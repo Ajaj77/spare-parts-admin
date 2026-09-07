@@ -1,0 +1,326 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>لوحة أسعار قطع الغيار - V2</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#0b1016;color:#eee;font-family:Arial,sans-serif}
+.wrap{max-width:900px;margin:auto;padding:16px}.card{background:#131b25;border:1px solid #2b3745;border-radius:16px;padding:16px;margin-bottom:14px}
+h1{font-size:23px;margin:0 0 7px}.muted{color:#9aa7b5;font-size:13px}
+input,select,button{width:100%;padding:14px;border-radius:11px;border:1px solid #3a4756;background:#0d141c;color:#fff;font-size:15px}
+button{background:#1976e8;border:0;font-weight:bold;cursor:pointer}button:disabled{opacity:.5}
+button.secondary{background:#293543}.row{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.status{margin-top:10px;padding:12px;border-radius:10px;background:#0c141d;white-space:pre-wrap;line-height:1.6}
+.ok{border:1px solid #28744c}.err{border:1px solid #a43b4a}.hidden{display:none}
+.tabs{display:flex;gap:7px;overflow:auto;margin-bottom:12px}.tabs button{width:auto;white-space:nowrap}
+table{width:100%;border-collapse:collapse;font-size:12px}th,td{padding:8px;border-bottom:1px solid #2b3745;text-align:right;white-space:nowrap}
+@media(max-width:650px){.row{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="card"><h1>🔧 لوحة إدارة أسعار قطع الغيار</h1><div class="muted">V2 — نسخة تشخيص وإصلاح تسجيل الدخول</div></div>
+
+<div id="loginCard" class="card">
+<h2>تسجيل دخول الأدمن</h2>
+<input id="email" type="email" inputmode="email" autocomplete="username" placeholder="البريد الإلكتروني">
+<input id="password" type="password" autocomplete="current-password" placeholder="كلمة المرور" style="margin-top:9px">
+<button id="loginBtn" style="margin-top:9px">دخول</button>
+<div id="loginStatus" class="status hidden"></div>
+</div>
+
+<main id="app" class="hidden">
+<div class="card">
+<div id="who"></div>
+<div class="row" style="margin-top:9px">
+<button id="logoutBtn" class="secondary">تسجيل خروج</button>
+<button id="versionBtn" class="secondary">رقم النسخة</button>
+</div>
+</div>
+
+<div class="tabs">
+<button class="active" data-tab="import">📥 استيراد Excel</button>
+<button data-tab="products">📦 المنتجات</button>
+<button data-tab="history">🕘 السجل</button>
+</div>
+
+<section id="tab-import" class="card">
+<h2>استيراد ملف أسعار</h2>
+<input id="file" type="file" accept=".xlsx,.xls,.csv">
+<div class="row" style="margin-top:9px">
+<select id="category"><option>Samsung</option><option>iPhone</option><option>SVC</option><option>Android</option></select>
+<button id="previewBtn" class="secondary">معاينة</button>
+</div>
+<div id="preview" class="hidden"></div>
+<button id="importBtn" disabled style="margin-top:9px">بدء الاستيراد</button>
+<div id="importStatus" class="status hidden"></div>
+</section>
+
+<section id="tab-products" class="card hidden">
+<h2>المنتجات</h2>
+<div class="row"><input id="productSearch" placeholder="الموديل أو الكود أو اللون"><button id="searchBtn" class="secondary">بحث</button></div>
+<div id="productsTable" style="margin-top:10px"></div>
+</section>
+
+<section id="tab-history" class="card hidden"><h2>سجل التحديثات</h2><div id="historyTable">جاري التحميل…</div></section>
+</main>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+const SUPABASE_URL="https://zqwyzzvszwifwplqkydw.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY="sb_publishable_YZXVg7MZl1ev57CnpPgIPQ_8Ox_b-qX";
+let client=null, currentUser=null, rows=[], selectedFile=null;
+
+const $=id=>document.getElementById(id);
+function status(el,msg,ok=false){
+  el.textContent=msg;
+  el.className="status "+(ok?"ok":"err");
+  el.classList.remove("hidden");
+}
+function esc(s){return String(s??"").replace(/[&<>"']/g,x=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[x]))}
+
+window.addEventListener("error",function(e){
+  const box=$("loginStatus");
+  if(box) status(box,"خطأ JavaScript:\n"+(e.message||"خطأ غير معروف"));
+});
+
+function setLoggedOut(){
+  currentUser=null;
+  $("app").classList.add("hidden");
+  $("loginCard").classList.remove("hidden");
+}
+
+async function checkAdmin(){
+  try{
+    const result=await client.auth.getSession();
+    if(result.error) throw result.error;
+    const session=result.data.session;
+    if(!session){setLoggedOut();return false}
+    currentUser=session.user;
+
+    const p=await client.from("user_profiles")
+      .select("name,role,active")
+      .eq("id",currentUser.id)
+      .maybeSingle();
+
+    if(p.error) throw p.error;
+
+    if(!p.data || p.data.role!=="admin" || p.data.active!==true){
+      await client.auth.signOut();
+      status($("loginStatus"),"تم تسجيل الدخول لكن الحساب ليس Admin أو أنه غير نشط.");
+      return false;
+    }
+
+    $("who").innerHTML="👤 "+esc(p.data.name||currentUser.email)+" — ADMIN";
+    $("loginCard").classList.add("hidden");
+    $("app").classList.remove("hidden");
+    return true;
+  }catch(e){
+    status($("loginStatus"),"حدث خطأ أثناء التحقق من الحساب:\n"+(e.message||e));
+    return false;
+  }
+}
+
+async function login(){
+  const email=$("email").value.trim();
+  const password=$("password").value;
+
+  if(!email || !password){
+    status($("loginStatus"),"اكتب البريد الإلكتروني وكلمة المرور أولاً.");
+    return;
+  }
+
+  $("loginBtn").disabled=true;
+  $("loginBtn").textContent="جاري تسجيل الدخول…";
+  status($("loginStatus"),"جارٍ الاتصال بـ Supabase…",true);
+
+  try{
+    if(!client) throw new Error("لم يتم تحميل مكتبة Supabase. افتح الصفحة مع اتصال بالإنترنت.");
+
+    const result=await client.auth.signInWithPassword({email,password});
+    if(result.error) throw result.error;
+
+    status($("loginStatus"),"تم تسجيل الدخول، جاري التحقق من صلاحيات الأدمن…",true);
+    await checkAdmin();
+  }catch(e){
+    status($("loginStatus"),"❌ لم يتم الدخول:\n"+(e.message||e));
+  }finally{
+    $("loginBtn").disabled=false;
+    $("loginBtn").textContent="دخول";
+  }
+}
+
+$("loginBtn").addEventListener("click",login);
+$("password").addEventListener("keydown",e=>{if(e.key==="Enter")login()});
+$("email").addEventListener("keydown",e=>{if(e.key==="Enter")$("password").focus()});
+
+$("logoutBtn").onclick=async()=>{await client.auth.signOut();setLoggedOut()};
+
+$("versionBtn").onclick=async()=>{
+ try{
+  const r=await client.from("app_settings").select("value,updated_at").eq("key","database_version").maybeSingle();
+  if(r.error)throw r.error;
+  status($("importStatus"),"database_version = "+(r.data?.value||"0")+"\nآخر تحديث: "+(r.data?.updated_at||"-"),true);
+ }catch(e){status($("importStatus"),e.message||String(e))}
+};
+
+document.querySelectorAll(".tabs button").forEach(b=>b.onclick=()=>{
+ document.querySelectorAll(".tabs button").forEach(x=>x.classList.remove("active"));
+ b.classList.add("active");
+ document.querySelectorAll("main section").forEach(x=>x.classList.add("hidden"));
+ $("tab-"+b.dataset.tab).classList.remove("hidden");
+ if(b.dataset.tab==="products")loadProducts();
+ if(b.dataset.tab==="history")loadHistory();
+});
+
+$("file").onchange=e=>{
+ selectedFile=e.target.files[0]||null;
+ $("preview").classList.add("hidden");
+ $("importBtn").disabled=true;
+};
+
+function clean(v){return v==null?"":String(v).trim()}
+function num(v){
+ if(v==null||clean(v)==="")return null;
+ const n=Number(clean(v).replace(/,/g,""));
+ return Number.isFinite(n)?n:null;
+}
+function slug(v){return clean(v).toLowerCase().replace(/\s+/g,"_").replace(/[^\p{L}\p{N}._+/-]/gu,"")}
+function key(c,m,i,col){return [c,m,i,col].map(slug).filter(Boolean).join("|")}
+function matrix(ws){return XLSX.utils.sheet_to_json(ws,{header:1,defval:"",raw:true})}
+function headerIndex(a){
+ for(let i=0;i<Math.min(a.length,15);i++){
+  const s=a[i].map(clean).join(" ").toLowerCase();
+  if(/model|modle|item|original/.test(s))return i;
+ }
+ return 1;
+}
+function parseSamsung(wb){
+ const a=matrix(wb.Sheets[wb.SheetNames[0]]),out=[];
+ for(let i=Math.max(2,headerIndex(a)+1);i<a.length;i++){
+  const r=a[i],model=clean(r[2]);
+  if(!model)continue;
+  const prices=[["original",num(r[3])],["oled",num(r[4])],["oled2",num(r[5])],["incell",num(r[6])]].filter(x=>x[1]!==null);
+  if(prices.length)out.push({category:"Samsung",model,itemCode:clean(r[0]),color:"",prices});
+ }
+ return out;
+}
+function parseIphone(wb){
+ const a=matrix(wb.Sheets[wb.SheetNames[0]]),out=[],types=["copy","second_hand","change_glass","fog","original_gx","copy_gx","copy_gx_wd","incell_hd_utc_tft"];
+ for(let i=Math.max(2,headerIndex(a)+1);i<a.length;i++){
+  const r=a[i],model=clean(r[1]);if(!model)continue;
+  const prices=[];
+  for(let j=2;j<10;j++){const n=num(r[j]);if(n!==null)prices.push([types[j-2],n])}
+  if(prices.length)out.push({category:"iPhone",model,itemCode:clean(r[0]),color:"",prices});
+ }
+ return out;
+}
+function parseSvc(wb){
+ const a=matrix(wb.Sheets[wb.SheetNames[0]]),out=[];let last="";
+ for(let i=2;i<a.length;i++){
+  const r=a[i],item=clean(r[1])||last,color=clean(r[2]),price=num(r[3]);
+  if(clean(r[1]))last=clean(r[1]);
+  if(item&&price!==null)out.push({category:"SVC",model:item,itemCode:clean(r[0]),color,prices:[["price",price]]});
+ }
+ return out;
+}
+function parseAndroid(wb){
+ const a=matrix(wb.Sheets[wb.SheetNames[0]]),out=[];let section="Android";
+ const brands=["Huawei","Honor","Infinx","Infinix","Tecno","Itel","Redmi","Poco","Xiaomi","Black Shark","Oppo","Realme","Reno","Vivo","Nokia","M-Horse","ZTE"];
+ for(let i=0;i<a.length;i++){
+  const r=a[i].map(clean),joined=r.join(" ");
+  if(!r[1]&&joined&&brands.some(b=>joined.toLowerCase().includes(b.toLowerCase()))){section=joined;continue}
+  const model=r[1]||r[0];if(!model)continue;
+  const prices=[];
+  for(let j=2;j<r.length;j++){const n=num(r[j]);if(n!==null)prices.push(["price_"+(j-1),n])}
+  if(prices.length)out.push({category:section,model,itemCode:r[0],color:"",prices});
+ }
+ return out;
+}
+
+async function preview(){
+ if(!selectedFile){status($("importStatus"),"اختر ملف Excel أولاً.");return}
+ try{
+  const wb=XLSX.read(await selectedFile.arrayBuffer(),{type:"array"});
+  const cat=$("category").value;
+  rows=cat==="Samsung"?parseSamsung(wb):cat==="iPhone"?parseIphone(wb):cat==="SVC"?parseSvc(wb):parseAndroid(wb);
+  if(!rows.length)throw new Error("لم أجد بيانات أسعار.");
+  $("preview").innerHTML="<div class='status ok'>تم العثور على "+rows.length+" منتج. أول 12:</div><div style='overflow:auto'><table><tr><th>Model</th><th>Code</th><th>Color</th><th>Prices</th></tr>"+rows.slice(0,12).map(x=>"<tr><td>"+esc(x.model)+"</td><td>"+esc(x.itemCode)+"</td><td>"+esc(x.color)+"</td><td>"+esc(x.prices.map(p=>p[0]+": "+p[1]).join(" | "))+"</td></tr>").join("")+"</table></div>";
+  $("preview").classList.remove("hidden");$("importBtn").disabled=false;
+  status($("importStatus"),"المعاينة جاهزة.",true);
+ }catch(e){status($("importStatus"),"خطأ في قراءة الملف:\n"+(e.message||e))}
+}
+$("previewBtn").onclick=preview;
+
+async function getCategory(name){
+ let r=await client.from("categories").select("id").eq("name",name).maybeSingle();
+ if(r.error)throw r.error;if(r.data)return r.data.id;
+ r=await client.from("categories").insert({name,code:slug(name)}).select("id").single();
+ if(r.error)throw r.error;return r.data.id;
+}
+async function bump(){
+ let r=await client.from("app_settings").select("value").eq("key","database_version").maybeSingle();
+ if(r.error)throw r.error;
+ const v=Number(r.data?.value||0)+1;
+ r=await client.from("app_settings").upsert({key:"database_version",value:String(v),updated_at:new Date().toISOString()},{onConflict:"key"});
+ if(r.error)throw r.error;return v;
+}
+$("importBtn").onclick=async()=>{
+ $("importBtn").disabled=true;
+ try{
+  const cat=$("category").value,cid=await getCategory(cat);
+  let u=await client.from("updates").insert({category_id:cid,file_name:selectedFile.name,version:0,updated_by:currentUser.id,total_products:rows.length,status:"processing"}).select("id").single();
+  if(u.error)throw u.error;
+  let count=0,priceCount=0;
+  for(let i=0;i<rows.length;i+=40){
+   const b=rows.slice(i,i+40);
+   const payload=b.map(x=>({category_id:cid,item_code:x.itemCode||null,model:x.model,color:x.color||null,product_key:key(cat,x.model,x.itemCode,x.color),active:true,updated_at:new Date().toISOString()}));
+   let p=await client.from("products").upsert(payload,{onConflict:"product_key"}).select("id,product_key");
+   if(p.error)throw p.error;
+   const ids=new Map(p.data.map(x=>[x.product_key,x.id])),pp=[];
+   b.forEach(x=>{const id=ids.get(key(cat,x.model,x.itemCode,x.color));if(id)x.prices.forEach(z=>pp.push({product_id:id,price_type:z[0],price:z[1],currency:"LYD",updated_at:new Date().toISOString()}))});
+   if(pp.length){let q=await client.from("prices").upsert(pp,{onConflict:"product_id,price_type"});if(q.error)throw q.error;priceCount+=pp.length}
+   count+=b.length;status($("importStatus"),"جاري الاستيراد… "+count+"/"+rows.length+"\nالأسعار: "+priceCount,true);
+  }
+  const v=await bump();
+  const done=await client.from("updates").update({version:v,status:"completed"}).eq("id",u.data.id);
+  if(done.error)throw done.error;
+  status($("importStatus"),"✅ اكتمل الاستيراد\nالمنتجات: "+count+"\nالأسعار: "+priceCount+"\ndatabase_version: "+v,true);
+ }catch(e){status($("importStatus"),"❌ فشل الاستيراد:\n"+(e.message||e))}
+ finally{$("importBtn").disabled=false}
+};
+
+async function loadProducts(){
+ const q=$("productSearch").value.trim();
+ let r=client.from("products").select("model,item_code,color,active,updated_at").order("updated_at",{ascending:false}).limit(100);
+ if(q)r=r.or("model.ilike.%"+q+"%,item_code.ilike.%"+q+"%,color.ilike.%"+q+"%");
+ r=await r;
+ if(r.error){$("productsTable").textContent=r.error.message;return}
+ $("productsTable").innerHTML="<div class='small'>أول 100 نتيجة</div><div style='overflow:auto'><table><tr><th>الموديل</th><th>الكود</th><th>اللون</th><th>نشط</th></tr>"+(r.data||[]).map(p=>"<tr><td>"+esc(p.model)+"</td><td>"+esc(p.item_code)+"</td><td>"+esc(p.color)+"</td><td>"+(p.active?"نعم":"لا")+"</td></tr>").join("")+"</table></div>";
+}
+$("searchBtn").onclick=loadProducts;
+
+async function loadHistory(){
+ const r=await client.from("updates").select("file_name,version,total_products,status,created_at").order("created_at",{ascending:false}).limit(50);
+ if(r.error){$("historyTable").textContent=r.error.message;return}
+ $("historyTable").innerHTML="<div style='overflow:auto'><table><tr><th>الملف</th><th>النسخة</th><th>المنتجات</th><th>الحالة</th><th>التاريخ</th></tr>"+(r.data||[]).map(x=>"<tr><td>"+esc(x.file_name)+"</td><td>"+x.version+"</td><td>"+x.total_products+"</td><td>"+esc(x.status)+"</td><td>"+esc(x.created_at)+"</td></tr>").join("")+"</table></div>";
+}
+
+async function start(){
+ try{
+  if(!window.supabase)throw new Error("مكتبة Supabase لم يتم تحميلها. تأكد من وجود الإنترنت.");
+  client=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
+  await checkAdmin();
+ }catch(e){status($("loginStatus"),"❌ خطأ في تشغيل الصفحة:\n"+(e.message||e))}
+}
+start();
+})();
+</script>
+</body>
+</html>
