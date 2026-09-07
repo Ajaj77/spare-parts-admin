@@ -216,6 +216,39 @@
             font-weight: bold;
         }
 
+        /* 🎨 تنسيقات الشارات والمعلومات النصية (مثل لون الشاشة والملاحظات) */
+        .info-tags-wrap {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 10px;
+        }
+
+        .info-badge {
+            background: rgba(2, 132, 199, 0.08);
+            border: 1px solid var(--border);
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        body.dark .info-badge {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .info-title {
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .info-value {
+            color: var(--primary);
+            font-weight: 700;
+        }
+
         .qualities-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
@@ -492,7 +525,7 @@
             if (rawRows[r] && rawRows[r].length > maxCols) maxCols = rawRows[r].length;
         }
 
-        const keywords = ['original', 'oled', 'incell', 'incel', 'copy', 'fog', 'gx', 'aaa', 'ori', 'org', 'service', 'pack', 'glass', 'change', 'tft', 'lcd', 'نوع', 'درجة', 'جودة', 'شاشة', 'سعر', 'موديل'];
+        const keywords = ['original', 'oled', 'incell', 'incel', 'copy', 'fog', 'gx', 'aaa', 'ori', 'org', 'service', 'pack', 'glass', 'change', 'tft', 'lcd', 'نوع', 'درجة', 'جودة', 'شاشة', 'سعر', 'موديل', 'لون', 'اللون', 'ملاحظات', 'فريم', 'إطار', 'color'];
 
         let detectedHeaders = new Array(maxCols).fill('');
         
@@ -533,7 +566,7 @@
 
         for (let c = 0; c < maxCols; c++) {
             if (!detectedHeaders[c] || detectedHeaders[c] === '-') {
-                detectedHeaders[c] = (c === modelColIndex) ? 'الموديل/الصنف' : ('جودة ' + c);
+                detectedHeaders[c] = (c === modelColIndex) ? 'الموديل/الصنف' : ('عمود ' + c);
             }
         }
 
@@ -572,185 +605,4 @@
             if ((!modelName || !isNaN(modelName)) && row[modelColIndex + 1]) {
                 if (isNaN(cleanStr(row[modelColIndex + 1]))) {
                     modelName = cleanStr(row[modelColIndex + 1]);
-                }
-            }
-
-            if (!modelName || modelName.toLowerCase().includes('model') || keywords.some(k => modelName.toLowerCase() === k)) continue;
-
-            const key = modelName.toLowerCase();
-            const existing = store.itemsMap[key];
-
-            const vals = [];
-            for (let c = 0; c < detectedHeaders.length; c++) {
-                vals.push(cleanStr(row[c]));
-            }
-
-            if (existing) {
-                for (let c = 0; c < vals.length; c++) {
-                    if (vals[c] !== '') existing.values[c] = vals[c];
-                }
-                existing.updated = true;
-            } else {
-                const itemObj = {
-                    isGroup: false,
-                    modelName: modelName,
-                    key: key,
-                    values: vals,
-                    updated: false
-                };
-                store.itemsMap[key] = itemObj;
-                store.itemsList.push(itemObj);
-            }
-        }
-    }
-
-    function renderBrandTabs() {
-        const container = document.getElementById('brandTabs');
-        container.innerHTML = '';
-
-        Object.keys(masterStore).forEach(b => {
-            const btn = document.createElement('button');
-            btn.className = `brand-tab ${b === activeBrand ? 'active' : ''}`;
-            btn.innerText = b;
-            btn.onclick = () => {
-                activeBrand = b;
-                renderBrandTabs();
-                renderDisplay();
-            };
-            container.appendChild(btn);
-        });
-    }
-
-    function getQualityBadgeClass(qName) {
-        const q = qName.toLowerCase();
-        if (q.includes('orig') || q.includes('service') || q.includes('org') || q.includes('اصلي') || q.includes('أصلي')) return 'bg-original';
-        if (q.includes('oled') || q.includes('gx')) return 'bg-oled';
-        if (q.includes('incell') || q.includes('incel') || q.includes('copy') || q.includes('tft') || q.includes('تجاري')) return 'bg-incell';
-        return 'bg-other';
-    }
-
-    function renderDisplay() {
-        const container = document.getElementById('displayArea');
-        if (!activeBrand || !masterStore[activeBrand]) {
-            container.innerHTML = '<div class="empty-box">لا توجد بيانات متاحة</div>';
-            return;
-        }
-
-        const data = masterStore[activeBrand];
-        const headers = data.headers;
-        const items = data.itemsList;
-        const modelIdx = data.modelColIndex || 0;
-
-        let totalCount = 0;
-
-        if (currentViewMode === 'cards') {
-            let html = '<div class="cards-grid">';
-            items.forEach(item => {
-                if (item.isGroup) {
-                    html += `<div class="group-banner" data-group="true">${item.name.toUpperCase()}</div>`;
-                } else {
-                    totalCount++;
-                    const modelTitle = item.modelName || item.values[modelIdx] || 'غير معنون';
-                    html += `
-                    <div class="item-card" data-item="true">
-                        <div class="card-header">
-                            <span class="model-title">${modelTitle}</span>
-                            ${item.updated ? '<span class="updated-tag">تم التحديث</span>' : ''}
-                        </div>
-                        <div class="qualities-grid">`;
-
-                    for (let c = 0; c < headers.length; c++) {
-                        // استبعاد عمود الموديل والأرقام التسلسلية من شبكة الأسعار
-                        if (c === modelIdx || (c === 0 && modelIdx === 1)) continue;
-
-                        const val = item.values[c];
-                        const qTitle = headers[c] || ('نوع ' + c);
-                        if (val && val !== '-' && !isNaN(val) && Number(val) > 0) {
-                            const badgeClass = getQualityBadgeClass(qTitle);
-                            html += `
-                            <div class="quality-box">
-                                <span class="quality-name">${qTitle}</span>
-                                <span class="price-tag ${badgeClass}">${val}</span>
-                            </div>`;
-                        }
-                    }
-
-                    html += `</div></div>`;
-                }
-            });
-            html += '</div>';
-            container.innerHTML = html;
-
-        } else {
-            let html = '<div class="table-card"><div class="table-wrapper"><table><thead><tr>';
-            headers.forEach((h, idx) => {
-                if (idx === 0 && modelIdx === 1) return; // إخفاء عمود الرقم التسلسلي لتصفية الجدول
-                html += `<th>${h}</th>`;
-            });
-            html += '</tr></thead><tbody>';
-
-            items.forEach(item => {
-                if (item.isGroup) {
-                    html += `<tr data-group="true" class="group-banner"><td colspan="${headers.length}">${item.name.toUpperCase()}</td></tr>`;
-                } else {
-                    totalCount++;
-                    html += '<tr data-item="true">';
-                    for (let c = 0; c < headers.length; c++) {
-                        if (c === 0 && modelIdx === 1) continue;
-
-                        const val = item.values[c] || '-';
-                        const isPrice = !isNaN(val) && val !== '' && val !== '-' && Number(val) > 0;
-                        if (c === modelIdx) {
-                            html += `<td>${val} ${item.updated ? ' <small style="color:#d97706;">●</small>' : ''}</td>`;
-                        } else if (isPrice) {
-                            const badgeClass = getQualityBadgeClass(headers[c] || '');
-                            html += `<td><span class="price-tag ${badgeClass}">${val}</span></td>`;
-                        } else {
-                            html += `<td>${val}</td>`;
-                        }
-                    }
-                    html += '</tr>';
-                }
-            });
-            html += '</tbody></table></div></div>';
-            container.innerHTML = html;
-        }
-
-        document.getElementById('statTotalRows').innerText = totalCount;
-        applyFilter();
-    }
-
-    function applyFilter() {
-        const q = document.getElementById('searchInput').value.toLowerCase().trim();
-        let visible = 0;
-
-        if (currentViewMode === 'cards') {
-            const cards = document.querySelectorAll('.item-card');
-            cards.forEach(card => {
-                const text = card.innerText.toLowerCase();
-                if (text.includes(q)) {
-                    card.style.display = '';
-                    visible++;
-                } else {
-                    card.style.display = 'none';
-                }
-            });
-        } else {
-            const rows = document.querySelectorAll('table tbody tr[data-item="true"]');
-            rows.forEach(row => {
-                const text = row.innerText.toLowerCase();
-                if (text.includes(q)) {
-                    row.style.display = '';
-                    visible++;
-                } else {
-                    row.style.display = 'none';
-                }
-            });
-        }
-
-        document.getElementById('statFilteredRows').innerText = visible;
-    }
-</script>
-
-</body>
-</html>
+ 
