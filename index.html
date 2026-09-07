@@ -3,371 +3,638 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة عرض وتحديث قوائم المنتجات</title>
-    <!-- مكتبة SheetJS لقراءة ملفات إكسل -->
+    <title>منظومة تحديث وقوائم أسعار صيانة الهواتف</title>
+    <!-- مكتبة SheetJS لقراءة معالجة ملفات الإكسل -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <style>
         :root {
-            --bg-color: #f4f7f6;
+            --primary: #0284c7;
+            --primary-dark: #0369a1;
+            --accent: #10b981;
+            --update-bg: #fef3c7;
+            --update-text: #b45309;
+            --bg: #f8fafc;
             --card-bg: #ffffff;
-            --primary: #2563eb;
-            --primary-hover: #1d4ed8;
-            --text-dark: #1e293b;
-            --border-color: #e2e8f0;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
         }
 
         body {
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-dark);
+            background-color: var(--bg);
+            color: var(--text-main);
             margin: 0;
-            padding: 20px;
+            padding: 24px 16px;
         }
 
         .container {
-            max-width: 1200px;
+            max-width: 1280px;
             margin: 0 auto;
         }
 
-        header {
-            text-align: center;
-            margin-bottom: 25px;
+        /* Header */
+        .app-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 16px;
         }
 
-        h1 {
-            margin: 0 0 8px 0;
-            color: #0f172a;
+        .app-title h1 {
+            margin: 0;
+            font-size: 1.6rem;
+            color: var(--text-main);
         }
 
-        .upload-section {
+        .app-title p {
+            margin: 4px 0 0 0;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        /* Drop Zone */
+        .drop-zone {
             background: var(--card-bg);
-            border: 2px dashed var(--primary);
-            border-radius: 12px;
-            padding: 30px;
+            border: 2px dashed #93c5fd;
+            border-radius: 16px;
+            padding: 28px 20px;
             text-align: center;
             cursor: pointer;
-            transition: background 0.2s ease;
-            margin-bottom: 25px;
+            transition: all 0.2s ease;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
         }
 
-        .upload-section:hover {
-            background: #eff6ff;
+        .drop-zone:hover, .drop-zone.dragover {
+            background: #f0f9ff;
+            border-color: var(--primary);
+            transform: translateY(-1px);
         }
 
-        .upload-section input[type="file"] {
-            display: none;
+        .drop-zone-icon {
+            font-size: 32px;
+            color: var(--primary);
+            margin-bottom: 6px;
         }
 
-        .btn-upload {
+        .btn-select {
             background-color: var(--primary);
             color: white;
-            padding: 10px 20px;
+            padding: 10px 22px;
             border-radius: 8px;
-            cursor: pointer;
+            font-weight: 600;
             display: inline-block;
-            font-weight: bold;
+            margin-top: 8px;
             transition: background 0.2s;
         }
 
-        .btn-upload:hover {
-            background-color: var(--primary-hover);
+        .btn-select:hover {
+            background-color: var(--primary-dark);
         }
 
-        .controls {
-            display: flex;
-            gap: 15px;
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 14px;
             margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            padding: 14px 16px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+        }
+
+        .stat-card .label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .stat-card .value {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-top: 2px;
+        }
+
+        /* Controls Section */
+        .controls-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 14px 16px;
+            border: 1px solid var(--border);
+            margin-bottom: 16px;
+            display: flex;
+            gap: 12px;
             flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
         }
 
-        .search-box {
+        .search-wrapper {
+            position: relative;
             flex: 1;
-            min-width: 250px;
+            min-width: 260px;
         }
 
-        .search-box input {
+        .search-wrapper input {
             width: 100%;
-            padding: 12px 16px;
-            border: 1px solid var(--border-color);
+            padding: 11px 16px;
+            border: 1px solid var(--border);
             border-radius: 8px;
-            font-size: 15px;
+            font-size: 0.95rem;
             outline: none;
-            box-sizing: border-box;
+            background: #f8fafc;
         }
 
-        .search-box input:focus {
+        .search-wrapper input:focus {
             border-color: var(--primary);
+            background: #ffffff;
+            box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.1);
         }
 
-        .tabs-container {
+        .action-btns {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-action {
+            background: #f1f5f9;
+            color: #334155;
+            border: 1px solid var(--border);
+            padding: 9px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+
+        .btn-action:hover {
+            background: #e2e8f0;
+        }
+
+        .btn-danger {
+            color: #dc2626;
+            border-color: #fecaca;
+            background: #fef2f2;
+        }
+
+        .btn-danger:hover {
+            background: #fee2e2;
+        }
+
+        /* Tabs Navigation */
+        .brand-tabs {
             display: flex;
             gap: 8px;
             overflow-x: auto;
-            padding-bottom: 10px;
-            border-bottom: 2px solid var(--border-color);
-            margin-bottom: 20px;
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 8px;
+            margin-bottom: 16px;
         }
 
-        .tab-button {
-            background: #e2e8f0;
+        .brand-tab {
+            background: transparent;
             border: none;
-            padding: 10px 18px;
-            border-radius: 8px 8px 0 0;
+            padding: 9px 18px;
+            border-radius: 8px;
             cursor: pointer;
-            font-weight: bold;
+            font-weight: 600;
+            color: var(--text-muted);
             white-space: nowrap;
             transition: all 0.2s;
         }
 
-        .tab-button.active {
+        .brand-tab.active {
             background: var(--primary);
             color: white;
         }
 
-        .sheet-tabs {
-            display: flex;
-            gap: 6px;
-            margin-bottom: 15px;
-            flex-wrap: wrap;
-        }
-
-        .sheet-btn {
-            background: #ffffff;
-            border: 1px solid var(--border-color);
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-size: 13px;
-            cursor: pointer;
-        }
-
-        .sheet-btn.active {
-            background: #3b82f6;
-            color: white;
-            border-color: #3b82f6;
-        }
-
-        .table-wrapper {
+        /* Table Styling */
+        .table-container {
             background: var(--card-bg);
             border-radius: 12px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        .table-scroll {
             overflow-x: auto;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            max-height: 65vh;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
             text-align: right;
+            font-size: 0.9rem;
         }
 
-        th, td {
-            padding: 12px 16px;
-            border-bottom: 1px solid var(--border-color);
+        thead {
+            position: sticky;
+            top: 0;
+            background: #f8fafc;
+            z-index: 10;
         }
 
         th {
-            background-color: #f8fafc;
-            font-weight: 600;
+            padding: 13px 16px;
             color: #475569;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border);
+            white-space: nowrap;
         }
 
-        tr:hover {
-            background-color: #f1f5f9;
+        td {
+            padding: 11px 16px;
+            border-bottom: 1px solid var(--border);
+            color: #334155;
+            white-space: nowrap;
         }
 
-        .no-data {
+        tbody tr:nth-child(even) {
+            background-color: #fafafa;
+        }
+
+        tbody tr:hover {
+            background-color: #f0f9ff;
+        }
+
+        .brand-header-row {
+            background-color: #e0f2fe !important;
+            font-weight: bold;
+            color: #0369a1;
+        }
+
+        .price-badge {
+            background-color: #ecfdf5;
+            color: #047857;
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-weight: bold;
+            display: inline-block;
+        }
+
+        .updated-badge {
+            background-color: var(--update-bg);
+            color: var(--update-text);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            margin-right: 6px;
+            font-weight: bold;
+        }
+
+        .empty-state {
+            padding: 48px;
             text-align: center;
-            padding: 40px;
-            color: #64748b;
+            color: var(--text-muted);
         }
 
-        .stats {
-            margin-top: 10px;
-            font-size: 13px;
-            color: #64748b;
+        @media print {
+            .drop-zone, .controls-card, .brand-tabs { display: none; }
+            body { padding: 0; background: white; }
+            .table-container { border: none; box-shadow: none; }
+            .table-scroll { max-height: none; }
         }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <header>
-        <h1>نظام عرض وقوائم أسعار المنتجات</h1>
-        <p>قم برفع ملفات الإكسل لتفريغها فورياً مع ميزة البحث والتحديث المستمر</p>
+    <header class="app-header">
+        <div class="app-title">
+            <h1>منظومة تحديث أسعار قطع وصيانة الهواتف</h1>
+            <p>نظام التحديث الذكي: يتم تحديث الأسعار والموديلات تلقائياً ومنع التكرار</p>
+        </div>
     </header>
 
-    <!-- منطقة رفع وتحديث الملفات -->
-    <div class="upload-section" onclick="document.getElementById('fileInput').click()">
-        <span class="btn-upload">اختيار / تحديث ملفات الإكسل</span>
-        <p style="margin-top: 10px; font-size: 13px; color: #64748b;">يمكنك تحديد أكثر من ملف دفعة واحدة (.xlsx, .xls)</p>
-        <input type="file" id="fileInput" multiple accept=".xlsx, .xls" onchange="handleFiles(this.files)">
+    <!-- منطقة رفع الملفات -->
+    <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+        <div class="drop-zone-icon">📥</div>
+        <div style="font-size: 1.05rem; font-weight: 600;">اسحب ملف الإكسل الجديد هنا للتحديث أو اضغط للاختيار</div>
+        <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">يقوم النظام بمطابقة الجهاز وتحديث سعره تلقائياً دون تكرار الصفوف</div>
+        <span class="btn-select">إدخال / تحديث ملف أسعار</span>
+        <input type="file" id="fileInput" multiple accept=".xlsx, .xls" style="display: none;" onchange="loadAndSmartMerge(this.files)">
     </div>
 
-    <!-- شريط البحث -->
-    <div class="controls">
-        <div class="search-box">
-            <input type="text" id="searchInput" placeholder="ابحث عن اسم الجهاز، السعر، المواصفات..." onkeyup="filterData()">
+    <!-- الإحصائيات -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="label">الأقسام والماركات</div>
+            <div class="value" id="statBrandsCount">0</div>
+        </div>
+        <div class="stat-card">
+            <div class="label">إجمالي الموديلات والقطع</div>
+            <div class="value" id="statTotalItems">0</div>
+        </div>
+        <div class="stat-card">
+            <div class="label">عناصر تم تحديث أسعارها</div>
+            <div class="value" id="statUpdatedCount" style="color: var(--update-text);">0</div>
+        </div>
+        <div class="stat-card">
+            <div class="label">العناصر المعروضة للبحث</div>
+            <div class="value" id="statFilteredCount">0</div>
         </div>
     </div>
 
-    <!-- تبويبات الملفات المرفوعة -->
-    <div class="tabs-container" id="fileTabs"></div>
-
-    <!-- تبويبات الصفحات الفرعية داخل الملف -->
-    <div class="sheet-tabs" id="sheetTabs"></div>
-
-    <!-- جدول عرض البيانات -->
-    <div class="table-wrapper">
-        <div id="tableContainer">
-            <div class="no-data">يرجى رفع ملفات الإكسل لعرض البيانات هنا.</div>
+    <!-- شريط البحث والتحكم -->
+    <div class="controls-card">
+        <div class="search-wrapper">
+            <input type="text" id="searchInput" placeholder="ابحث باسم الموديل (مثل S23, iPhone 11, A013)..." onkeyup="applyFilter()">
+        </div>
+        <div class="action-btns">
+            <button class="btn-action" onclick="window.print()">طباعة / PDF</button>
+            <button class="btn-action btn-danger" onclick="resetAllData()">مسح وبدء جديد</button>
         </div>
     </div>
 
-    <div class="stats" id="statsContainer"></div>
+    <!-- تبويبات الماركات والأقسام -->
+    <div class="brand-tabs" id="brandTabs"></div>
+
+    <!-- جدول عرض البيانات المحدثة -->
+    <div class="table-container">
+        <div class="table-scroll" id="tableScroll">
+            <div class="empty-state">قم برفع ملفات أسعار الإكسل ليتم تفريغها وتحديثها هنا.</div>
+        </div>
+    </div>
 </div>
 
 <script>
-    let filesData = {}; 
-    let currentFileName = '';
-    let currentSheetName = '';
+    // الهيكل الرئيسي لتخزين البيانات الذكية
+    let masterData = {}; 
+    let activeBrandKey = '';
+    let totalUpdatedItemsCount = 0;
 
-    function handleFiles(files) {
+    // إعداد منطقة السحب والإفلات
+    const dropZone = document.getElementById('dropZone');
+    ['dragenter', 'dragover'].forEach(ev => {
+        dropZone.addEventListener(ev, (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
+    });
+    ['dragleave', 'drop'].forEach(ev => {
+        dropZone.addEventListener(ev, (e) => { e.preventDefault(); dropZone.classList.remove('dragover'); });
+    });
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        loadAndSmartMerge(e.dataTransfer.files);
+    });
+
+    // التعرف الذكي على نوع/ماركة الملف بناءً على اسمه
+    function detectBrandKey(filename) {
+        const fn = filename.toLowerCase();
+        if (fn.includes('samsung') || fn.includes('سامسونج')) return 'Samsung';
+        if (fn.includes('ipone') || fn.includes('iphone') || fn.includes('آيفون')) return 'iPhone';
+        if (fn.includes('svc') || fn.includes('service')) return 'SVC (قطع صيانة)';
+        if (fn.includes('inf') || fn.includes('huawei') || fn.includes('itel') || fn.includes('xiaomi') || fn.includes('redmi')) return 'Infinix & Huawei & Xiaomi';
+        return filename.replace(/\.[^/.]+$/, "");
+    }
+
+    function cleanStr(val) {
+        if (val === null || val === undefined) return '';
+        return String(val).replace(/\r?\n|\r/g, ' ').trim();
+    }
+
+    function loadAndSmartMerge(files) {
         if (!files.length) return;
 
-        Array.from(files).forEach(file => {
-            const reader = new FileReader();
-            reader.onload = function (e) {
-                const data = new Uint8Array(e.target.result);
-                const workbook = XLSX.read(data, { type: 'array' });
+        let promises = Array.from(files).map(file => {
+            return new Promise(resolve => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const brandKey = detectBrandKey(file.name);
 
-                filesData[file.name] = {};
+                    // استخراج أول شيت فعال
+                    let sheetName = workbook.SheetNames[0];
+                    const rawJson = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { header: 1, defval: '' });
 
-                workbook.SheetNames.forEach(sheetName => {
-                    const sheet = workbook.Sheets[sheetName];
-                    const jsonData = XLSX.utils.sheet_to_json(sheet, { header: 1 });
-                    filesData[file.name][sheetName] = jsonData;
-                });
+                    if (rawJson.length > 0) {
+                        processSmartMerge(brandKey, rawJson);
+                    }
+                    resolve();
+                };
+                reader.readAsArrayBuffer(file);
+            });
+        });
 
-                renderFileTabs();
-                if (!currentFileName || !filesData[currentFileName]) {
-                    switchToFile(file.name);
-                } else {
-                    renderTable();
-                }
+        Promise.all(promises).then(() => {
+            renderBrandTabs();
+            if (!activeBrandKey || !masterData[activeBrandKey]) {
+                activeBrandKey = Object.keys(masterData)[0] || '';
+            }
+            renderBrandTabs();
+            renderTable();
+            updateStats();
+        });
+    }
+
+    // خوارزمية التحديث الذكي ومنع التكرار
+    function processSmartMerge(brandKey, rawJson) {
+        // تحديد صف الهيدر
+        let headerRowIdx = 0;
+        for (let i = 0; i < Math.min(3, rawJson.length); i++) {
+            if (rawJson[i].some(c => cleanStr(c) !== '')) {
+                headerRowIdx = i;
+                break;
+            }
+        }
+
+        const headers = rawJson[headerRowIdx].map(c => cleanStr(c));
+
+        if (!masterData[brandKey]) {
+            masterData[brandKey] = {
+                headers: headers,
+                itemsMap: {}, // خريطة لتخزين الموديل كمفتاح لمنع التكرار
+                itemsList: []
             };
-            reader.readAsArrayBuffer(file);
-        });
+        } else {
+            // تحديث الهيدر إذا كان الجديد أشمل
+            if (headers.length > masterData[brandKey].headers.length) {
+                masterData[brandKey].headers = headers;
+            }
+        }
+
+        const currentStore = masterData[brandKey];
+
+        for (let r = headerRowIdx + 1; r < rawJson.length; r++) {
+            const row = rawJson[r];
+            if (!row || row.every(c => cleanStr(c) === '')) continue;
+
+            const nonEmp = row.filter(c => cleanStr(c) !== '');
+            const isBrandGroup = nonEmp.length === 1 && typeof nonEmp[0] === 'string' && isNaN(nonEmp[0]);
+
+            if (isBrandGroup) {
+                const groupName = cleanStr(nonEmp[0]);
+                if (!currentStore.itemsMap['GROUP_' + groupName]) {
+                    const groupObj = { isGroup: true, name: groupName };
+                    currentStore.itemsMap['GROUP_' + groupName] = groupObj;
+                    currentStore.itemsList.push(groupObj);
+                }
+                continue;
+            }
+
+            // الموديل يعتمد عادة على العمود الأول أو الثاني (رقم الجهاز / الكود)
+            let modelKey = cleanStr(row[1]) || cleanStr(row[0]);
+            if (!modelKey) continue;
+
+            const existingItem = currentStore.itemsMap[modelKey.toLowerCase()];
+
+            if (existingItem) {
+                // *** التحديث الذكي عند وجود الموديل سابقاً ***
+                let hasChange = false;
+                for (let c = 0; c < row.length; c++) {
+                    const newVal = cleanStr(row[c]);
+                    if (newVal !== '' && existingItem.values[c] !== newVal) {
+                        existingItem.values[c] = newVal;
+                        hasChange = true;
+                    }
+                }
+                if (hasChange) {
+                    existingItem.isUpdated = true;
+                    totalUpdatedItemsCount++;
+                }
+            } else {
+                // *** إضافة جهاز جديد إذا لم يكن موجوداً ***
+                const rowValues = [];
+                for (let c = 0; c < headers.length; c++) {
+                    rowValues.push(cleanStr(row[c]));
+                }
+                const newItem = {
+                    isGroup: false,
+                    key: modelKey.toLowerCase(),
+                    values: rowValues,
+                    isUpdated: false
+                };
+                currentStore.itemsMap[modelKey.toLowerCase()] = newItem;
+                currentStore.itemsList.push(newItem);
+            }
+        }
     }
 
-    function renderFileTabs() {
-        const fileTabsContainer = document.getElementById('fileTabs');
-        fileTabsContainer.innerHTML = '';
+    function renderBrandTabs() {
+        const container = document.getElementById('brandTabs');
+        container.innerHTML = '';
 
-        Object.keys(filesData).forEach(fileName => {
+        Object.keys(masterData).forEach(bKey => {
             const btn = document.createElement('button');
-            btn.className = `tab-button ${fileName === currentFileName ? 'active' : ''}`;
-            btn.innerText = fileName;
-            btn.onclick = () => switchToFile(fileName);
-            fileTabsContainer.appendChild(btn);
-        });
-    }
-
-    function switchToFile(fileName) {
-        currentFileName = fileName;
-        const sheets = Object.keys(filesData[fileName] || {});
-        currentSheetName = sheets[0] || '';
-
-        renderFileTabs();
-        renderSheetTabs();
-        renderTable();
-    }
-
-    function renderSheetTabs() {
-        const sheetTabsContainer = document.getElementById('sheetTabs');
-        sheetTabsContainer.innerHTML = '';
-
-        if (!currentFileName || !filesData[currentFileName]) return;
-
-        const sheets = Object.keys(filesData[currentFileName]);
-        if (sheets.length <= 1) return; // عدم إظهار التبويبات الفرعية إذا كانت صفحة واحدة فقط
-
-        sheets.forEach(sheetName => {
-            const btn = document.createElement('button');
-            btn.className = `sheet-btn ${sheetName === currentSheetName ? 'active' : ''}`;
-            btn.innerText = sheetName;
+            btn.className = `brand-tab ${bKey === activeBrandKey ? 'active' : ''}`;
+            btn.innerText = bKey;
             btn.onclick = () => {
-                currentSheetName = sheetName;
-                renderSheetTabs();
+                activeBrandKey = bKey;
+                renderBrandTabs();
                 renderTable();
             };
-            sheetTabsContainer.appendChild(btn);
+            container.appendChild(btn);
         });
+
+        document.getElementById('statBrandsCount').innerText = Object.keys(masterData).length;
     }
 
     function renderTable() {
-        const container = document.getElementById('tableContainer');
-        const stats = document.getElementById('statsContainer');
-
-        if (!currentFileName || !currentSheetName || !filesData[currentFileName][currentSheetName]) {
-            container.innerHTML = '<div class="no-data">لا توجد بيانات متاحة.</div>';
-            stats.innerText = '';
+        const container = document.getElementById('tableScroll');
+        if (!activeBrandKey || !masterData[activeBrandKey]) {
+            container.innerHTML = '<div class="empty-state">لا توجد بيانات متاحة</div>';
             return;
         }
 
-        const rows = filesData[currentFileName][currentSheetName];
-        if (rows.length === 0) {
-            container.innerHTML = '<div class="no-data">هذه الصفحة فارغة.</div>';
-            stats.innerText = '';
+        const brandData = masterData[activeBrandKey];
+        const headers = brandData.headers;
+        const items = brandData.itemsList;
+
+        if (items.length === 0) {
+            container.innerHTML = '<div class="empty-state">القائمة فارغة</div>';
             return;
         }
 
-        let html = '<table id="dataTable">';
-        
-        // الهيدر (السطر الأول)
-        html += '<thead><tr>';
-        const headers = rows[0] || [];
-        headers.forEach(cell => {
-            html += `<th>${cell !== undefined ? cell : ''}</th>`;
+        let html = '<table><thead><tr>';
+        headers.forEach(h => {
+            html += `<th>${h || '-'}</th>`;
         });
         html += '</tr></thead><tbody>';
 
-        // الصفوف
-        for (let i = 1; i < rows.length; i++) {
-            if (rows[i].length === 0) continue;
-            html += '<tr>';
-            for (let j = 0; j < headers.length; j++) {
-                const cellValue = rows[i][j] !== undefined ? rows[i][j] : '';
-                html += `<td>${cellValue}</td>`;
-            }
-            html += '</tr>';
-        }
-
-        html += '</tbody></table>';
-        container.innerHTML = html;
-        stats.innerText = `إجمالي الصفوف: ${rows.length - 1}`;
-
-        filterData(); // تطبيق البحث بعد إعادة رسم الجدول
-    }
-
-    function filterData() {
-        const query = document.getElementById('searchInput').value.toLowerCase();
-        const table = document.getElementById('dataTable');
-        if (!table) return;
-
-        const trs = table.getElementsByTagName('tbody')[0]?.getElementsByTagName('tr');
-        if (!trs) return;
-
-        let visibleCount = 0;
-        Array.from(trs).forEach(row => {
-            const text = row.innerText.toLowerCase();
-            if (text.includes(query)) {
-                row.style.display = '';
-                visibleCount++;
+        items.forEach(item => {
+            if (item.isGroup) {
+                html += `<tr class="brand-header-row"><td colspan="${headers.length}">${item.name.toUpperCase()}</td></tr>`;
             } else {
-                row.style.display = 'none';
+                html += '<tr>';
+                for (let c = 0; c < headers.length; c++) {
+                    const val = item.values[c] || '';
+                    const isPrice = !isNaN(val) && val !== '' && Number(val) > 0;
+                    
+                    if (c === 1 && item.isUpdated) {
+                        html += `<td>${val} <span class="updated-badge">تم التحديث</span></td>`;
+                    } else if (isPrice) {
+                        html += `<td><span class="price-badge">${val}</span></td>`;
+                    } else {
+                        html += `<td>${val}</td>`;
+                    }
+                }
+                html += '</tr>';
             }
         });
 
-        document.getElementById('statsContainer').innerText = `المعروض: ${visibleCount} عنصر`;
+        html += '</tbody></table>';
+        container.innerHTML = html;
+
+        applyFilter();
+        updateStats();
+    }
+
+    function applyFilter() {
+        const q = document.getElementById('searchInput').value.toLowerCase().trim();
+        const table = document.querySelector('table tbody');
+        if (!table) return;
+
+        const trs = table.getElementsByTagName('tr');
+        let visible = 0;
+
+        Array.from(trs).forEach(tr => {
+            if (tr.classList.contains('brand-header-row')) {
+                tr.style.display = '';
+                return;
+            }
+            const text = tr.innerText.toLowerCase();
+            if (text.includes(q)) {
+                tr.style.display = '';
+                visible++;
+            } else {
+                tr.style.display = 'none';
+            }
+        });
+
+        document.getElementById('statFilteredCount').innerText = visible;
+    }
+
+    function updateStats() {
+        let totalItems = 0;
+        Object.keys(masterData).forEach(bk => {
+            totalItems += masterData[bk].itemsList.filter(i => !i.isGroup).length;
+        });
+        document.getElementById('statTotalItems').innerText = totalItems;
+        document.getElementById('statUpdatedCount').innerText = totalUpdatedItemsCount;
+    }
+
+    function resetAllData() {
+        if (confirm("هل انت محقق من مسح جميع البيانات المرفوعة للبدء من جديد؟")) {
+            masterData = {};
+            activeBrandKey = '';
+            totalUpdatedItemsCount = 0;
+            renderBrandTabs();
+            renderTable();
+            updateStats();
+        }
     }
 </script>
 
