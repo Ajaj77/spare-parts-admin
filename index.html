@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>دليل أسعار الشاشات قطع الغيار</title>
+    <title>دليل أسعار الشاشات وقطع الغيار</title>
     <!-- مكتبة SheetJS لقراءة ملفات الإكسل -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <style>
@@ -19,6 +19,15 @@
             --success: #10b981;
         }
 
+        /* متغيرات الوضع المظلم */
+        body.dark {
+            --bg: #0f172a;
+            --card-bg: #1e293b;
+            --text-dark: #f8fafc;
+            --text-muted: #94a3b8;
+            --border: #334155;
+        }
+
         * {
             box-sizing: border-box;
             font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -32,6 +41,7 @@
             padding: 10px;
             font-size: 14px;
             direction: rtl;
+            transition: background-color 0.3s, color 0.3s;
         }
 
         .app-container {
@@ -70,7 +80,8 @@
             font-size: 1rem;
             outline: none;
             font-weight: 700;
-            background: #fff;
+            background: var(--card-bg);
+            color: var(--text-dark);
         }
 
         .search-box-wrap input:focus {
@@ -102,13 +113,17 @@
         .btn:active { transform: scale(0.98); }
         .btn-upload { background: var(--primary); color: white; }
         .btn-clear { background: #fee2e2; color: #991b1b; }
+        body.dark .btn-clear { background: #451a1a; color: #fca5a5; }
         .btn-toggle { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
+        body.dark .btn-toggle { background: #0c4a6e; color: #7dd3fc; border-color: #0284c7; }
+        .btn-theme { background: #f1f5f9; color: #334155; border: 1px solid var(--border); }
+        body.dark .btn-theme { background: #334155; color: #f8fafc; }
 
         .stats-bar {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: #f1f5f9;
+            background: rgba(0,0,0,0.03);
             padding: 8px 12px;
             border-radius: 8px;
             font-size: 0.82rem;
@@ -116,8 +131,12 @@
             font-weight: 600;
         }
 
+        body.dark .stats-bar {
+            background: #0f172a;
+        }
+
         .stats-bar strong {
-            color: var(--primary-dark);
+            color: var(--primary);
             font-size: 0.95rem;
         }
 
@@ -147,13 +166,18 @@
             font-size: 0.85rem;
         }
 
+        body.dark .brand-tab {
+            background: #334155;
+            color: #cbd5e1;
+        }
+
         .brand-tab.active {
             background: var(--primary);
-            color: white;
+            color: white !important;
             box-shadow: 0 2px 4px rgba(2, 132, 199, 0.3);
         }
 
-        /* VIEW MODE 1: CARDS VIEW (أفضل وأوضح طريقة للعرض للموبايل) */
+        /* CARDS VIEW */
         .cards-grid {
             display: flex;
             flex-direction: column;
@@ -172,15 +196,15 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 1px solid #f1f5f9;
+            border-bottom: 1px solid var(--border);
             padding-bottom: 8px;
             margin-bottom: 10px;
         }
 
         .model-title {
-            font-size: 1.1rem;
+            font-size: 1.15rem;
             font-weight: 800;
-            color: #0f172a;
+            color: var(--text-dark);
         }
 
         .updated-tag {
@@ -199,8 +223,8 @@
         }
 
         .quality-box {
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
+            background: var(--bg);
+            border: 1px solid var(--border);
             border-radius: 8px;
             padding: 8px 10px;
             display: flex;
@@ -213,7 +237,7 @@
         .quality-name {
             font-size: 0.78rem;
             font-weight: 700;
-            color: #475569;
+            color: var(--text-muted);
             text-transform: uppercase;
         }
 
@@ -225,14 +249,21 @@
             width: 100%;
         }
 
-        /* ألوان الجودات المتميزة */
+        /* ألوان الجودات */
         .bg-original { background-color: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
+        body.dark .bg-original { background-color: #064e3b; color: #6ee7b7; border-color: #047857; }
+
         .bg-oled { background-color: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
+        body.dark .bg-oled { background-color: #0c4a6e; color: #7dd3fc; border-color: #0284c7; }
+
         .bg-incell { background-color: #fef3c7; color: #b45309; border: 1px solid #fde68a; }
+        body.dark .bg-incell { background-color: #78350f; color: #fde047; border-color: #a16207; }
+
         .bg-other { background-color: #f3e8ff; color: #6b21a8; border: 1px solid #e9d5ff; }
+        body.dark .bg-other { background-color: #581c87; color: #e9d5ff; border-color: #7e22ce; }
 
         .group-banner {
-            background: #0284c7;
+            background: var(--primary);
             color: white;
             padding: 8px 14px;
             border-radius: 8px;
@@ -242,7 +273,7 @@
             margin-top: 6px;
         }
 
-        /* VIEW MODE 2: TABLE VIEW */
+        /* TABLE VIEW */
         .table-card {
             background: var(--card-bg);
             border-radius: 12px;
@@ -270,6 +301,8 @@
             z-index: 20;
         }
 
+        body.dark thead { background: #0284c7; }
+
         th {
             padding: 10px 6px;
             font-weight: 700;
@@ -289,19 +322,14 @@
             font-size: 0.88rem;
         }
 
-        tbody tr:nth-child(even) { background-color: #f8fafc; }
+        tbody tr:nth-child(even) { background-color: rgba(0,0,0,0.02); }
+        body.dark tbody tr:nth-child(even) { background-color: rgba(255,255,255,0.03); }
 
         .empty-box {
             padding: 50px 20px;
             text-align: center;
             color: var(--text-muted);
             font-size: 0.95rem;
-        }
-
-        @media print {
-            .top-panel { position: static; box-shadow: none; }
-            .action-btns, input[type="file"] { display: none; }
-            body { padding: 0; background: white; }
         }
     </style>
 </head>
@@ -318,6 +346,7 @@
         <div class="action-btns">
             <button class="btn btn-upload" onclick="document.getElementById('fileInput').click()">📥 رفع إكسل</button>
             <button class="btn btn-toggle" id="viewToggleBtn" onclick="toggleViewMode()">📱 عرض الكروت</button>
+            <button class="btn btn-theme" id="themeToggleBtn" onclick="toggleDarkMode()">🌙 الوضع المظلم</button>
             <button class="btn btn-clear" onclick="clearAllData()">🗑️ مسح البيانات</button>
             <input type="file" id="fileInput" multiple accept=".xlsx, .xls" style="display: none;" onchange="handleFiles(this.files)">
         </div>
@@ -340,10 +369,10 @@
 </div>
 
 <script>
-    const STORAGE_KEY = 'PHONE_PARTS_STORE_V3';
+    const STORAGE_KEY = 'PHONE_PARTS_STORE_V4';
     let masterStore = {};
     let activeBrand = '';
-    let currentViewMode = 'cards'; // 'cards' or 'table'
+    let currentViewMode = 'cards';
 
     function cleanStr(val) {
         if (val === null || val === undefined) return '';
@@ -351,15 +380,32 @@
     }
 
     document.addEventListener('DOMContentLoaded', () => {
+        loadDarkMode();
         loadFromStorage();
     });
+
+    /* إدارات الوضع المظلم */
+    function toggleDarkMode() {
+        document.body.classList.toggle('dark');
+        const isDark = document.body.classList.contains('dark');
+        localStorage.setItem('DARK_MODE', isDark ? 'enabled' : 'disabled');
+        document.getElementById('themeToggleBtn').innerText = isDark ? '☀️ الوضع المضيء' : '🌙 الوضع المظلم';
+    }
+
+    function loadDarkMode() {
+        if (localStorage.getItem('DARK_MODE') === 'enabled') {
+            document.body.classList.add('dark');
+            const btn = document.getElementById('themeToggleBtn');
+            if (btn) btn.innerText = '☀️ الوضع المضيء';
+        }
+    }
 
     function saveToStorage() {
         try {
             localStorage.setItem(STORAGE_KEY, JSON.stringify(masterStore));
             document.getElementById('saveStatus').innerText = '💾 تم الحفظ تلقائياً';
         } catch (e) {
-            console.error('Storage limit reached', e);
+            console.error('Storage error', e);
         }
     }
 
@@ -440,7 +486,6 @@
         return filename.replace(/\.[^/.]+$/, "");
     }
 
-    // خوارزمية ذكية لاكتشاف أسماء الجودات والأنواع (Original, OLED, INCELL) من ملف الإكسل
     function processSmartData(brandKey, rawRows) {
         let maxCols = 0;
         for (let r = 0; r < Math.min(15, rawRows.length); r++) {
@@ -449,13 +494,11 @@
 
         const keywords = ['original', 'oled', 'incell', 'incel', 'copy', 'fog', 'gx', 'aaa', 'ori', 'org', 'service', 'pack', 'glass', 'change', 'tft', 'lcd', 'نوع', 'درجة', 'جودة', 'شاشة', 'سعر', 'موديل'];
 
-        // البحث عن أفضل سطر يحتوي على الجودات والأنواع
         let detectedHeaders = new Array(maxCols).fill('');
         
         for (let c = 0; c < maxCols; c++) {
             for (let r = 0; r < Math.min(10, rawRows.length); r++) {
                 let cellVal = cleanStr(rawRows[r][c]);
-                // تجاهل التواريخ الأرقام الشائعة
                 if (cellVal && isNaN(cellVal) && !cellVal.match(/^\d{1,2}[\/\.-]\d{1,2}[\/\.-]\d{2,4}$/)) {
                     if (keywords.some(kw => cellVal.toLowerCase().includes(kw)) || cellVal.length > 2) {
                         detectedHeaders[c] = cellVal;
@@ -465,16 +508,39 @@
             }
         }
 
-        // إعطاء أسماء افتراضية ذكية للخلية التي لم يُكتشف اسمها
+        // تحديد عمود اسم الموديل الذكي (لتخطي عمود التسلسل الأرقام مثل NO أو #)
+        let modelColIndex = 0;
+        const col0Header = (detectedHeaders[0] || '').toLowerCase().trim();
+        const seqHeaders = ['no', 'n', '#', 'م', 'ت', 'تسلسل', 'الرقم', 'id'];
+
+        if (seqHeaders.includes(col0Header)) {
+            modelColIndex = 1;
+        } else {
+            // فحص عينات الصفوف للتحقق إذا كان العمود الأول مجرد أرقام تسلسلية 1,2,3...
+            let col0IsNumbers = true;
+            let col1HasText = false;
+            let numCount = 0;
+            for (let r = 0; r < Math.min(15, rawRows.length); r++) {
+                let v0 = cleanStr(rawRows[r][0]);
+                let v1 = cleanStr(rawRows[r][1]);
+                if (v0 && !isNaN(v0)) numCount++;
+                if (v1 && isNaN(v1) && v1.length > 1) col1HasText = true;
+            }
+            if (numCount > 3 && col1HasText) {
+                modelColIndex = 1;
+            }
+        }
+
         for (let c = 0; c < maxCols; c++) {
             if (!detectedHeaders[c] || detectedHeaders[c] === '-') {
-                detectedHeaders[c] = (c === 0) ? 'الموديل/الصنف' : ('جودة ' + c);
+                detectedHeaders[c] = (c === modelColIndex) ? 'الموديل/الصنف' : ('جودة ' + c);
             }
         }
 
         if (!masterStore[brandKey]) {
             masterStore[brandKey] = {
                 headers: detectedHeaders,
+                modelColIndex: modelColIndex,
                 itemsMap: {},
                 itemsList: []
             };
@@ -482,6 +548,7 @@
 
         const store = masterStore[brandKey];
         store.headers = detectedHeaders;
+        store.modelColIndex = modelColIndex;
 
         for (let r = 0; r < rawRows.length; r++) {
             const row = rawRows[r];
@@ -500,8 +567,14 @@
                 continue;
             }
 
-            let modelName = cleanStr(row[0]) || cleanStr(row[1]);
-            // التأكد أن الصنف ليس هيدر
+            // استخراج اسم الموديل بدون الاعتماد على رقم العمود الأول التسلسلي
+            let modelName = cleanStr(row[modelColIndex]);
+            if ((!modelName || !isNaN(modelName)) && row[modelColIndex + 1]) {
+                if (isNaN(cleanStr(row[modelColIndex + 1]))) {
+                    modelName = cleanStr(row[modelColIndex + 1]);
+                }
+            }
+
             if (!modelName || modelName.toLowerCase().includes('model') || keywords.some(k => modelName.toLowerCase() === k)) continue;
 
             const key = modelName.toLowerCase();
@@ -520,6 +593,7 @@
             } else {
                 const itemObj = {
                     isGroup: false,
+                    modelName: modelName,
                     key: key,
                     values: vals,
                     updated: false
@@ -565,27 +639,30 @@
         const data = masterStore[activeBrand];
         const headers = data.headers;
         const items = data.itemsList;
+        const modelIdx = data.modelColIndex || 0;
 
         let totalCount = 0;
 
         if (currentViewMode === 'cards') {
-            // عرض الكروت الذكي
             let html = '<div class="cards-grid">';
             items.forEach(item => {
                 if (item.isGroup) {
                     html += `<div class="group-banner" data-group="true">${item.name.toUpperCase()}</div>`;
                 } else {
                     totalCount++;
-                    const modelName = item.values[0] || item.values[1] || 'غير معنون';
+                    const modelTitle = item.modelName || item.values[modelIdx] || 'غير معنون';
                     html += `
                     <div class="item-card" data-item="true">
                         <div class="card-header">
-                            <span class="model-title">${modelName}</span>
+                            <span class="model-title">${modelTitle}</span>
                             ${item.updated ? '<span class="updated-tag">تم التحديث</span>' : ''}
                         </div>
                         <div class="qualities-grid">`;
 
-                    for (let c = 1; c < headers.length; c++) {
+                    for (let c = 0; c < headers.length; c++) {
+                        // استبعاد عمود الموديل والأرقام التسلسلية من شبكة الأسعار
+                        if (c === modelIdx || (c === 0 && modelIdx === 1)) continue;
+
                         const val = item.values[c];
                         const qTitle = headers[c] || ('نوع ' + c);
                         if (val && val !== '-' && !isNaN(val) && Number(val) > 0) {
@@ -605,9 +682,11 @@
             container.innerHTML = html;
 
         } else {
-            // عرض الجدول المطور
             let html = '<div class="table-card"><div class="table-wrapper"><table><thead><tr>';
-            headers.forEach(h => html += `<th>${h}</th>`);
+            headers.forEach((h, idx) => {
+                if (idx === 0 && modelIdx === 1) return; // إخفاء عمود الرقم التسلسلي لتصفية الجدول
+                html += `<th>${h}</th>`;
+            });
             html += '</tr></thead><tbody>';
 
             items.forEach(item => {
@@ -617,9 +696,11 @@
                     totalCount++;
                     html += '<tr data-item="true">';
                     for (let c = 0; c < headers.length; c++) {
+                        if (c === 0 && modelIdx === 1) continue;
+
                         const val = item.values[c] || '-';
                         const isPrice = !isNaN(val) && val !== '' && val !== '-' && Number(val) > 0;
-                        if (c === 0) {
+                        if (c === modelIdx) {
                             html += `<td>${val} ${item.updated ? ' <small style="color:#d97706;">●</small>' : ''}</td>`;
                         } else if (isPrice) {
                             const badgeClass = getQualityBadgeClass(headers[c] || '');
