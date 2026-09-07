@@ -3,144 +3,169 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة عرض وتحديث أسعار الهواتف والقطع</title>
-    <!-- مكتبة SheetJS لقراءة معالجة ملفات الإكسل -->
+    <title>عرض وتحديث أسعار الشاشات والقطع</title>
+    <!-- مكتبة SheetJS لقراءة ملفات الإكسل -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <style>
         :root {
             --primary: #0284c7;
             --primary-dark: #0369a1;
-            --accent: #10b981;
-            --badge-bg: #e0f2fe;
-            --badge-text: #0369a1;
-            --bg: #f1f5f9;
+            --accent: #16a34a;
+            --bg: #f8fafc;
             --card-bg: #ffffff;
-            --text-main: #0f172a;
+            --text-dark: #0f172a;
             --text-muted: #64748b;
-            --border: #cbd5e1;
+            --border: #e2e8f0;
+            --danger: #ef4444;
         }
 
         * {
             box-sizing: border-box;
-            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 0;
         }
 
         body {
             background-color: var(--bg);
-            color: var(--text-main);
-            margin: 0;
-            padding: 16px;
+            color: var(--text-dark);
+            padding: 8px;
+            font-size: 14px;
         }
 
-        .container {
-            max-width: 1400px;
+        .app-container {
+            max-width: 800px;
             margin: 0 auto;
-        }
-
-        /* 1. TOP SECTION: SEARCH & QUICK CONTROLS AT THE VERY TOP */
-        .top-controls {
-            background: var(--card-bg);
-            border-radius: 12px;
-            padding: 16px 20px;
-            border: 1px solid var(--border);
-            margin-bottom: 12px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.04);
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 8px;
         }
 
-        .search-row {
+        /* 1. TOP CONTROL PANEL */
+        .top-panel {
+            background: var(--card-bg);
+            border-radius: 10px;
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
             display: flex;
-            gap: 12px;
-            align-items: center;
-            flex-wrap: wrap;
+            flex-direction: column;
+            gap: 8px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
         }
 
         .search-box {
-            flex: 1;
-            min-width: 280px;
             position: relative;
+            width: 100%;
         }
 
         .search-box input {
             width: 100%;
-            padding: 12px 18px;
+            padding: 10px 12px;
             border: 2px solid var(--primary);
-            border-radius: 10px;
-            font-size: 1.05rem;
-            outline: none;
-            background: #ffffff;
-            font-weight: 500;
-        }
-
-        .search-box input:focus {
-            box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.2);
-        }
-
-        .stats-summary {
-            display: flex;
-            gap: 16px;
-            background: #f8fafc;
-            padding: 8px 16px;
             border-radius: 8px;
-            border: 1px solid var(--border);
-            font-size: 0.88rem;
+            font-size: 0.95rem;
+            outline: none;
+            font-weight: 600;
+        }
+
+        .action-btns {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            flex: 1;
+            min-width: 90px;
+            padding: 8px 10px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 0.82rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            transition: opacity 0.2s;
+        }
+
+        .btn:active { opacity: 0.8; }
+        .btn-upload { background: var(--primary); color: white; }
+        .btn-clear { background: #fee2e2; color: #991b1b; }
+        .btn-print { background: #f1f5f9; color: #334155; border: 1px solid var(--border); }
+
+        .stats-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #f1f5f9;
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 0.8rem;
             color: var(--text-muted);
+            font-weight: 600;
         }
 
-        .stats-summary span strong {
-            color: var(--primary);
-            font-size: 1rem;
+        .stats-bar strong {
+            color: var(--primary-dark);
+            font-size: 0.9rem;
         }
 
-        /* Tabs for Categories & Files */
+        .save-status {
+            color: var(--accent);
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+
+        /* TAB NAVIGATION */
         .brand-tabs {
             display: flex;
-            gap: 8px;
+            gap: 6px;
             overflow-x: auto;
-            padding-bottom: 4px;
+            padding-bottom: 2px;
         }
 
         .brand-tab {
             background: #e2e8f0;
             border: none;
-            padding: 10px 20px;
-            border-radius: 8px;
+            padding: 6px 14px;
+            border-radius: 6px;
             cursor: pointer;
             font-weight: 700;
             color: #475569;
             white-space: nowrap;
-            transition: all 0.2s;
-            font-size: 0.95rem;
+            font-size: 0.82rem;
         }
 
         .brand-tab.active {
             background: var(--primary);
             color: white;
-            box-shadow: 0 2px 4px rgba(2, 132, 199, 0.3);
         }
 
-        /* 2. TABLE DISPLAY AREA (TOP DISPLAY) */
-        .table-container {
+        /* 2. COMPACT DATA TABLE AREA */
+        .table-card {
             background: var(--card-bg);
-            border-radius: 12px;
+            border-radius: 10px;
             border: 1px solid var(--border);
             overflow: hidden;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
         }
 
-        .table-scroll {
-            overflow-x: auto;
-            max-height: 70vh;
+        .table-wrapper {
+            max-height: 72vh;
+            overflow-y: auto;
+            overflow-x: hidden; /* يمنع التمرير الجانبي */
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
-            text-align: right;
-            font-size: 0.9rem;
+            table-layout: fixed; /* يضمن احتواء الأعمدة داخل الشاشة */
+            text-align: center;
         }
 
         thead {
@@ -148,169 +173,166 @@
             top: 0;
             background: #0f172a;
             color: #ffffff;
-            z-index: 10;
+            z-index: 20;
         }
 
         th {
-            padding: 14px 16px;
-            font-weight: 600;
+            padding: 8px 4px;
+            font-weight: 700;
+            font-size: 0.82rem;
             border-bottom: 2px solid var(--border);
-            white-space: nowrap;
-            font-size: 0.92rem;
+            word-wrap: break-word;
+        }
+
+        /* تخصيص عرض عمود الموديل عن باقي أعمدة الأسعار */
+        th:first-child, td:first-child {
+            width: 45%;
+            text-align: right;
+            padding-right: 8px;
+            font-weight: 700;
         }
 
         td {
-            padding: 11px 16px;
+            padding: 8px 4px;
             border-bottom: 1px solid var(--border);
+            font-size: 0.85rem;
             color: #1e293b;
-            white-space: nowrap;
+            word-wrap: break-word;
         }
 
-        tbody tr:nth-child(even) {
-            background-color: #f8fafc;
-        }
+        tbody tr:nth-child(even) { background-color: #f8fafc; }
+        tbody tr:hover { background-color: #e0f2fe; }
 
-        tbody tr:hover {
-            background-color: #e0f2fe;
-        }
-
-        .brand-header-row {
-            background-color: #3b82f6 !important;
+        .group-header-row {
+            background-color: #0284c7 !important;
             color: #ffffff !important;
             font-weight: bold;
-            font-size: 1rem;
+            font-size: 0.88rem;
+            text-align: center !important;
         }
 
         .price-badge {
             background-color: #dcfce7;
             color: #15803d;
-            padding: 4px 10px;
-            border-radius: 6px;
-            font-weight: 700;
+            padding: 3px 6px;
+            border-radius: 5px;
+            font-weight: 800;
             display: inline-block;
+            font-size: 0.85rem;
+            min-width: 36px;
+        }
+
+        .updated-mark {
+            color: #d97706;
+            font-size: 0.7rem;
+            font-weight: bold;
+            margin-right: 2px;
+        }
+
+        .empty-box {
+            padding: 40px 15px;
+            text-align: center;
+            color: var(--text-muted);
             font-size: 0.95rem;
         }
 
-        .type-tag {
-            background-color: var(--badge-bg);
-            color: var(--badge-text);
-            padding: 3px 8px;
-            border-radius: 4px;
-            font-size: 0.8rem;
-            font-weight: 600;
-        }
-
-        .updated-tag {
-            background-color: #fef3c7;
-            color: #b45309;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-size: 0.75rem;
-            margin-right: 4px;
-            font-weight: bold;
-        }
-
-        .empty-state {
-            padding: 60px;
-            text-align: center;
-            color: var(--text-muted);
-            font-size: 1.1rem;
-        }
-
-        /* 3. BOTTOM SECTION: COMPACT UPLOAD & UPDATE ZONE */
-        .bottom-upload-section {
-            background: var(--card-bg);
-            border: 2px dashed #93c5fd;
-            border-radius: 12px;
-            padding: 20px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .bottom-upload-section:hover {
-            background: #f0f9ff;
-            border-color: var(--primary);
-        }
-
-        .btn-upload {
-            background: var(--primary);
-            color: white;
-            padding: 8px 18px;
-            border-radius: 6px;
-            font-weight: 600;
-            display: inline-block;
-            margin-top: 6px;
-            cursor: pointer;
-        }
-
-        .btn-action {
-            background: #f1f5f9;
-            color: #334155;
-            border: 1px solid var(--border);
-            padding: 10px 16px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-        }
-
         @media print {
-            .top-controls, .bottom-upload-section { display: none; }
+            .top-panel { position: static; box-shadow: none; }
+            .action-btns, input[type="file"] { display: none; }
             body { padding: 0; background: white; }
-            .table-container { border: none; box-shadow: none; }
-            .table-scroll { max-height: none; }
+            .table-wrapper { max-height: none; }
         }
     </style>
 </head>
 <body>
 
-<div class="container">
+<div class="app-container">
 
-    <!-- 1. شريط البحث والتحكم والتبويبات في أعلى الصفحة -->
-    <div class="top-controls">
-        <div class="search-row">
-            <div class="search-box">
-                <input type="text" id="searchInput" placeholder="🔍 ابحث بالموديل أو نوع الشاشة (مثل: OLED, INCELL, Original, S22, A013)..." onkeyup="applyFilter()">
-            </div>
-            <button class="btn-action" onclick="window.print()">🖨️ طباعة / PDF</button>
+    <!-- 1. شريط التحكم والبحث في الأعلى -->
+    <div class="top-panel">
+        <div class="search-box">
+            <input type="text" id="searchInput" placeholder="🔍 ابحث بالموديل أو الشاشة (مثال: A01, OLED, INCELL)..." onkeyup="applyFilter()">
         </div>
 
-        <!-- الإحصائيات السريعة -->
-        <div class="stats-summary">
-            <span>إجمالي القطع المعروضة: <strong id="statTotalRows">0</strong></span> |
-            <span>النتائج المطابقة للبحث: <strong id="statFilteredRows">0</strong></span>
+        <div class="action-btns">
+            <button class="btn btn-upload" onclick="document.getElementById('fileInput').click()">📥 رفع إكسل</button>
+            <button class="btn btn-clear" onclick="clearAllData()">🗑️ مسح البيانات</button>
+            <button class="btn btn-print" onclick="window.print()">🖨️ طباعة</button>
+            <input type="file" id="fileInput" multiple accept=".xlsx, .xls" style="display: none;" onchange="handleFiles(this.files)">
         </div>
 
-        <!-- تبويبات الماركات والقوائم -->
+        <div class="stats-bar">
+            <span>القطع المعروضة: <strong id="statFilteredRows">0</strong> / <strong id="statTotalRows">0</strong></span>
+            <span class="save-status" id="saveStatus">💾 محفوض تلقائياً</span>
+        </div>
+
         <div class="brand-tabs" id="brandTabs"></div>
     </div>
 
-    <!-- 2. جدول العرض الرئيسي في الأعلى -->
-    <div class="table-container">
-        <div class="table-scroll" id="tableScroll">
-            <div class="empty-state">
-                يرجى رفع ملفات الإكسل من الأسفل لعرض كافة تفاصيل الأجهزة والأنواع والأسعار هنا.
+    <!-- 2. جدول العرض المضغوط والمركز -->
+    <div class="table-card">
+        <div class="table-wrapper" id="tableWrapper">
+            <div class="empty-box">
+                لا توجد بيانات محفوظة.<br>اضغط على <strong>"📥 رفع إكسل"</strong> لإضافة الملفات.
             </div>
         </div>
-    </div>
-
-    <!-- 3. منطقة رفع وتحديث الملفات في أسفل الصفحة -->
-    <div class="bottom-upload-section" onclick="document.getElementById('fileInput').click()">
-        <span style="font-weight: bold; color: var(--primary-dark);">📥 رفع ملفات جديدة أو تحديث الأسعار</span>
-        <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">يمكنك اختيار ملفات Samsung, iPhone, SVC, أو الماركات الأخرى معاً. سيتم تحديث الأسعار تلقائياً ومنع التكرار.</div>
-        <span class="btn-upload">اختيار الملفات</span>
-        <input type="file" id="fileInput" multiple accept=".xlsx, .xls" style="display: none;" onchange="handleFiles(this.files)">
     </div>
 
 </div>
 
 <script>
+    const STORAGE_KEY = 'PHONE_PARTS_STORE_V2';
     let masterStore = {};
     let activeBrand = '';
 
+    // دالة لتنظيف النصوص
     function cleanStr(val) {
         if (val === null || val === undefined) return '';
         return String(val).replace(/\r?\n|\r/g, ' ').trim();
+    }
+
+    // تحميل البيانات التلقائي عند فتح الصفحة
+    document.addEventListener('DOMContentLoaded', () => {
+        loadFromStorage();
+    });
+
+    function saveToStorage() {
+        try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(masterStore));
+            document.getElementById('saveStatus').innerText = '💾 تم الحفظ تلقائياً';
+        } catch (e) {
+            console.error('Storage quota exceeded', e);
+        }
+    }
+
+    function loadFromStorage() {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+            try {
+                masterStore = JSON.parse(saved);
+                const keys = Object.keys(masterStore);
+                if (keys.length > 0) {
+                    activeBrand = keys[0];
+                    renderBrandTabs();
+                    renderTable();
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+    }
+
+    function clearAllData() {
+        if (confirm('هل أنت متأكد من مسح جميع البيانات والملفات المحفوظة؟')) {
+            localStorage.removeItem(STORAGE_KEY);
+            masterStore = {};
+            activeBrand = '';
+            document.getElementById('brandTabs').innerHTML = '';
+            document.getElementById('tableWrapper').innerHTML = '<div class="empty-box">تم مسح البيانات بنجاح.<br>قم برفع ملفات جديدة.</div>';
+            document.getElementById('statFilteredRows').innerText = '0';
+            document.getElementById('statTotalRows').innerText = '0';
+            document.getElementById('fileInput').value = '';
+        }
     }
 
     function handleFiles(files) {
@@ -322,13 +344,12 @@
                 reader.onload = function(e) {
                     const data = new Uint8Array(e.target.result);
                     const workbook = XLSX.read(data, { type: 'array' });
-
                     let brandKey = detectBrandKey(file.name);
                     let sheetName = workbook.SheetNames[0];
                     const rawRows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { header: 1, defval: '' });
 
                     if (rawRows.length > 0) {
-                        mergeSmartData(brandKey, rawRows);
+                        processSheetData(brandKey, rawRows);
                     }
                     resolve();
                 };
@@ -337,7 +358,7 @@
         });
 
         Promise.all(promises).then(() => {
-            renderBrandTabs();
+            saveToStorage();
             if (!activeBrand || !masterStore[activeBrand]) {
                 activeBrand = Object.keys(masterStore)[0] || '';
             }
@@ -350,31 +371,57 @@
         const fn = filename.toLowerCase();
         if (fn.includes('samsung') || fn.includes('سامسونج')) return 'Samsung';
         if (fn.includes('ipone') || fn.includes('iphone') || fn.includes('آيفون')) return 'iPhone';
-        if (fn.includes('svc') || fn.includes('service')) return 'SVC (قطع صيانة)';
-        if (fn.includes('inf') || fn.includes('huawei') || fn.includes('itel') || fn.includes('xiaomi') || fn.includes('redmi')) return 'Infinix & Huawei & Xiaomi & Techno';
+        if (fn.includes('svc') || fn.includes('service')) return 'SVC (قطع)';
+        if (fn.includes('inf') || fn.includes('huawei') || fn.includes('xiaomi') || fn.includes('redmi')) return 'Infinix & Xiaomi';
         return filename.replace(/\.[^/.]+$/, "");
     }
 
-    function mergeSmartData(brandKey, rawRows) {
-        let headerIdx = 0;
-        for (let i = 0; i < Math.min(3, rawRows.length); i++) {
-            if (rawRows[i].some(c => cleanStr(c) !== '')) {
-                headerIdx = i;
-                break;
+    // التعرف الذكي على سطر الهيدر الذي يحتوي على الجودات والأنواع (Original, OLED, Incell...)
+    function findHeaderRowIndex(rawRows) {
+        const keywords = ['original', 'oled', 'incell', 'incel', 'copy', 'fog', 'gx', 'aaa', 'ori', 'org', 'service', 'نوع', 'درجة', 'شاشة', 'سعر', 'موديل', 'model'];
+        
+        for (let i = 0; i < Math.min(8, rawRows.length); i++) {
+            const rowText = rawRows[i].map(c => cleanStr(c).toLowerCase()).join(' ');
+            if (keywords.some(kw => rowText.includes(kw))) {
+                return i;
             }
         }
+        return 0; // افتراضي إذا لم يجد
+    }
 
-        const rawHeaders = rawRows[headerIdx].map(c => cleanStr(c));
+    function processSheetData(brandKey, rawRows) {
+        const headerIdx = findHeaderRowIndex(rawRows);
+        let rawHeaders = rawRows[headerIdx].map(c => cleanStr(c));
+
+        // كشف الأعمدة التي بها بيانات حقيقية وإلغاء الأعمدة الفارغة
+        const activeCols = [];
+        for (let c = 0; c < rawHeaders.length; c++) {
+            let hasData = false;
+            for (let r = headerIdx; r < rawRows.length; r++) {
+                if (cleanStr(rawRows[r][c]) !== '') {
+                    hasData = true;
+                    break;
+                }
+            }
+            if (hasData) activeCols.push(c);
+        }
+
+        // تصفية الهيدر بناءً على الأعمدة النشطة
+        let headers = activeCols.map(c => rawHeaders[c] || 'النوع');
+        if (!headers[0] || headers[0] === '-') headers[0] = 'الموديل/الصنف';
 
         if (!masterStore[brandKey]) {
             masterStore[brandKey] = {
-                headers: rawHeaders,
+                headers: headers,
+                activeCols: activeCols,
                 itemsMap: {},
                 itemsList: []
             };
         }
 
         const store = masterStore[brandKey];
+        store.headers = headers;
+        store.activeCols = activeCols;
 
         for (let r = headerIdx + 1; r < rawRows.length; r++) {
             const row = rawRows[r];
@@ -393,31 +440,26 @@
                 continue;
             }
 
-            let modelName = cleanStr(row[1]) || cleanStr(row[0]);
+            // استخراج القيم المحددة
+            const filteredVals = activeCols.map(c => cleanStr(row[c]));
+            let modelName = filteredVals[0] || filteredVals[1];
             if (!modelName) continue;
 
             const key = modelName.toLowerCase();
             const existing = store.itemsMap[key];
 
             if (existing) {
-                // تحديث الأسعار الموجودة
-                for (let c = 0; c < row.length; c++) {
-                    const val = cleanStr(row[c]);
-                    if (val !== '') {
-                        existing.values[c] = val;
+                for (let c = 0; c < filteredVals.length; c++) {
+                    if (filteredVals[c] !== '') {
+                        existing.values[c] = filteredVals[c];
                     }
                 }
                 existing.updated = true;
             } else {
-                // إضافة الموديل بجميع خانات أنواع الشاشات
-                const vals = [];
-                for (let c = 0; c < rawHeaders.length; c++) {
-                    vals.push(cleanStr(row[c]));
-                }
                 const itemObj = {
                     isGroup: false,
                     key: key,
-                    values: vals,
+                    values: filteredVals,
                     updated: false
                 };
                 store.itemsMap[key] = itemObj;
@@ -444,9 +486,9 @@
     }
 
     function renderTable() {
-        const container = document.getElementById('tableScroll');
+        const container = document.getElementById('tableWrapper');
         if (!activeBrand || !masterStore[activeBrand]) {
-            container.innerHTML = '<div class="empty-state">لا توجد بيانات متاحة</div>';
+            container.innerHTML = '<div class="empty-box">لا توجد بيانات متاحة</div>';
             return;
         }
 
@@ -455,8 +497,10 @@
         const items = data.itemsList;
 
         let html = '<table><thead><tr>';
-        headers.forEach(h => {
-            html += `<th>${h || '-'}</th>`;
+        headers.forEach((h, idx) => {
+            let title = h;
+            if (idx === 0 && (title === '-' || title === '')) title = 'الموديل';
+            html += `<th>${title}</th>`;
         });
         html += '</tr></thead><tbody>';
 
@@ -464,16 +508,16 @@
 
         items.forEach(item => {
             if (item.isGroup) {
-                html += `<tr class="brand-header-row"><td colspan="${headers.length}">${item.name.toUpperCase()}</td></tr>`;
+                html += `<tr class="group-header-row"><td colspan="${headers.length}">${item.name.toUpperCase()}</td></tr>`;
             } else {
                 totalCount++;
                 html += '<tr>';
                 for (let c = 0; c < headers.length; c++) {
-                    const val = item.values[c] || '';
-                    const isPrice = !isNaN(val) && val !== '' && Number(val) > 0;
-                    
-                    if (c === 1 && item.updated) {
-                        html += `<td>${val} <span class="updated-tag">تحديث</span></td>`;
+                    const val = item.values[c] || '-';
+                    const isPrice = !isNaN(val) && val !== '' && val !== '-' && Number(val) > 0;
+
+                    if (c === 0) {
+                        html += `<td>${val} ${item.updated ? '<span class="updated-mark">● مٌحدث</span>' : ''}</td>`;
                     } else if (isPrice) {
                         html += `<td><span class="price-badge">${val}</span></td>`;
                     } else {
@@ -497,7 +541,7 @@
         let visible = 0;
 
         trs.forEach(tr => {
-            if (tr.classList.contains('brand-header-row')) {
+            if (tr.classList.contains('group-header-row')) {
                 tr.style.display = '';
                 return;
             }
