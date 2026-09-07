@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>منظومة تحديث وقوائم أسعار صيانة الهواتف</title>
+    <title>لوحة عرض وتحديث أسعار الهواتف والقطع</title>
     <!-- مكتبة SheetJS لقراءة معالجة ملفات الإكسل -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <style>
@@ -11,13 +11,13 @@
             --primary: #0284c7;
             --primary-dark: #0369a1;
             --accent: #10b981;
-            --update-bg: #fef3c7;
-            --update-text: #b45309;
-            --bg: #f8fafc;
+            --badge-bg: #e0f2fe;
+            --badge-text: #0369a1;
+            --bg: #f1f5f9;
             --card-bg: #ffffff;
             --text-main: #0f172a;
             --text-muted: #64748b;
-            --border: #e2e8f0;
+            --border: #cbd5e1;
         }
 
         * {
@@ -29,209 +29,111 @@
             background-color: var(--bg);
             color: var(--text-main);
             margin: 0;
-            padding: 24px 16px;
+            padding: 16px;
         }
 
         .container {
-            max-width: 1280px;
+            max-width: 1400px;
             margin: 0 auto;
         }
 
-        /* Header */
-        .app-header {
+        /* 1. TOP SECTION: SEARCH & QUICK CONTROLS AT THE VERY TOP */
+        .top-controls {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 16px 20px;
+            border: 1px solid var(--border);
+            margin-bottom: 12px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.04);
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-            gap: 16px;
+            flex-direction: column;
+            gap: 12px;
         }
 
-        .app-title h1 {
-            margin: 0;
-            font-size: 1.6rem;
-            color: var(--text-main);
-        }
-
-        .app-title p {
-            margin: 4px 0 0 0;
-            color: var(--text-muted);
-            font-size: 0.9rem;
-        }
-
-        /* Drop Zone */
-        .drop-zone {
-            background: var(--card-bg);
-            border: 2px dashed #93c5fd;
-            border-radius: 16px;
-            padding: 28px 20px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            margin-bottom: 20px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-        }
-
-        .drop-zone:hover, .drop-zone.dragover {
-            background: #f0f9ff;
-            border-color: var(--primary);
-            transform: translateY(-1px);
-        }
-
-        .drop-zone-icon {
-            font-size: 32px;
-            color: var(--primary);
-            margin-bottom: 6px;
-        }
-
-        .btn-select {
-            background-color: var(--primary);
-            color: white;
-            padding: 10px 22px;
-            border-radius: 8px;
-            font-weight: 600;
-            display: inline-block;
-            margin-top: 8px;
-            transition: background 0.2s;
-        }
-
-        .btn-select:hover {
-            background-color: var(--primary-dark);
-        }
-
-        /* Stats Cards */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 14px;
-            margin-bottom: 20px;
-        }
-
-        .stat-card {
-            background: var(--card-bg);
-            padding: 14px 16px;
-            border-radius: 12px;
-            border: 1px solid var(--border);
-            box-shadow: 0 1px 2px rgba(0,0,0,0.03);
-        }
-
-        .stat-card .label {
-            font-size: 0.8rem;
-            color: var(--text-muted);
-        }
-
-        .stat-card .value {
-            font-size: 1.4rem;
-            font-weight: 700;
-            color: var(--primary);
-            margin-top: 2px;
-        }
-
-        /* Controls Section */
-        .controls-card {
-            background: var(--card-bg);
-            border-radius: 12px;
-            padding: 14px 16px;
-            border: 1px solid var(--border);
-            margin-bottom: 16px;
+        .search-row {
             display: flex;
             gap: 12px;
-            flex-wrap: wrap;
             align-items: center;
-            justify-content: space-between;
+            flex-wrap: wrap;
         }
 
-        .search-wrapper {
-            position: relative;
+        .search-box {
             flex: 1;
-            min-width: 260px;
+            min-width: 280px;
+            position: relative;
         }
 
-        .search-wrapper input {
+        .search-box input {
             width: 100%;
-            padding: 11px 16px;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            font-size: 0.95rem;
+            padding: 12px 18px;
+            border: 2px solid var(--primary);
+            border-radius: 10px;
+            font-size: 1.05rem;
             outline: none;
-            background: #f8fafc;
-        }
-
-        .search-wrapper input:focus {
-            border-color: var(--primary);
             background: #ffffff;
-            box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.1);
+            font-weight: 500;
         }
 
-        .action-btns {
+        .search-box input:focus {
+            box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.2);
+        }
+
+        .stats-summary {
             display: flex;
-            gap: 8px;
-        }
-
-        .btn-action {
-            background: #f1f5f9;
-            color: #334155;
-            border: 1px solid var(--border);
-            padding: 9px 14px;
+            gap: 16px;
+            background: #f8fafc;
+            padding: 8px 16px;
             border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 0.85rem;
+            border: 1px solid var(--border);
+            font-size: 0.88rem;
+            color: var(--text-muted);
         }
 
-        .btn-action:hover {
-            background: #e2e8f0;
+        .stats-summary span strong {
+            color: var(--primary);
+            font-size: 1rem;
         }
 
-        .btn-danger {
-            color: #dc2626;
-            border-color: #fecaca;
-            background: #fef2f2;
-        }
-
-        .btn-danger:hover {
-            background: #fee2e2;
-        }
-
-        /* Tabs Navigation */
+        /* Tabs for Categories & Files */
         .brand-tabs {
             display: flex;
             gap: 8px;
             overflow-x: auto;
-            border-bottom: 2px solid var(--border);
-            padding-bottom: 8px;
-            margin-bottom: 16px;
+            padding-bottom: 4px;
         }
 
         .brand-tab {
-            background: transparent;
+            background: #e2e8f0;
             border: none;
-            padding: 9px 18px;
+            padding: 10px 20px;
             border-radius: 8px;
             cursor: pointer;
-            font-weight: 600;
-            color: var(--text-muted);
+            font-weight: 700;
+            color: #475569;
             white-space: nowrap;
             transition: all 0.2s;
+            font-size: 0.95rem;
         }
 
         .brand-tab.active {
             background: var(--primary);
             color: white;
+            box-shadow: 0 2px 4px rgba(2, 132, 199, 0.3);
         }
 
-        /* Table Styling */
+        /* 2. TABLE DISPLAY AREA (TOP DISPLAY) */
         .table-container {
             background: var(--card-bg);
             border-radius: 12px;
             border: 1px solid var(--border);
             overflow: hidden;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            margin-bottom: 20px;
         }
 
         .table-scroll {
             overflow-x: auto;
-            max-height: 65vh;
+            max-height: 70vh;
         }
 
         table {
@@ -244,66 +146,116 @@
         thead {
             position: sticky;
             top: 0;
-            background: #f8fafc;
+            background: #0f172a;
+            color: #ffffff;
             z-index: 10;
         }
 
         th {
-            padding: 13px 16px;
-            color: #475569;
+            padding: 14px 16px;
             font-weight: 600;
             border-bottom: 2px solid var(--border);
             white-space: nowrap;
+            font-size: 0.92rem;
         }
 
         td {
             padding: 11px 16px;
             border-bottom: 1px solid var(--border);
-            color: #334155;
+            color: #1e293b;
             white-space: nowrap;
         }
 
         tbody tr:nth-child(even) {
-            background-color: #fafafa;
+            background-color: #f8fafc;
         }
 
         tbody tr:hover {
-            background-color: #f0f9ff;
+            background-color: #e0f2fe;
         }
 
         .brand-header-row {
-            background-color: #e0f2fe !important;
+            background-color: #3b82f6 !important;
+            color: #ffffff !important;
             font-weight: bold;
-            color: #0369a1;
+            font-size: 1rem;
         }
 
         .price-badge {
-            background-color: #ecfdf5;
-            color: #047857;
-            padding: 3px 8px;
+            background-color: #dcfce7;
+            color: #15803d;
+            padding: 4px 10px;
             border-radius: 6px;
-            font-weight: bold;
+            font-weight: 700;
             display: inline-block;
+            font-size: 0.95rem;
         }
 
-        .updated-badge {
-            background-color: var(--update-bg);
-            color: var(--update-text);
+        .type-tag {
+            background-color: var(--badge-bg);
+            color: var(--badge-text);
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .updated-tag {
+            background-color: #fef3c7;
+            color: #b45309;
             padding: 2px 6px;
             border-radius: 4px;
             font-size: 0.75rem;
-            margin-right: 6px;
+            margin-right: 4px;
             font-weight: bold;
         }
 
         .empty-state {
-            padding: 48px;
+            padding: 60px;
             text-align: center;
             color: var(--text-muted);
+            font-size: 1.1rem;
+        }
+
+        /* 3. BOTTOM SECTION: COMPACT UPLOAD & UPDATE ZONE */
+        .bottom-upload-section {
+            background: var(--card-bg);
+            border: 2px dashed #93c5fd;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .bottom-upload-section:hover {
+            background: #f0f9ff;
+            border-color: var(--primary);
+        }
+
+        .btn-upload {
+            background: var(--primary);
+            color: white;
+            padding: 8px 18px;
+            border-radius: 6px;
+            font-weight: 600;
+            display: inline-block;
+            margin-top: 6px;
+            cursor: pointer;
+        }
+
+        .btn-action {
+            background: #f1f5f9;
+            color: #334155;
+            border: 1px solid var(--border);
+            padding: 10px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
         }
 
         @media print {
-            .drop-zone, .controls-card, .brand-tabs { display: none; }
+            .top-controls, .bottom-upload-section { display: none; }
             body { padding: 0; background: white; }
             .table-container { border: none; box-shadow: none; }
             .table-scroll { max-height: none; }
@@ -313,99 +265,55 @@
 <body>
 
 <div class="container">
-    <header class="app-header">
-        <div class="app-title">
-            <h1>منظومة تحديث أسعار قطع وصيانة الهواتف</h1>
-            <p>نظام التحديث الذكي: يتم تحديث الأسعار والموديلات تلقائياً ومنع التكرار</p>
-        </div>
-    </header>
 
-    <!-- منطقة رفع الملفات -->
-    <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
-        <div class="drop-zone-icon">📥</div>
-        <div style="font-size: 1.05rem; font-weight: 600;">اسحب ملف الإكسل الجديد هنا للتحديث أو اضغط للاختيار</div>
-        <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">يقوم النظام بمطابقة الجهاز وتحديث سعره تلقائياً دون تكرار الصفوف</div>
-        <span class="btn-select">إدخال / تحديث ملف أسعار</span>
-        <input type="file" id="fileInput" multiple accept=".xlsx, .xls" style="display: none;" onchange="loadAndSmartMerge(this.files)">
+    <!-- 1. شريط البحث والتحكم والتبويبات في أعلى الصفحة -->
+    <div class="top-controls">
+        <div class="search-row">
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="🔍 ابحث بالموديل أو نوع الشاشة (مثل: OLED, INCELL, Original, S22, A013)..." onkeyup="applyFilter()">
+            </div>
+            <button class="btn-action" onclick="window.print()">🖨️ طباعة / PDF</button>
+        </div>
+
+        <!-- الإحصائيات السريعة -->
+        <div class="stats-summary">
+            <span>إجمالي القطع المعروضة: <strong id="statTotalRows">0</strong></span> |
+            <span>النتائج المطابقة للبحث: <strong id="statFilteredRows">0</strong></span>
+        </div>
+
+        <!-- تبويبات الماركات والقوائم -->
+        <div class="brand-tabs" id="brandTabs"></div>
     </div>
 
-    <!-- الإحصائيات -->
-    <div class="stats-grid">
-        <div class="stat-card">
-            <div class="label">الأقسام والماركات</div>
-            <div class="value" id="statBrandsCount">0</div>
-        </div>
-        <div class="stat-card">
-            <div class="label">إجمالي الموديلات والقطع</div>
-            <div class="value" id="statTotalItems">0</div>
-        </div>
-        <div class="stat-card">
-            <div class="label">عناصر تم تحديث أسعارها</div>
-            <div class="value" id="statUpdatedCount" style="color: var(--update-text);">0</div>
-        </div>
-        <div class="stat-card">
-            <div class="label">العناصر المعروضة للبحث</div>
-            <div class="value" id="statFilteredCount">0</div>
-        </div>
-    </div>
-
-    <!-- شريط البحث والتحكم -->
-    <div class="controls-card">
-        <div class="search-wrapper">
-            <input type="text" id="searchInput" placeholder="ابحث باسم الموديل (مثل S23, iPhone 11, A013)..." onkeyup="applyFilter()">
-        </div>
-        <div class="action-btns">
-            <button class="btn-action" onclick="window.print()">طباعة / PDF</button>
-            <button class="btn-action btn-danger" onclick="resetAllData()">مسح وبدء جديد</button>
-        </div>
-    </div>
-
-    <!-- تبويبات الماركات والأقسام -->
-    <div class="brand-tabs" id="brandTabs"></div>
-
-    <!-- جدول عرض البيانات المحدثة -->
+    <!-- 2. جدول العرض الرئيسي في الأعلى -->
     <div class="table-container">
         <div class="table-scroll" id="tableScroll">
-            <div class="empty-state">قم برفع ملفات أسعار الإكسل ليتم تفريغها وتحديثها هنا.</div>
+            <div class="empty-state">
+                يرجى رفع ملفات الإكسل من الأسفل لعرض كافة تفاصيل الأجهزة والأنواع والأسعار هنا.
+            </div>
         </div>
     </div>
+
+    <!-- 3. منطقة رفع وتحديث الملفات في أسفل الصفحة -->
+    <div class="bottom-upload-section" onclick="document.getElementById('fileInput').click()">
+        <span style="font-weight: bold; color: var(--primary-dark);">📥 رفع ملفات جديدة أو تحديث الأسعار</span>
+        <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">يمكنك اختيار ملفات Samsung, iPhone, SVC, أو الماركات الأخرى معاً. سيتم تحديث الأسعار تلقائياً ومنع التكرار.</div>
+        <span class="btn-upload">اختيار الملفات</span>
+        <input type="file" id="fileInput" multiple accept=".xlsx, .xls" style="display: none;" onchange="handleFiles(this.files)">
+    </div>
+
 </div>
 
 <script>
-    // الهيكل الرئيسي لتخزين البيانات الذكية
-    let masterData = {}; 
-    let activeBrandKey = '';
-    let totalUpdatedItemsCount = 0;
-
-    // إعداد منطقة السحب والإفلات
-    const dropZone = document.getElementById('dropZone');
-    ['dragenter', 'dragover'].forEach(ev => {
-        dropZone.addEventListener(ev, (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
-    });
-    ['dragleave', 'drop'].forEach(ev => {
-        dropZone.addEventListener(ev, (e) => { e.preventDefault(); dropZone.classList.remove('dragover'); });
-    });
-    dropZone.addEventListener('drop', (e) => {
-        e.preventDefault();
-        loadAndSmartMerge(e.dataTransfer.files);
-    });
-
-    // التعرف الذكي على نوع/ماركة الملف بناءً على اسمه
-    function detectBrandKey(filename) {
-        const fn = filename.toLowerCase();
-        if (fn.includes('samsung') || fn.includes('سامسونج')) return 'Samsung';
-        if (fn.includes('ipone') || fn.includes('iphone') || fn.includes('آيفون')) return 'iPhone';
-        if (fn.includes('svc') || fn.includes('service')) return 'SVC (قطع صيانة)';
-        if (fn.includes('inf') || fn.includes('huawei') || fn.includes('itel') || fn.includes('xiaomi') || fn.includes('redmi')) return 'Infinix & Huawei & Xiaomi';
-        return filename.replace(/\.[^/.]+$/, "");
-    }
+    let masterStore = {};
+    let activeBrand = '';
 
     function cleanStr(val) {
         if (val === null || val === undefined) return '';
         return String(val).replace(/\r?\n|\r/g, ' ').trim();
     }
 
-    function loadAndSmartMerge(files) {
+    function handleFiles(files) {
         if (!files.length) return;
 
         let promises = Array.from(files).map(file => {
@@ -414,14 +322,13 @@
                 reader.onload = function(e) {
                     const data = new Uint8Array(e.target.result);
                     const workbook = XLSX.read(data, { type: 'array' });
-                    const brandKey = detectBrandKey(file.name);
 
-                    // استخراج أول شيت فعال
+                    let brandKey = detectBrandKey(file.name);
                     let sheetName = workbook.SheetNames[0];
-                    const rawJson = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { header: 1, defval: '' });
+                    const rawRows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { header: 1, defval: '' });
 
-                    if (rawJson.length > 0) {
-                        processSmartMerge(brandKey, rawJson);
+                    if (rawRows.length > 0) {
+                        mergeSmartData(brandKey, rawRows);
                     }
                     resolve();
                 };
@@ -431,94 +338,90 @@
 
         Promise.all(promises).then(() => {
             renderBrandTabs();
-            if (!activeBrandKey || !masterData[activeBrandKey]) {
-                activeBrandKey = Object.keys(masterData)[0] || '';
+            if (!activeBrand || !masterStore[activeBrand]) {
+                activeBrand = Object.keys(masterStore)[0] || '';
             }
             renderBrandTabs();
             renderTable();
-            updateStats();
         });
     }
 
-    // خوارزمية التحديث الذكي ومنع التكرار
-    function processSmartMerge(brandKey, rawJson) {
-        // تحديد صف الهيدر
-        let headerRowIdx = 0;
-        for (let i = 0; i < Math.min(3, rawJson.length); i++) {
-            if (rawJson[i].some(c => cleanStr(c) !== '')) {
-                headerRowIdx = i;
+    function detectBrandKey(filename) {
+        const fn = filename.toLowerCase();
+        if (fn.includes('samsung') || fn.includes('سامسونج')) return 'Samsung';
+        if (fn.includes('ipone') || fn.includes('iphone') || fn.includes('آيفون')) return 'iPhone';
+        if (fn.includes('svc') || fn.includes('service')) return 'SVC (قطع صيانة)';
+        if (fn.includes('inf') || fn.includes('huawei') || fn.includes('itel') || fn.includes('xiaomi') || fn.includes('redmi')) return 'Infinix & Huawei & Xiaomi & Techno';
+        return filename.replace(/\.[^/.]+$/, "");
+    }
+
+    function mergeSmartData(brandKey, rawRows) {
+        let headerIdx = 0;
+        for (let i = 0; i < Math.min(3, rawRows.length); i++) {
+            if (rawRows[i].some(c => cleanStr(c) !== '')) {
+                headerIdx = i;
                 break;
             }
         }
 
-        const headers = rawJson[headerRowIdx].map(c => cleanStr(c));
+        const rawHeaders = rawRows[headerIdx].map(c => cleanStr(c));
 
-        if (!masterData[brandKey]) {
-            masterData[brandKey] = {
-                headers: headers,
-                itemsMap: {}, // خريطة لتخزين الموديل كمفتاح لمنع التكرار
+        if (!masterStore[brandKey]) {
+            masterStore[brandKey] = {
+                headers: rawHeaders,
+                itemsMap: {},
                 itemsList: []
             };
-        } else {
-            // تحديث الهيدر إذا كان الجديد أشمل
-            if (headers.length > masterData[brandKey].headers.length) {
-                masterData[brandKey].headers = headers;
-            }
         }
 
-        const currentStore = masterData[brandKey];
+        const store = masterStore[brandKey];
 
-        for (let r = headerRowIdx + 1; r < rawJson.length; r++) {
-            const row = rawJson[r];
+        for (let r = headerIdx + 1; r < rawRows.length; r++) {
+            const row = rawRows[r];
             if (!row || row.every(c => cleanStr(c) === '')) continue;
 
-            const nonEmp = row.filter(c => cleanStr(c) !== '');
-            const isBrandGroup = nonEmp.length === 1 && typeof nonEmp[0] === 'string' && isNaN(nonEmp[0]);
+            const nonNull = row.filter(c => cleanStr(c) !== '');
+            const isGroup = nonNull.length === 1 && typeof nonNull[0] === 'string' && isNaN(nonNull[0]);
 
-            if (isBrandGroup) {
-                const groupName = cleanStr(nonEmp[0]);
-                if (!currentStore.itemsMap['GROUP_' + groupName]) {
-                    const groupObj = { isGroup: true, name: groupName };
-                    currentStore.itemsMap['GROUP_' + groupName] = groupObj;
-                    currentStore.itemsList.push(groupObj);
+            if (isGroup) {
+                const groupName = cleanStr(nonNull[0]);
+                if (!store.itemsMap['GRP_' + groupName]) {
+                    const gObj = { isGroup: true, name: groupName };
+                    store.itemsMap['GRP_' + groupName] = gObj;
+                    store.itemsList.push(gObj);
                 }
                 continue;
             }
 
-            // الموديل يعتمد عادة على العمود الأول أو الثاني (رقم الجهاز / الكود)
-            let modelKey = cleanStr(row[1]) || cleanStr(row[0]);
-            if (!modelKey) continue;
+            let modelName = cleanStr(row[1]) || cleanStr(row[0]);
+            if (!modelName) continue;
 
-            const existingItem = currentStore.itemsMap[modelKey.toLowerCase()];
+            const key = modelName.toLowerCase();
+            const existing = store.itemsMap[key];
 
-            if (existingItem) {
-                // *** التحديث الذكي عند وجود الموديل سابقاً ***
-                let hasChange = false;
+            if (existing) {
+                // تحديث الأسعار الموجودة
                 for (let c = 0; c < row.length; c++) {
-                    const newVal = cleanStr(row[c]);
-                    if (newVal !== '' && existingItem.values[c] !== newVal) {
-                        existingItem.values[c] = newVal;
-                        hasChange = true;
+                    const val = cleanStr(row[c]);
+                    if (val !== '') {
+                        existing.values[c] = val;
                     }
                 }
-                if (hasChange) {
-                    existingItem.isUpdated = true;
-                    totalUpdatedItemsCount++;
-                }
+                existing.updated = true;
             } else {
-                // *** إضافة جهاز جديد إذا لم يكن موجوداً ***
-                const rowValues = [];
-                for (let c = 0; c < headers.length; c++) {
-                    rowValues.push(cleanStr(row[c]));
+                // إضافة الموديل بجميع خانات أنواع الشاشات
+                const vals = [];
+                for (let c = 0; c < rawHeaders.length; c++) {
+                    vals.push(cleanStr(row[c]));
                 }
-                const newItem = {
+                const itemObj = {
                     isGroup: false,
-                    key: modelKey.toLowerCase(),
-                    values: rowValues,
-                    isUpdated: false
+                    key: key,
+                    values: vals,
+                    updated: false
                 };
-                currentStore.itemsMap[modelKey.toLowerCase()] = newItem;
-                currentStore.itemsList.push(newItem);
+                store.itemsMap[key] = itemObj;
+                store.itemsList.push(itemObj);
             }
         }
     }
@@ -527,36 +430,29 @@
         const container = document.getElementById('brandTabs');
         container.innerHTML = '';
 
-        Object.keys(masterData).forEach(bKey => {
+        Object.keys(masterStore).forEach(b => {
             const btn = document.createElement('button');
-            btn.className = `brand-tab ${bKey === activeBrandKey ? 'active' : ''}`;
-            btn.innerText = bKey;
+            btn.className = `brand-tab ${b === activeBrand ? 'active' : ''}`;
+            btn.innerText = b;
             btn.onclick = () => {
-                activeBrandKey = bKey;
+                activeBrand = b;
                 renderBrandTabs();
                 renderTable();
             };
             container.appendChild(btn);
         });
-
-        document.getElementById('statBrandsCount').innerText = Object.keys(masterData).length;
     }
 
     function renderTable() {
         const container = document.getElementById('tableScroll');
-        if (!activeBrandKey || !masterData[activeBrandKey]) {
+        if (!activeBrand || !masterStore[activeBrand]) {
             container.innerHTML = '<div class="empty-state">لا توجد بيانات متاحة</div>';
             return;
         }
 
-        const brandData = masterData[activeBrandKey];
-        const headers = brandData.headers;
-        const items = brandData.itemsList;
-
-        if (items.length === 0) {
-            container.innerHTML = '<div class="empty-state">القائمة فارغة</div>';
-            return;
-        }
+        const data = masterStore[activeBrand];
+        const headers = data.headers;
+        const items = data.itemsList;
 
         let html = '<table><thead><tr>';
         headers.forEach(h => {
@@ -564,17 +460,20 @@
         });
         html += '</tr></thead><tbody>';
 
+        let totalCount = 0;
+
         items.forEach(item => {
             if (item.isGroup) {
                 html += `<tr class="brand-header-row"><td colspan="${headers.length}">${item.name.toUpperCase()}</td></tr>`;
             } else {
+                totalCount++;
                 html += '<tr>';
                 for (let c = 0; c < headers.length; c++) {
                     const val = item.values[c] || '';
                     const isPrice = !isNaN(val) && val !== '' && Number(val) > 0;
                     
-                    if (c === 1 && item.isUpdated) {
-                        html += `<td>${val} <span class="updated-badge">تم التحديث</span></td>`;
+                    if (c === 1 && item.updated) {
+                        html += `<td>${val} <span class="updated-tag">تحديث</span></td>`;
                     } else if (isPrice) {
                         html += `<td><span class="price-badge">${val}</span></td>`;
                     } else {
@@ -588,19 +487,16 @@
         html += '</tbody></table>';
         container.innerHTML = html;
 
+        document.getElementById('statTotalRows').innerText = totalCount;
         applyFilter();
-        updateStats();
     }
 
     function applyFilter() {
         const q = document.getElementById('searchInput').value.toLowerCase().trim();
-        const table = document.querySelector('table tbody');
-        if (!table) return;
-
-        const trs = table.getElementsByTagName('tr');
+        const trs = document.querySelectorAll('table tbody tr');
         let visible = 0;
 
-        Array.from(trs).forEach(tr => {
+        trs.forEach(tr => {
             if (tr.classList.contains('brand-header-row')) {
                 tr.style.display = '';
                 return;
@@ -614,27 +510,7 @@
             }
         });
 
-        document.getElementById('statFilteredCount').innerText = visible;
-    }
-
-    function updateStats() {
-        let totalItems = 0;
-        Object.keys(masterData).forEach(bk => {
-            totalItems += masterData[bk].itemsList.filter(i => !i.isGroup).length;
-        });
-        document.getElementById('statTotalItems').innerText = totalItems;
-        document.getElementById('statUpdatedCount').innerText = totalUpdatedItemsCount;
-    }
-
-    function resetAllData() {
-        if (confirm("هل انت محقق من مسح جميع البيانات المرفوعة للبدء من جديد؟")) {
-            masterData = {};
-            activeBrandKey = '';
-            totalUpdatedItemsCount = 0;
-            renderBrandTabs();
-            renderTable();
-            updateStats();
-        }
+        document.getElementById('statFilteredRows').innerText = visible;
     }
 </script>
 
