@@ -201,7 +201,6 @@
             margin-bottom: 10px;
         }
 
-        /* 🎨 تجميع الاسم واللون بجانب بعضهما */
         .title-wrap {
             display: flex;
             align-items: center;
@@ -215,7 +214,6 @@
             color: var(--text-dark);
         }
 
-        /* 🎨 شارة اللون بجانب الاسم */
         .model-color-tag {
             background: #e0f2fe;
             color: #0369a1;
@@ -244,7 +242,6 @@
             font-weight: bold;
         }
 
-        /* معلومات إضافية مثل الملاحظات الإضافية */
         .info-tags-wrap {
             display: flex;
             flex-wrap: wrap;
@@ -401,7 +398,7 @@
     <!-- SHIRIT CONTROL & SEARCH -->
     <div class="top-panel">
         <div class="search-box-wrap">
-            <input type="text" id="searchInput" placeholder="🔍 ابحث بالموديل أو نوع الشاشة (مثال: Note9, OLED, INCELL)..." onkeyup="applyFilter()">
+            <input type="text" id="searchInput" placeholder="🔍 ابحث باسم الموديل فقط (مثال: 12, Note9, A52)..." onkeyup="applyFilter()">
         </div>
 
         <div class="action-btns">
@@ -445,7 +442,6 @@
         loadFromStorage();
     });
 
-    /* إدارات الوضع المظلم */
     function toggleDarkMode() {
         document.body.classList.toggle('dark');
         const isDark = document.body.classList.contains('dark');
@@ -569,7 +565,6 @@
             }
         }
 
-        // تحديد عمود اسم الموديل الذكي (لتخطي عمود التسلسل الأرقام مثل NO أو #)
         let modelColIndex = 0;
         const col0Header = (detectedHeaders[0] || '').toLowerCase().trim();
         const seqHeaders = ['no', 'n', '#', 'م', 'ت', 'تسلسل', 'الرقم', 'id'];
@@ -688,7 +683,6 @@
         return 'bg-other';
     }
 
-    /* 🛠️ دالة العرض بوضع اللون بجانب اسم الموديل */
     function renderDisplay() {
         const container = document.getElementById('displayArea');
         if (!activeBrand || !masterStore[activeBrand]) {
@@ -711,6 +705,7 @@
                 } else {
                     totalCount++;
                     const modelTitle = item.modelName || item.values[modelIdx] || 'غير معنون';
+                    const safeModelAttr = modelTitle.toLowerCase().replace(/"/g, '&quot;');
                     
                     let colorHtml = '';
                     let infoTagsHtml = '';
@@ -723,7 +718,6 @@
                         const qTitle = headers[c] || ('نوع ' + c);
 
                         if (val && val !== '-' && val !== '') {
-                            // إذا كانت القيمة رقماً (سعر)
                             if (!isNaN(val) && Number(val) > 0) {
                                 const badgeClass = getQualityBadgeClass(qTitle);
                                 pricesHtml += `
@@ -733,11 +727,9 @@
                                 </div>`;
                             } else {
                                 const lowerTitle = qTitle.toLowerCase();
-                                // 🎨 فحص ما إذا كان العمود مخصصاً للون لطباعته بجانب الاسم مباشرة
                                 if (lowerTitle.includes('لون') || lowerTitle.includes('color')) {
                                     colorHtml += `<span class="model-color-tag">🎨 ${val}</span>`;
                                 } else {
-                                    // أية قيم نصية أخرى (مثل ملاحظات) تظهر تحت العنوان
                                     infoTagsHtml += `
                                     <div class="info-badge">
                                         <span class="info-title">${qTitle}:</span>
@@ -749,7 +741,7 @@
                     }
 
                     html += `
-                    <div class="item-card" data-item="true">
+                    <div class="item-card" data-item="true" data-model="${safeModelAttr}">
                         <div class="card-header">
                             <div class="title-wrap">
                                 <span class="model-title">${modelTitle}</span>
@@ -782,7 +774,10 @@
                     html += `<tr data-group="true" class="group-banner"><td colspan="${headers.length}">${item.name.toUpperCase()}</td></tr>`;
                 } else {
                     totalCount++;
-                    html += '<tr data-item="true">';
+                    const modelTitle = item.modelName || item.values[modelIdx] || '';
+                    const safeModelAttr = modelTitle.toLowerCase().replace(/"/g, '&quot;');
+
+                    html += `<tr data-item="true" data-model="${safeModelAttr}">`;
                     for (let c = 0; c < headers.length; c++) {
                         if (c === 0 && modelIdx === 1) continue;
 
@@ -808,33 +803,27 @@
         applyFilter();
     }
 
+    /* 🎯 دالة البحث المحصورة باسم الموديل فقط */
     function applyFilter() {
         const q = document.getElementById('searchInput').value.toLowerCase().trim();
         let visible = 0;
 
-        if (currentViewMode === 'cards') {
-            const cards = document.querySelectorAll('.item-card');
-            cards.forEach(card => {
-                const text = card.innerText.toLowerCase();
-                if (text.includes(q)) {
-                    card.style.display = '';
-                    visible++;
-                } else {
-                    card.style.display = 'none';
-                }
-            });
-        } else {
-            const rows = document.querySelectorAll('table tbody tr[data-item="true"]');
-            rows.forEach(row => {
-                const text = row.innerText.toLowerCase();
-                if (text.includes(q)) {
-                    row.style.display = '';
-                    visible++;
-                } else {
-                    row.style.display = 'none';
-                }
-            });
-        }
+        const selector = currentViewMode === 'cards' 
+            ? '.item-card[data-item="true"]' 
+            : 'table tbody tr[data-item="true"]';
+
+        const elements = document.querySelectorAll(selector);
+
+        elements.forEach(el => {
+            const modelName = (el.getAttribute('data-model') || '').toLowerCase();
+            
+            if (q === '' || modelName.includes(q)) {
+                el.style.display = '';
+                visible++;
+            } else {
+                el.style.display = 'none';
+            }
+        });
 
         document.getElementById('statFilteredRows').innerText = visible;
     }
