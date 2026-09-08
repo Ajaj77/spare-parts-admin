@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>لوحة أسعار قطع الغيار - الإصدار الاحترافي V2</title>
+<title>لوحة أسعار قطع الغيار المباشرة</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
@@ -38,25 +38,13 @@ th{background:#1a2332;color:#94a3b8}
 </head>
 <body>
 <div class="wrap">
-<div class="card">
-  <h1>🔧 لوحة إدارة أسعار قطع الغيار</h1>
-  <div class="muted">V2.2 — نظام معالجة ملفات الأكسل واستيراد الأسعار المطور</div>
-</div>
-
-<div id="loginCard" class="card">
-  <h2>تسجيل دخول الأدمن</h2>
-  <input id="email" type="email" inputmode="email" autocomplete="username" placeholder="البريد الإلكتروني">
-  <input id="password" type="password" autocomplete="current-password" placeholder="كلمة المرور" style="margin-top:10px">
-  <button id="loginBtn" style="margin-top:12px">تسجيل الدخول</button>
-  <div id="loginStatus" class="status hidden"></div>
-</div>
-
-<main id="app" class="hidden">
   <div class="card">
-    <div id="who"></div>
-    <div class="row" style="margin-top:12px">
-      <button id="logoutBtn" class="secondary">تسجيل الخروج</button>
-      <button id="versionBtn" class="secondary">فحص النسخة</button>
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <div>
+        <h1>🔧 لوحة إدارة أسعار قطع الغيار</h1>
+        <div class="muted">النسخة المباشرة والسريعة (بدون تسجيل دخول)</div>
+      </div>
+      <button id="versionBtn" class="secondary" style="width:auto">فحص النسخة</button>
     </div>
   </div>
 
@@ -66,37 +54,38 @@ th{background:#1a2332;color:#94a3b8}
     <button data-tab="history">🕘 السجل</button>
   </div>
 
-  <section id="tab-import" class="card">
-    <h2>استيراد ملف أسعار جديد</h2>
-    <input id="file" type="file" accept=".xlsx,.xls,.csv">
-    <div class="row" style="margin-top:12px">
-      <select id="category">
-        <option value="Samsung">Samsung</option>
-        <option value="iPhone">iPhone</option>
-        <option value="SVC">SVC (قطع صيانة)</option>
-        <option value="Android">Android (متعدد الماركات)</option>
-      </select>
-      <button id="previewBtn" class="secondary">معاينة البيانات</button>
-    </div>
-    <div id="preview" class="hidden"></div>
-    <button id="importBtn" disabled style="margin-top:12px">بدء الاستيراد وحفظ البيانات</button>
-    <div id="importStatus" class="status hidden"></div>
-  </section>
+  <main id="app">
+    <section id="tab-import" class="card">
+      <h2>استيراد ملف أسعار جديد</h2>
+      <input id="file" type="file" accept=".xlsx,.xls,.csv">
+      <div class="row" style="margin-top:12px">
+        <select id="category">
+          <option value="Samsung">Samsung</option>
+          <option value="iPhone">iPhone</option>
+          <option value="SVC">SVC (قطع صيانة)</option>
+          <option value="Android">Android (متعدد الماركات)</option>
+        </select>
+        <button id="previewBtn" class="secondary">معاينة البيانات</button>
+      </div>
+      <div id="preview" class="hidden"></div>
+      <button id="importBtn" disabled style="margin-top:12px">بدء الاستيراد وحفظ البيانات</button>
+      <div id="importStatus" class="status hidden"></div>
+    </section>
 
-  <section id="tab-products" class="card hidden">
-    <h2>المنتجات المسجلة</h2>
-    <div class="row">
-      <input id="productSearch" placeholder="ابحث بالموديل، الكود أو اللون…">
-      <button id="searchBtn" class="secondary">بحث</button>
-    </div>
-    <div id="productsTable" style="margin-top:12px"></div>
-  </section>
+    <section id="tab-products" class="card hidden">
+      <h2>المنتجات المسجلة</h2>
+      <div class="row">
+        <input id="productSearch" placeholder="ابحث بالموديل، الكود أو اللون…">
+        <button id="searchBtn" class="secondary">بحث</button>
+      </div>
+      <div id="productsTable" style="margin-top:12px"></div>
+    </section>
 
-  <section id="tab-history" class="card hidden">
-    <h2>سجل التحديثات</h2>
-    <div id="historyTable">جاري التحميل…</div>
-  </section>
-</main>
+    <section id="tab-history" class="card hidden">
+      <h2>سجل التحديثات</h2>
+      <div id="historyTable">جاري التحميل…</div>
+    </section>
+  </main>
 </div>
 
 <script>
@@ -105,7 +94,7 @@ th{background:#1a2332;color:#94a3b8}
 
 const SUPABASE_URL="https://zqwyzzvszwifwplqkydw.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY="sb_publishable_YZXVg7MZl1ev57CnpPgIPQ_8Ox_b-qX";
-let client=null, currentUser=null, rows=[], selectedFile=null;
+let client=null, rows=[], selectedFile=null;
 
 const $=id=>document.getElementById(id);
 
@@ -147,85 +136,6 @@ function headerIndex(a){
   return 1;
 }
 
-window.addEventListener("error", function(e){
-  const box = $("loginStatus");
-  if(box && !$("loginCard").classList.contains("hidden")){
-    status(box, "خطأ JavaScript:\n" + (e.message || "خطأ غير معروف"));
-  }
-});
-
-function setLoggedOut(){
-  currentUser = null;
-  $("app").classList.add("hidden");
-  $("loginCard").classList.remove("hidden");
-}
-
-async function checkAdmin(showErrors = false){
-  try{
-    const result = await client.auth.getSession();
-    if(result.error) throw result.error;
-    const session = result.data.session;
-    if(!session){ setLoggedOut(); return false; }
-    currentUser = session.user;
-
-    const p = await client.from("user_profiles")
-      .select("name,role,active")
-      .eq("id", currentUser.id)
-      .maybeSingle();
-
-    if(p.error) throw p.error;
-
-    if(!p.data || p.data.role !== "admin" || p.data.active !== true){
-      await client.auth.signOut();
-      if(showErrors) status($("loginStatus"), "تم تسجيل الدخول لكن الحساب ليس Admin أو أنه غير نشط.");
-      setLoggedOut();
-      return false;
-    }
-
-    $("who").innerHTML = "👤 " + esc(p.data.name || currentUser.email) + " — <span class='badge'>ADMIN</span>";
-    $("loginCard").classList.add("hidden");
-    $("app").classList.remove("hidden");
-    return true;
-  }catch(e){
-    if(showErrors) status($("loginStatus"), "خطأ في التحقق من الحساب:\n" + (e.message || e));
-    setLoggedOut();
-    return false;
-  }
-}
-
-async function login(){
-  const email = $("email").value.trim();
-  const password = $("password").value;
-
-  if(!email || !password){
-    status($("loginStatus"), "يرجى كتابة البريد الإلكتروني وكلمة المرور.");
-    return;
-  }
-
-  $("loginBtn").disabled = true;
-  $("loginBtn").textContent = "جاري الاتصال…";
-  status($("loginStatus"), "جاري التحقق من البيانات…", true);
-
-  try{
-    if(!client) throw new Error("لم يتم تحميل مكتبة Supabase بنجاح.");
-    const result = await client.auth.signInWithPassword({email, password});
-    if(result.error) throw result.error;
-
-    status($("loginStatus"), "تم الدخول، جاري فحص الصلاحيات…", true);
-    await checkAdmin(true);
-  }catch(e){
-    status($("loginStatus"), "❌ فشل تسجيل الدخول:\n" + (e.message || e));
-  }finally{
-    $("loginBtn").disabled = false;
-    $("loginBtn").textContent = "تسجيل الدخول";
-  }
-}
-
-$("loginBtn").addEventListener("click", login);
-$("password").addEventListener("keydown", e => { if(e.key === "Enter") login(); });
-$("email").addEventListener("keydown", e => { if(e.key === "Enter") $("password").focus(); });
-$("logoutBtn").onclick = async () => { await client.auth.signOut(); setLoggedOut(); };
-
 $("versionBtn").onclick = async () => {
   try{
     const r = await client.from("app_settings").select("value,updated_at").eq("key", "database_version").maybeSingle();
@@ -249,7 +159,7 @@ $("file").onchange = e => {
   $("importBtn").disabled = true;
 };
 
-// --- خوارزميات تحليل ملفات Excel المفصلة ---
+// --- خوارزميات تحليل ملفات Excel ---
 
 function parseSamsung(wb){
   const a = matrix(wb.Sheets[wb.SheetNames[0]]), out = [];
@@ -317,14 +227,12 @@ function parseAndroid(wb){
     const joined = nonE.join(" ").toLowerCase();
     const firstCol = (row[0] || "").toLowerCase();
 
-    // فحص ما إذا كان السطر يمثل ترويسة ماركة رئيسية
     if(nonE.length <= 2 && knownBrands.some(b => firstCol.includes(b) || joined.includes(b)) && !/model|modle|lcd|aaa|ori/i.test(joined)){
       currentBrand = row[0] || row[1] || currentBrand;
       currentHeaders = [];
       continue;
     }
 
-    // فحص ما إذا كان السطر هو ترويسة الأعمدة للماركة الحالية
     if(/model|modle/i.test(joined)){
       currentHeaders = [];
       for(let j = 2; j < row.length; j++){
@@ -411,12 +319,11 @@ $("importBtn").onclick = async () => {
     const selectedCat = $("category").value;
     const initialCid = await getCategory(selectedCat);
 
-    // 1. تسجيل عملية الاستيراد في جدول السجل
     const u = await client.from("updates").insert({
       category_id: initialCid,
       file_name: selectedFile.name,
       version: 0,
-      updated_by: currentUser.id,
+      updated_by: null,
       total_products: rows.length,
       status: "processing"
     }).select("id").single();
@@ -429,7 +336,6 @@ $("importBtn").onclick = async () => {
 
     let count = 0, priceCount = 0;
 
-    // 2. معالجة البيانات على دفعات بحد أقصى 40 عنصر للدفعة
     for(let i = 0; i < rows.length; i += 40){
       const batch = rows.slice(i, i + 40);
 
@@ -451,7 +357,6 @@ $("importBtn").onclick = async () => {
         };
       }));
 
-      // إدراج أو تحديث المنتجات
       const p = await client.from("products").upsert(payload, {onConflict:"product_key"}).select("id,product_key");
       if(p.error) throw p.error;
 
@@ -498,7 +403,7 @@ $("importBtn").onclick = async () => {
 
 async function loadProducts(){
   const rawQ = $("productSearch").value.trim();
-  const q = rawQ.replace(/[\(\),%]/g, ""); // تنظيف نصوص البحث لحماية استعلامات PostgREST
+  const q = rawQ.replace(/[\(\),%]/g, "");
   
   let r = client.from("products").select("model,item_code,color,active,updated_at").order("updated_at", {ascending:false}).limit(100);
   if(q) r = r.or(`model.ilike.%${q}%,item_code.ilike.%${q}%,color.ilike.%${q}%`);
@@ -522,13 +427,12 @@ async function loadHistory(){
     "</table></div>";
 }
 
-async function start(){
+function start(){
   try{
-    if(!window.supabase) throw new Error("لم يتم تحميل مكتبة Supabase. تحقق من اتصال الإنترنت.");
+    if(!window.supabase) throw new Error("لم يتم تحميل مكتبة Supabase.");
     client = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
-    await checkAdmin(false);
   }catch(e){
-    status($("loginStatus"), "❌ خطأ في تشغيل لوحة التحكم:\n" + (e.message || e));
+    alert("❌ خطأ في تشغيل لوحة التحكم:\n" + (e.message || e));
   }
 }
 
