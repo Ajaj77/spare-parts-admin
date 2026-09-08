@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#1a1a2e">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>📱 دليل أسعار قطع الغيار</title>
+<title>📱 المتقن | دليل أسعار قطع الغيار</title>
 <link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoi2K/Ys9mI2YrZhiDYt9in2YTYqNit2YrYryDYp9mE2YXYsdmK2K8iLCJzaG9ydF9uYW1lIjoi2KfZhNmF2LHZitivIiwic3RhcnRfdXJsIjoiLiIsImRpc3BsYXkiOiJzdGFuZGFsb25lIiwiYmFja2dyb3VuZF9jb2xvciI6IiMxYTFhMmUiLCJ0aGVtZV9jb2xvciI6IiMxYTFhMmUifQ==">
 <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.mini.min.js"></script>
 <style>
@@ -307,33 +307,13 @@
     box-shadow: 0 4px 20px rgba(0,212,255,0.3);
   }
   .toast.show { transform: translateX(-50%) translateY(0); }
-  .edit-price-btn {
-    background: rgba(0,212,255,0.1);
-    border: 1px solid #00d4ff;
-    color: #00d4ff;
-    padding: 4px 10px;
-    border-radius: 8px;
-    font-size: 11px;
-    cursor: pointer;
-    margin-right: 8px;
-  }
-  .price-input {
-    background: #0f0f1a;
-    border: 1px solid #2a2a4a;
-    color: #fff;
-    padding: 4px 10px;
-    border-radius: 8px;
-    font-size: 13px;
-    width: 80px;
-    text-align: center;
-  }
   .highlight { background: rgba(255,215,0,0.2); color: #ffd700; padding: 0 2px; border-radius: 3px; }
 </style>
 </head>
 <body>
 
 <div class="app-header">
-  <div class="app-title">📱 دليل أسعار قطع الغيار</div>
+  <div class="app-title">📱 المتقن &nbsp;|&nbsp; دليل أسعار قطع الغيار</div>
   <div class="search-box">
     <span class="search-icon">🔍</span>
     <input type="text" id="searchInput" placeholder="ابحث عن موديل (مثال: S23, iPhone 14, Note 10...)" autocomplete="off">
@@ -350,7 +330,7 @@
 <div class="product-list" id="productList"></div>
 
 <div class="bottom-nav">
-  <button class="nav-btn secondary" onclick="resetData()">🔄 استعادة</button>
+  
   <button class="nav-btn primary" onclick="openUploadModal()">📁 تحديث الأسعار</button>
 </div>
 
@@ -391,7 +371,7 @@ function init() {
   if (saved) {
     try {
       products = JSON.parse(saved);
-      showToast('✅ تم تحميل البيانات المحفوظة');
+      showToast('✅ المتقن: تم تحميل البيانات المحفوظة');
     } catch(e) {
       products = [...DEFAULT_DATA];
     }
@@ -464,7 +444,7 @@ function renderProducts() {
         <div class="price-row">
           <span class="price-label">${k}</span>
           <span style="display:flex; align-items:center;">
-            <button class="edit-price-btn" onclick="event.stopPropagation(); editPrice(${p.id}, '${k}')">✏️</button>
+            
             <span class="price-value">${v}</span>
           </span>
         </div>
@@ -502,21 +482,6 @@ function toggleCard(id) {
   card.classList.toggle('expanded');
 }
 
-// ===== EDIT PRICE =====
-function editPrice(id, priceKey) {
-  const p = products.find(x => x.id === id);
-  if (!p) return;
-  const current = p.prices[priceKey];
-  const newVal = prompt(`تعديل سعر "${p.model}" - ${priceKey}:
-السعر الحالي: ${current}`, current);
-  if (newVal !== null && newVal.trim() !== '') {
-    p.prices[priceKey] = newVal.trim();
-    saveData();
-    renderProducts();
-    showToast('✅ تم تحديث السعر');
-  }
-}
-
 // ===== SAVE =====
 function saveData() {
   localStorage.setItem('sparePartsData', JSON.stringify(products));
@@ -525,21 +490,6 @@ function saveData() {
 
 function updateStats() {
   document.getElementById('totalCount').textContent = `📦 ${products.length} منتج`;
-}
-
-// ===== RESET =====
-function resetData() {
-  if (confirm('هل تريد استعادة الأسعار الأصلية؟ سيتم حذف جميع التعديلات!')) {
-    products = [...DEFAULT_DATA];
-    localStorage.removeItem('sparePartsData');
-    currentBrand = 'الكل';
-    searchQuery = '';
-    document.getElementById('searchInput').value = '';
-    renderBrands();
-    renderProducts();
-    updateStats();
-    showToast('🔄 تم استعادة البيانات الأصلية');
-  }
 }
 
 // ===== UPLOAD MODAL =====
