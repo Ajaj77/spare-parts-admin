@@ -1,749 +1,539 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>دليل أسعار الشاشات وقطع الغيار</title>
-    <!-- مكتبة SheetJS لقراءة ملفات الإكسل -->
-    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-    <style>
-        :root {
-            --primary: #0284c7;
-            --primary-dark: #0369a1;
-            --bg: #f8fafc;
-            --card-bg: #ffffff;
-            --text-dark: #0f172a;
-            --text-muted: #64748b;
-            --border: #e2e8f0;
-            --danger: #ef4444;
-            --success: #10b981;
-        }
-
-        body.dark {
-            --bg: #0f172a;
-            --card-bg: #1e293b;
-            --text-dark: #f8fafc;
-            --text-muted: #94a3b8;
-            --border: #334155;
-        }
-
-        * {
-            box-sizing: border-box;
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            margin: 0;
-            padding: 0;
-        }
-
-        body {
-            background-color: var(--bg);
-            color: var(--text-dark);
-            padding: 10px;
-            font-size: 14px;
-            direction: rtl;
-            transition: background-color 0.3s, color 0.3s;
-        }
-
-        .app-container {
-            max-width: 900px;
-            margin: 0 auto;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .top-panel {
-            background: var(--card-bg);
-            border-radius: 12px;
-            padding: 12px;
-            border: 1px solid var(--border);
-            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-
-        .search-box-wrap {
-            position: relative;
-            width: 100%;
-        }
-
-        .search-box-wrap input {
-            width: 100%;
-            padding: 12px 14px;
-            border: 2px solid var(--primary);
-            border-radius: 10px;
-            font-size: 1rem;
-            outline: none;
-            font-weight: 700;
-            background: var(--card-bg);
-            color: var(--text-dark);
-        }
-
-        .search-box-wrap input:focus {
-            box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.2);
-        }
-
-        .action-btns {
-            display: flex;
-            gap: 6px;
-            flex-wrap: wrap;
-        }
-
-        .btn {
-            flex: 1;
-            min-width: 80px;
-            padding: 9px 10px;
-            border: none;
-            border-radius: 8px;
-            font-weight: 700;
-            font-size: 0.82rem;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 4px;
-            transition: all 0.2s;
-        }
-
-        .btn:active { transform: scale(0.98); }
-        .btn-upload { background: var(--primary); color: white; }
-        .btn-clear { background: #fee2e2; color: #991b1b; }
-        body.dark .btn-clear { background: #451a1a; color: #fca5a5; }
-        .btn-toggle { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
-        body.dark .btn-toggle { background: #0c4a6e; color: #7dd3fc; border-color: #0284c7; }
-        .btn-theme { background: #f1f5f9; color: #334155; border: 1px solid var(--border); }
-        body.dark .btn-theme { background: #334155; color: #f8fafc; }
-
-        .stats-bar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: rgba(0,0,0,0.03);
-            padding: 8px 12px;
-            border-radius: 8px;
-            font-size: 0.82rem;
-            color: var(--text-muted);
-            font-weight: 600;
-        }
-
-        body.dark .stats-bar { background: #0f172a; }
-        .stats-bar strong { color: var(--primary); font-size: 0.95rem; }
-        .save-indicator { color: var(--success); font-size: 0.78rem; font-weight: 800; }
-
-        .brand-tabs {
-            display: flex;
-            gap: 6px;
-            overflow-x: auto;
-            padding-bottom: 2px;
-        }
-
-        .brand-tab {
-            background: #e2e8f0;
-            border: none;
-            padding: 7px 16px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 700;
-            color: #475569;
-            white-space: nowrap;
-            font-size: 0.85rem;
-        }
-
-        body.dark .brand-tab { background: #334155; color: #cbd5e1; }
-        .brand-tab.active {
-            background: var(--primary);
-            color: white !important;
-            box-shadow: 0 2px 4px rgba(2, 132, 199, 0.3);
-        }
-
-        .cards-grid {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .item-card {
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 12px 14px;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.03);
-        }
-
-        .card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid var(--border);
-            padding-bottom: 8px;
-            margin-bottom: 10px;
-        }
-
-        .title-wrap {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-
-        .model-title {
-            font-size: 1.15rem;
-            font-weight: 800;
-            color: var(--text-dark);
-        }
-
-        .updated-tag {
-            background: #fef3c7;
-            color: #b45309;
-            font-size: 0.7rem;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-weight: bold;
-        }
-
-        .qualities-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-            gap: 8px;
-        }
-
-        .quality-box {
-            background: var(--bg);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 8px 10px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 4px;
-            text-align: center;
-        }
-
-        .quality-name {
-            font-size: 0.78rem;
-            font-weight: 700;
-            color: var(--text-muted);
-            text-transform: uppercase;
-        }
-
-        .price-tag {
-            font-size: 1rem;
-            font-weight: 800;
-            padding: 4px 10px;
-            border-radius: 6px;
-            width: 100%;
-            text-align: center;
-        }
-
-        .bg-original { background-color: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
-        body.dark .bg-original { background-color: #064e3b; color: #6ee7b7; border-color: #047857; }
-        .bg-oled { background-color: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
-        body.dark .bg-oled { background-color: #0c4a6e; color: #7dd3fc; border-color: #0284c7; }
-        .bg-incell { background-color: #fef3c7; color: #b45309; border: 1px solid #fde68a; }
-        body.dark .bg-incell { background-color: #78350f; color: #fde047; border-color: #a16207; }
-        .bg-other { background-color: #f3e8ff; color: #6b21a8; border: 1px solid #e9d5ff; }
-        body.dark .bg-other { background-color: #581c87; color: #e9d5ff; border-color: #7e22ce; }
-
-        .group-banner {
-            background: var(--primary);
-            color: #ffffff;
-            padding: 12px 16px;
-            border-radius: 10px;
-            font-weight: 900;
-            font-size: 1.05rem;
-            text-align: center;
-            margin-top: 6px;
-            letter-spacing: 0.5px;
-            box-shadow: 0 2px 6px rgba(2, 132, 199, 0.25);
-            text-transform: uppercase;
-        }
-
-        .table-card {
-            background: var(--card-bg);
-            border-radius: 12px;
-            border: 1px solid var(--border);
-            overflow: hidden;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.03);
-        }
-
-        .table-wrapper { max-height: 70vh; overflow-y: auto; }
-        table { width: 100%; border-collapse: collapse; text-align: center; }
-        thead { position: sticky; top: 0; background: #0f172a; color: #ffffff; z-index: 20; }
-        body.dark thead { background: #0284c7; }
-        th { padding: 10px 6px; font-weight: 700; font-size: 0.82rem; border-bottom: 2px solid var(--border); }
-        th:first-child, td:first-child { text-align: right; padding-right: 12px; font-weight: 800; }
-        td { padding: 10px 6px; border-bottom: 1px solid var(--border); font-size: 0.88rem; }
-        tbody tr:nth-child(even) { background-color: rgba(0,0,0,0.02); }
-        body.dark tbody tr:nth-child(even) { background-color: rgba(255,255,255,0.03); }
-
-        .empty-box {
-            padding: 50px 20px;
-            text-align: center;
-            color: var(--text-muted);
-            font-size: 0.95rem;
-        }
-    </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>لوحة أسعار قطع الغيار - الإصدار الاحترافي V2</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#0b1016;color:#eee;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:960px;margin:auto;padding:16px}
+.card{background:#131b25;border:1px solid #2b3745;border-radius:16px;padding:20px;margin-bottom:16px;box-shadow:0 4px 12px rgba(0,0,0,0.3)}
+h1{font-size:22px;margin:0 0 6px;color:#3b82f6}
+h2{font-size:18px;margin:0 0 14px;color:#f3f4f6}
+.muted{color:#9aa7b5;font-size:13px}
+input,select,button{width:100%;padding:12px 14px;border-radius:10px;border:1px solid #3a4756;background:#0d141c;color:#fff;font-size:14px;outline:none;transition:all .2s}
+input:focus,select:focus{border-color:#3b82f6;box-shadow:0 0 0 2px rgba(59,130,246,0.2)}
+button{background:#2563eb;border:0;font-weight:600;cursor:pointer}
+button:hover{background:#1d4ed8}
+button:disabled{opacity:.5;cursor:not-allowed}
+button.secondary{background:#1e293b;border:1px solid #334155;color:#e2e8f0}
+button.secondary:hover{background:#334155}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.status{margin-top:12px;padding:12px 16px;border-radius:10px;background:#0c141d;white-space:pre-wrap;line-height:1.6;font-size:13px}
+.ok{border:1px solid #10b981;color:#34d399;background:#062016}
+.err{border:1px solid #ef4444;color:#f87171;background:#241014}
+.hidden{display:none}
+.tabs{display:flex;gap:8px;overflow-x:auto;margin-bottom:14px;padding-bottom:4px}
+.tabs button{width:auto;white-space:nowrap;padding:10px 18px;border-radius:8px;background:#1e293b;border:1px solid #334155}
+.tabs button.active{background:#2563eb;border-color:#2563eb;color:#fff}
+table{width:100%;border-collapse:collapse;font-size:13px;margin-top:10px}
+th,td{padding:10px;border-bottom:1px solid #2b3745;text-align:right;white-space:nowrap}
+th{background:#1a2332;color:#94a3b8}
+.badge{display:inline-block;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:bold;background:#1e293b;color:#38bdf8}
+@media(max-width:650px){.row{grid-template-columns:1fr}}
+</style>
 </head>
 <body>
+<div class="wrap">
+<div class="card">
+  <h1>🔧 لوحة إدارة أسعار قطع الغيار</h1>
+  <div class="muted">V2.2 — نظام معالجة ملفات الأكسل واستيراد الأسعار المطور</div>
+</div>
 
-<div class="app-container">
+<div id="loginCard" class="card">
+  <h2>تسجيل دخول الأدمن</h2>
+  <input id="email" type="email" inputmode="email" autocomplete="username" placeholder="البريد الإلكتروني">
+  <input id="password" type="password" autocomplete="current-password" placeholder="كلمة المرور" style="margin-top:10px">
+  <button id="loginBtn" style="margin-top:12px">تسجيل الدخول</button>
+  <div id="loginStatus" class="status hidden"></div>
+</div>
 
-    <div class="top-panel">
-        <div class="search-box-wrap">
-            <input type="text" id="searchInput" placeholder="🔍 ابحث باسم الموديل فقط (مثال: 12, Note9, A52)..." onkeyup="applyFilter()">
-        </div>
-
-        <div class="action-btns">
-            <button class="btn btn-upload" onclick="document.getElementById('fileInput').click()">📥 رفع إكسل</button>
-            <button class="btn btn-toggle" id="viewToggleBtn" onclick="toggleViewMode()">📱 عرض الكروت</button>
-            <button class="btn btn-theme" id="themeToggleBtn" onclick="toggleDarkMode()">🌙 الوضع المظلم</button>
-            <button class="btn btn-clear" onclick="clearAllData()">🗑️ مسح البيانات</button>
-            <input type="file" id="fileInput" multiple accept=".xlsx, .xls" style="display: none;" onchange="handleFiles(this.files)">
-        </div>
-
-        <div class="stats-bar">
-            <span>النتائج المطابقة: <strong id="statFilteredRows">0</strong> / <strong id="statTotalRows">0</strong></span>
-            <span class="save-indicator" id="saveStatus">💾 محفوظ تلقائياً</span>
-        </div>
-
-        <div class="brand-tabs" id="brandTabs"></div>
+<main id="app" class="hidden">
+  <div class="card">
+    <div id="who"></div>
+    <div class="row" style="margin-top:12px">
+      <button id="logoutBtn" class="secondary">تسجيل الخروج</button>
+      <button id="versionBtn" class="secondary">فحص النسخة</button>
     </div>
+  </div>
 
-    <div id="displayArea">
-        <div class="empty-box">
-            لا توجد بيانات محفوظة حالياً.<br>اضغط على <strong>"📥 رفع إكسل"</strong> لإضافة الملفات.
-        </div>
+  <div class="tabs">
+    <button class="active" data-tab="import">📥 استيراد Excel</button>
+    <button data-tab="products">📦 المنتجات</button>
+    <button data-tab="history">🕘 السجل</button>
+  </div>
+
+  <section id="tab-import" class="card">
+    <h2>استيراد ملف أسعار جديد</h2>
+    <input id="file" type="file" accept=".xlsx,.xls,.csv">
+    <div class="row" style="margin-top:12px">
+      <select id="category">
+        <option value="Samsung">Samsung</option>
+        <option value="iPhone">iPhone</option>
+        <option value="SVC">SVC (قطع صيانة)</option>
+        <option value="Android">Android (متعدد الماركات)</option>
+      </select>
+      <button id="previewBtn" class="secondary">معاينة البيانات</button>
     </div>
+    <div id="preview" class="hidden"></div>
+    <button id="importBtn" disabled style="margin-top:12px">بدء الاستيراد وحفظ البيانات</button>
+    <div id="importStatus" class="status hidden"></div>
+  </section>
 
+  <section id="tab-products" class="card hidden">
+    <h2>المنتجات المسجلة</h2>
+    <div class="row">
+      <input id="productSearch" placeholder="ابحث بالموديل، الكود أو اللون…">
+      <button id="searchBtn" class="secondary">بحث</button>
+    </div>
+    <div id="productsTable" style="margin-top:12px"></div>
+  </section>
+
+  <section id="tab-history" class="card hidden">
+    <h2>سجل التحديثات</h2>
+    <div id="historyTable">جاري التحميل…</div>
+  </section>
+</main>
 </div>
 
 <script>
-    const STORAGE_KEY = 'PHONE_PARTS_STORE_V5';
-    let masterStore = {};
-    let activeBrand = '';
-    let currentViewMode = 'cards';
+(function(){
+"use strict";
 
-    const IGNORE_HEADER_WORDS = [
-        'no', 'n/o', '#', 'م', 'ت', 'تسلسل', 'الرقم', 'id', 'modle', 'model', 'الموديل', 
-        'الصنف', 'الموديل/الصنف', 'original', 'oled', 'oled2', 'incell', 'incel', 'copy', 
-        'price', 'السعر', 'سعر', 'نوع', 'جودة'
-    ];
+const SUPABASE_URL="https://zqwyzzvszwifwplqkydw.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY="sb_publishable_YZXVg7MZl1ev57CnpPgIPQ_8Ox_b-qX";
+let client=null, currentUser=null, rows=[], selectedFile=null;
 
-    const COLOR_WORDS = [
-        'black', 'blk', 'white', 'wht', 'green', 'grn', 'blue', 'blu', 'pink', 'gold', 
-        'silver', 'slv', 'violet', 'lavender', 'gray', 'grey', 'yellow', 'red', 'orange', 
-        'purple', 'no frame', 'frame', 'black+frame', 'blk+frame', 'black inner', 'white inner',
-        'blue inner', 'green inner', 'gold inner', 'silver inner'
-    ];
+const $=id=>document.getElementById(id);
 
-    function cleanStr(val) {
-        if (val === null || val === undefined) return '';
-        return String(val).replace(/\r?\n|\r/g, ' ').trim();
+function status(el, msg, ok=false){
+  if(!el) return;
+  el.textContent = msg;
+  el.className = "status " + (ok ? "ok" : "err");
+  el.classList.remove("hidden");
+}
+
+function esc(s){
+  return String(s??"").replace(/[&<>"']/g, x => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[x]));
+}
+
+function clean(v){ return v == null ? "" : String(v).trim(); }
+
+function num(v){
+  if(v == null || clean(v) === "") return null;
+  const s = clean(v).replace(/,/g, "");
+  const n = Number(s);
+  return Number.isFinite(n) ? n : null;
+}
+
+function slug(v){
+  return clean(v).toLowerCase().replace(/\s+/g, "_").replace(/[^\p{L}\p{N}._+/-]/gu, "");
+}
+
+function key(c, m, i, col){
+  return [c, m, i || "", col || ""].map(slug).join("|");
+}
+
+function matrix(ws){ return XLSX.utils.sheet_to_json(ws, {header:1, defval:"", raw:true}); }
+
+function headerIndex(a){
+  for(let i = 0; i < Math.min(a.length, 15); i++){
+    const s = a[i].map(clean).join(" ").toLowerCase();
+    if(/model|modle|item|original/i.test(s)) return i;
+  }
+  return 1;
+}
+
+window.addEventListener("error", function(e){
+  const box = $("loginStatus");
+  if(box && !$("loginCard").classList.contains("hidden")){
+    status(box, "خطأ JavaScript:\n" + (e.message || "خطأ غير معروف"));
+  }
+});
+
+function setLoggedOut(){
+  currentUser = null;
+  $("app").classList.add("hidden");
+  $("loginCard").classList.remove("hidden");
+}
+
+async function checkAdmin(showErrors = false){
+  try{
+    const result = await client.auth.getSession();
+    if(result.error) throw result.error;
+    const session = result.data.session;
+    if(!session){ setLoggedOut(); return false; }
+    currentUser = session.user;
+
+    const p = await client.from("user_profiles")
+      .select("name,role,active")
+      .eq("id", currentUser.id)
+      .maybeSingle();
+
+    if(p.error) throw p.error;
+
+    if(!p.data || p.data.role !== "admin" || p.data.active !== true){
+      await client.auth.signOut();
+      if(showErrors) status($("loginStatus"), "تم تسجيل الدخول لكن الحساب ليس Admin أو أنه غير نشط.");
+      setLoggedOut();
+      return false;
     }
 
-    document.addEventListener('DOMContentLoaded', () => {
-        loadDarkMode();
-        loadFromStorage();
-    });
+    $("who").innerHTML = "👤 " + esc(p.data.name || currentUser.email) + " — <span class='badge'>ADMIN</span>";
+    $("loginCard").classList.add("hidden");
+    $("app").classList.remove("hidden");
+    return true;
+  }catch(e){
+    if(showErrors) status($("loginStatus"), "خطأ في التحقق من الحساب:\n" + (e.message || e));
+    setLoggedOut();
+    return false;
+  }
+}
 
-    function toggleDarkMode() {
-        document.body.classList.toggle('dark');
-        const isDark = document.body.classList.contains('dark');
-        localStorage.setItem('DARK_MODE', isDark ? 'enabled' : 'disabled');
-        document.getElementById('themeToggleBtn').innerText = isDark ? '☀️ الوضع المضيء' : '🌙 الوضع المظلم';
+async function login(){
+  const email = $("email").value.trim();
+  const password = $("password").value;
+
+  if(!email || !password){
+    status($("loginStatus"), "يرجى كتابة البريد الإلكتروني وكلمة المرور.");
+    return;
+  }
+
+  $("loginBtn").disabled = true;
+  $("loginBtn").textContent = "جاري الاتصال…";
+  status($("loginStatus"), "جاري التحقق من البيانات…", true);
+
+  try{
+    if(!client) throw new Error("لم يتم تحميل مكتبة Supabase بنجاح.");
+    const result = await client.auth.signInWithPassword({email, password});
+    if(result.error) throw result.error;
+
+    status($("loginStatus"), "تم الدخول، جاري فحص الصلاحيات…", true);
+    await checkAdmin(true);
+  }catch(e){
+    status($("loginStatus"), "❌ فشل تسجيل الدخول:\n" + (e.message || e));
+  }finally{
+    $("loginBtn").disabled = false;
+    $("loginBtn").textContent = "تسجيل الدخول";
+  }
+}
+
+$("loginBtn").addEventListener("click", login);
+$("password").addEventListener("keydown", e => { if(e.key === "Enter") login(); });
+$("email").addEventListener("keydown", e => { if(e.key === "Enter") $("password").focus(); });
+$("logoutBtn").onclick = async () => { await client.auth.signOut(); setLoggedOut(); };
+
+$("versionBtn").onclick = async () => {
+  try{
+    const r = await client.from("app_settings").select("value,updated_at").eq("key", "database_version").maybeSingle();
+    if(r.error) throw r.error;
+    status($("importStatus"), "الإصدار الحالي للبيانات: " + (r.data?.value || "0") + "\nآخر تحديث: " + (r.data?.updated_at || "-"), true);
+  }catch(e){ status($("importStatus"), e.message || String(e)); }
+};
+
+document.querySelectorAll(".tabs button").forEach(b => b.onclick = () => {
+  document.querySelectorAll(".tabs button").forEach(x => x.classList.remove("active"));
+  b.classList.add("active");
+  document.querySelectorAll("main section").forEach(x => x.classList.add("hidden"));
+  $("tab-" + b.dataset.tab).classList.remove("hidden");
+  if(b.dataset.tab === "products") loadProducts();
+  if(b.dataset.tab === "history") loadHistory();
+});
+
+$("file").onchange = e => {
+  selectedFile = e.target.files[0] || null;
+  $("preview").classList.add("hidden");
+  $("importBtn").disabled = true;
+};
+
+// --- خوارزميات تحليل ملفات Excel المفصلة ---
+
+function parseSamsung(wb){
+  const a = matrix(wb.Sheets[wb.SheetNames[0]]), out = [];
+  const hIdx = headerIndex(a);
+  for(let i = hIdx + 1; i < a.length; i++){
+    const r = a[i], model = clean(r[2]);
+    if(!model) continue;
+    const code = clean(r[0]) || clean(r[1]);
+    const prices = [
+      ["original", num(r[3])],
+      ["oled", num(r[4])],
+      ["oled2", num(r[5])],
+      ["incell", num(r[6])]
+    ].filter(x => x[1] !== null);
+    if(prices.length) out.push({category:"Samsung", model, itemCode:code, color:"", prices});
+  }
+  return out;
+}
+
+function parseIphone(wb){
+  const a = matrix(wb.Sheets[wb.SheetNames[0]]), out = [];
+  const types = ["copy", "second_hand", "change_glass", "fog", "original_gx", "copy_gx", "wd_incell", "hd_utc_tft"];
+  const hIdx = headerIndex(a);
+  for(let i = hIdx + 1; i < a.length; i++){
+    const r = a[i], model = clean(r[1]);
+    if(!model) continue;
+    const prices = [];
+    for(let j = 2; j < 10; j++){
+      const n = num(r[j]);
+      if(n !== null) prices.push([types[j-2] || "price_"+(j-1), n]);
+    }
+    if(prices.length) out.push({category:"iPhone", model, itemCode:clean(r[0]), color:"", prices});
+  }
+  return out;
+}
+
+function parseSvc(wb){
+  const a = matrix(wb.Sheets[wb.SheetNames[0]]), out = [];
+  let lastItem = "";
+  const hIdx = headerIndex(a);
+  for(let i = hIdx + 1; i < a.length; i++){
+    const r = a[i];
+    const rawItem = clean(r[1]);
+    const item = rawItem || lastItem;
+    if(rawItem) lastItem = rawItem;
+    const color = clean(r[2]), price = num(r[3]);
+    if(item && price !== null){
+      out.push({category:"SVC", model:item, itemCode:clean(r[0]), color, prices:[["price", price]]});
+    }
+  }
+  return out;
+}
+
+function parseAndroid(wb){
+  const a = matrix(wb.Sheets[wb.SheetNames[0]]), out = [];
+  let currentBrand = "Android";
+  let currentHeaders = [];
+  const knownBrands = ["huawei","honor","infinx","infinix","tecno","itel","redmi","poco","xiaomi","oppo","realme","vivo","nokia","zte","black shark"];
+
+  for(let i = 0; i < a.length; i++){
+    const row = a[i].map(clean);
+    const nonE = row.filter(Boolean);
+    if(!nonE.length) continue;
+
+    const joined = nonE.join(" ").toLowerCase();
+    const firstCol = (row[0] || "").toLowerCase();
+
+    // فحص ما إذا كان السطر يمثل ترويسة ماركة رئيسية
+    if(nonE.length <= 2 && knownBrands.some(b => firstCol.includes(b) || joined.includes(b)) && !/model|modle|lcd|aaa|ori/i.test(joined)){
+      currentBrand = row[0] || row[1] || currentBrand;
+      currentHeaders = [];
+      continue;
     }
 
-    function loadDarkMode() {
-        if (localStorage.getItem('DARK_MODE') === 'enabled') {
-            document.body.classList.add('dark');
-            const btn = document.getElementById('themeToggleBtn');
-            if (btn) btn.innerText = '☀️ الوضع المضيء';
+    // فحص ما إذا كان السطر هو ترويسة الأعمدة للماركة الحالية
+    if(/model|modle/i.test(joined)){
+      currentHeaders = [];
+      for(let j = 2; j < row.length; j++){
+        const h = row[j].toLowerCase().replace(/[\n\s]+/g, "_");
+        currentHeaders.push(h || "price_" + (j-1));
+      }
+      continue;
+    }
+
+    const model = row[1] || row[0];
+    if(!model || /no|model|modle/i.test(model)) continue;
+
+    const prices = [];
+    for(let j = 2; j < row.length; j++){
+      const n = num(row[j]);
+      if(n !== null){
+        const hIdx = j - 2;
+        const hName = currentHeaders[hIdx] || ("price_" + (j-1));
+        prices.push([hName, n]);
+      }
+    }
+
+    if(prices.length){
+      out.push({category: currentBrand, model, itemCode: row[0], color: "", prices});
+    }
+  }
+  return out;
+}
+
+async function preview(){
+  if(!selectedFile){ status($("importStatus"), "يرجى اختيار ملف Excel أولاً."); return; }
+  try{
+    const wb = XLSX.read(await selectedFile.arrayBuffer(), {type:"array"});
+    const cat = $("category").value;
+    
+    rows = cat === "Samsung" ? parseSamsung(wb) :
+           cat === "iPhone"  ? parseIphone(wb) :
+           cat === "SVC"     ? parseSvc(wb) : parseAndroid(wb);
+
+    if(!rows.length) throw new Error("لم يتم العثور على بيانات أسعار صالحة في الملف.");
+
+    let html = "<div class='status ok'>تم تحليل الملف بنجاح! تم استخراج " + rows.length + " منتج. (عرض أول 10 عناصر):</div>";
+    html += "<div style='overflow:auto'><table><tr><th>الماركة</th><th>الموديل</th><th>الكود</th><th>اللون</th><th>الأسعار المستخرجة</th></tr>";
+    html += rows.slice(0, 10).map(x => 
+      "<tr><td><span class='badge'>" + esc(x.category) + "</span></td><td>" + esc(x.model) + "</td><td>" + esc(x.itemCode) + "</td><td>" + esc(x.color) + "</td><td>" + esc(x.prices.map(p=>p[0]+": "+p[1]+" د.ل").join(" | ")) + "</td></tr>"
+    ).join("");
+    html += "</table></div>";
+
+    $("preview").innerHTML = html;
+    $("preview").classList.remove("hidden");
+    $("importBtn").disabled = false;
+    status($("importStatus"), "المعاينة جاهزة لعملية الحفظ.", true);
+  }catch(e){
+    status($("importStatus"), "خطأ في قراءة وتحليل الملف:\n" + (e.message || e));
+  }
+}
+
+$("previewBtn").onclick = preview;
+
+async function getCategory(name){
+  let r = await client.from("categories").select("id").eq("name", name).maybeSingle();
+  if(r.error) throw r.error;
+  if(r.data) return r.data.id;
+  
+  r = await client.from("categories").insert({name, code: slug(name)}).select("id").single();
+  if(r.error) throw r.error;
+  return r.data.id;
+}
+
+async function bump(){
+  let r = await client.from("app_settings").select("value").eq("key", "database_version").maybeSingle();
+  if(r.error) throw r.error;
+  const v = Number(r.data?.value || 0) + 1;
+  r = await client.from("app_settings").upsert({key:"database_version", value:String(v), updated_at:new Date().toISOString()}, {onConflict:"key"});
+  if(r.error) throw r.error;
+  return v;
+}
+
+$("importBtn").onclick = async () => {
+  $("importBtn").disabled = true;
+  let updateId = null;
+
+  try{
+    const selectedCat = $("category").value;
+    const initialCid = await getCategory(selectedCat);
+
+    // 1. تسجيل عملية الاستيراد في جدول السجل
+    const u = await client.from("updates").insert({
+      category_id: initialCid,
+      file_name: selectedFile.name,
+      version: 0,
+      updated_by: currentUser.id,
+      total_products: rows.length,
+      status: "processing"
+    }).select("id").single();
+
+    if(u.error) throw u.error;
+    updateId = u.data.id;
+
+    const catMap = new Map();
+    catMap.set(selectedCat, initialCid);
+
+    let count = 0, priceCount = 0;
+
+    // 2. معالجة البيانات على دفعات بحد أقصى 40 عنصر للدفعة
+    for(let i = 0; i < rows.length; i += 40){
+      const batch = rows.slice(i, i + 40);
+
+      const payload = await Promise.all(batch.map(async x => {
+        const itemCat = x.category || selectedCat;
+        if(!catMap.has(itemCat)){
+          const cid = await getCategory(itemCat);
+          catMap.set(itemCat, cid);
         }
-    }
+        const pKey = key(itemCat, x.model, x.itemCode, x.color);
+        return {
+          category_id: catMap.get(itemCat),
+          item_code: x.itemCode || null,
+          model: x.model,
+          color: x.color || null,
+          product_key: pKey,
+          active: true,
+          updated_at: new Date().toISOString()
+        };
+      }));
 
-    function saveToStorage() {
-        try {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(masterStore));
-            document.getElementById('saveStatus').innerText = '💾 تم الحفظ تلقائياً';
-        } catch (e) {
-            console.error('Storage error', e);
+      // إدراج أو تحديث المنتجات
+      const p = await client.from("products").upsert(payload, {onConflict:"product_key"}).select("id,product_key");
+      if(p.error) throw p.error;
+
+      const ids = new Map(p.data.map(x => [x.product_key, x.id]));
+      const pricePayload = [];
+
+      batch.forEach((x, idx) => {
+        const pKey = payload[idx].product_key;
+        const id = ids.get(pKey);
+        if(id){
+          x.prices.forEach(z => pricePayload.push({
+            product_id: id,
+            price_type: z[0],
+            price: z[1],
+            currency: "LYD",
+            updated_at: new Date().toISOString()
+          }));
         }
+      });
+
+      if(pricePayload.length){
+        const q = await client.from("prices").upsert(pricePayload, {onConflict:"product_id,price_type"});
+        if(q.error) throw q.error;
+        priceCount += pricePayload.length;
+      }
+
+      count += batch.length;
+      status($("importStatus"), `جاري رفع وحفظ البيانات… (${count}/${rows.length})\nعدد الأسعار المسجلة: ${priceCount}`, true);
     }
 
-    function loadFromStorage() {
-        const saved = localStorage.getItem(STORAGE_KEY);
-        if (saved) {
-            try {
-                masterStore = JSON.parse(saved);
-                const keys = Object.keys(masterStore);
-                if (keys.length > 0) {
-                    activeBrand = keys[0];
-                    renderBrandTabs();
-                    renderDisplay();
-                }
-            } catch (e) {
-                console.error(e);
-            }
-        }
+    const v = await bump();
+    await client.from("updates").update({version: v, status: "completed"}).eq("id", updateId);
+    status($("importStatus"), `✅ اكتملت عملية الاستيراد بنجاح!\nإجمالي المنتجات: ${count}\nإجمالي الأسعار: ${priceCount}\nرقم النسخة المحدثة: ${v}`, true);
+
+  }catch(e){
+    if(updateId){
+      await client.from("updates").update({status: "failed"}).eq("id", updateId);
     }
+    status($("importStatus"), "❌ حدث خطأ أثناء الاستيراد:\n" + (e.message || e));
+  }finally{
+    $("importBtn").disabled = false;
+  }
+};
 
-    function clearAllData() {
-        if (confirm('هل أنت متأكد من مسح جميع البيانات والملفات المحفوظة؟')) {
-            localStorage.removeItem(STORAGE_KEY);
-            masterStore = {};
-            activeBrand = '';
-            document.getElementById('brandTabs').innerHTML = '';
-            document.getElementById('displayArea').innerHTML = '<div class="empty-box">تم مسح البيانات بنجاح.<br>قم برفع ملفات جديدة.</div>';
-            document.getElementById('statFilteredRows').innerText = '0';
-            document.getElementById('statTotalRows').innerText = '0';
-            document.getElementById('fileInput').value = '';
-        }
-    }
+async function loadProducts(){
+  const rawQ = $("productSearch").value.trim();
+  const q = rawQ.replace(/[\(\),%]/g, ""); // تنظيف نصوص البحث لحماية استعلامات PostgREST
+  
+  let r = client.from("products").select("model,item_code,color,active,updated_at").order("updated_at", {ascending:false}).limit(100);
+  if(q) r = r.or(`model.ilike.%${q}%,item_code.ilike.%${q}%,color.ilike.%${q}%`);
+  
+  r = await r;
+  if(r.error){ $("productsTable").textContent = r.error.message; return; }
 
-    function toggleViewMode() {
-        currentViewMode = currentViewMode === 'cards' ? 'table' : 'cards';
-        document.getElementById('viewToggleBtn').innerText = currentViewMode === 'cards' ? '📱 عرض الكروت' : '📊 عرض الجدول';
-        renderDisplay();
-    }
+  $("productsTable").innerHTML = "<div class='muted' style='margin-bottom:8px'>أول 100 نتيجة:</div><div style='overflow:auto'><table><tr><th>الموديل</th><th>الكود</th><th>اللون</th><th>الحالة</th></tr>" +
+    (r.data || []).map(p => `<tr><td>${esc(p.model)}</td><td>${esc(p.item_code)}</td><td>${esc(p.color)}</td><td>${p.active ? "نشط" : "غير نشط"}</td></tr>`).join("") +
+    "</table></div>";
+}
 
-    function handleFiles(files) {
-        if (!files.length) return;
+$("searchBtn").onclick = loadProducts;
 
-        let promises = Array.from(files).map(file => {
-            return new Promise(resolve => {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const data = new Uint8Array(e.target.result);
-                    const workbook = XLSX.read(data, { type: 'array' });
-                    let brandKey = detectBrandKey(file.name);
-                    let sheetName = workbook.SheetNames[0];
-                    const rawRows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { header: 1, defval: '' });
+async function loadHistory(){
+  const r = await client.from("updates").select("file_name,version,total_products,status,created_at").order("created_at", {ascending:false}).limit(50);
+  if(r.error){ $("historyTable").textContent = r.error.message; return; }
 
-                    if (rawRows.length > 0) {
-                        processSmartData(brandKey, file.name, rawRows);
-                    }
-                    resolve();
-                };
-                reader.readAsArrayBuffer(file);
-            });
-        });
+  $("historyTable").innerHTML = "<div style='overflow:auto'><table><tr><th>اسم الملف</th><th>الإصدار</th><th>عدد المنتجات</th><th>الحالة</th><th>التاريخ</th></tr>" +
+    (r.data || []).map(x => `<tr><td>${esc(x.file_name)}</td><td><span class='badge'>v${x.version}</span></td><td>${x.total_products}</td><td>${esc(x.status)}</td><td>${esc(new Date(x.created_at).toLocaleString('ar-LY'))}</td></tr>`).join("") +
+    "</table></div>";
+}
 
-        Promise.all(promises).then(() => {
-            saveToStorage();
-            if (!activeBrand || !masterStore[activeBrand]) {
-                activeBrand = Object.keys(masterStore)[0] || '';
-            }
-            renderBrandTabs();
-            renderDisplay();
-        });
-    }
+async function start(){
+  try{
+    if(!window.supabase) throw new Error("لم يتم تحميل مكتبة Supabase. تحقق من اتصال الإنترنت.");
+    client = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+    await checkAdmin(false);
+  }catch(e){
+    status($("loginStatus"), "❌ خطأ في تشغيل لوحة التحكم:\n" + (e.message || e));
+  }
+}
 
-    function detectBrandKey(filename) {
-        const fn = filename.toLowerCase();
-        if (fn.includes('samsung') || fn.includes('سامسونج')) return 'Samsung';
-        if (fn.includes('ipone') || fn.includes('iphone') || fn.includes('آيفون')) return 'iPhone';
-        if (fn.includes('svc') || fn.includes('service')) return 'SVC (قطع صيانة)';
-        if (fn.includes('inf') || fn.includes('huawei') || fn.includes('xiaomi') || fn.includes('redmi')) return 'Infinix & Xiaomi';
-        return filename.replace(/\.[^/.]+$/, "");
-    }
-
-    function formatBannerText(filename, brandKey) {
-        let str = filename.replace(/\.[^/.]+$/, "").toUpperCase();
-        
-        let dateMatch = str.match(/(\d{1,4}[\/\.-]\d{1,2}[\/\.-]\d{1,4})/);
-        let dateStr = '2026.08.10';
-        
-        if (dateMatch) {
-            let rawDate = dateMatch[0].replace(/[\/-]/g, '.');
-            let parts = rawDate.split('.');
-            if (parts.length === 3) {
-                if (parts[0].length === 2 && parts[2].length === 4) {
-                    dateStr = `${parts[2]}.${parts[1]}.${parts[0]}`;
-                } else if (parts[0].length === 4) {
-                    dateStr = `${parts[0]}.${parts[1]}.${parts[2]}`;
-                } else {
-                    dateStr = rawDate;
-                }
-            }
-        }
-
-        let cleanBrandName = brandKey.toUpperCase();
-        if (cleanBrandName.includes('IPHONE')) cleanBrandName = 'IPHONE LCD';
-        
-        return `PRICE OF ${cleanBrandName} DATE ${dateStr}`;
-    }
-
-    function isColorOnly(text) {
-        if (!text) return false;
-        let lower = text.toLowerCase().trim();
-        return COLOR_WORDS.includes(lower);
-    }
-
-    function isHeaderRow(rowStrList) {
-        let matches = 0;
-        rowStrList.forEach(s => {
-            if (IGNORE_HEADER_WORDS.includes(s.toLowerCase().trim())) {
-                matches++;
-            }
-        });
-        return matches >= 2;
-    }
-
-    function processSmartData(brandKey, fileName, rawRows) {
-        let maxCols = 0;
-        for (let r = 0; r < Math.min(20, rawRows.length); r++) {
-            if (rawRows[r] && rawRows[r].length > maxCols) maxCols = rawRows[r].length;
-        }
-
-        let modelColIndex = 0;
-        let numCount = 0;
-        let col1HasText = false;
-
-        for (let r = 0; r < Math.min(15, rawRows.length); r++) {
-            let v0 = cleanStr(rawRows[r][0]);
-            let v1 = cleanStr(rawRows[r][1]);
-            if (v0 && !isNaN(v0) && Number(v0) < 500) numCount++;
-            if (v1 && isNaN(v1) && v1.length > 1) col1HasText = true;
-        }
-
-        if (numCount >= 3 && col1HasText) {
-            modelColIndex = 1;
-        }
-
-        let headers = new Array(maxCols).fill('');
-        for (let c = 0; c < maxCols; c++) {
-            for (let r = 0; r < Math.min(10, rawRows.length); r++) {
-                let cellVal = cleanStr(rawRows[r][c]);
-                if (cellVal && isNaN(cellVal) && cellVal.length > 1 && !IGNORE_HEADER_WORDS.includes(cellVal.toLowerCase())) {
-                    headers[c] = cellVal;
-                    break;
-                }
-            }
-            if (!headers[c]) headers[c] = (c === modelColIndex) ? 'الموديل/الصنف' : ('نوع ' + c);
-        }
-
-        if (!masterStore[brandKey]) {
-            masterStore[brandKey] = {
-                bannerTitle: formatBannerText(fileName, brandKey),
-                headers: headers,
-                modelColIndex: modelColIndex,
-                itemsMap: {},
-                itemsList: []
-            };
-        }
-
-        const store = masterStore[brandKey];
-        store.bannerTitle = formatBannerText(fileName, brandKey);
-        store.headers = headers;
-
-        let lastValidModel = '';
-
-        for (let r = 0; r < rawRows.length; r++) {
-            const row = rawRows[r];
-            if (!row || row.every(c => cleanStr(c) === '')) continue;
-
-            const rowStrings = row.map(c => cleanStr(c));
-            if (isHeaderRow(rowStrings)) continue;
-
-            let cellModel = cleanStr(row[modelColIndex]);
-
-            if (IGNORE_HEADER_WORDS.includes(cellModel.toLowerCase())) continue;
-
-            if (!cellModel || isColorOnly(cellModel)) {
-                cellModel = lastValidModel;
-            } else {
-                lastValidModel = cellModel;
-            }
-
-            if (!cellModel) continue;
-
-            const modelKey = cellModel.toLowerCase();
-
-            if (!store.itemsMap[modelKey]) {
-                const itemObj = {
-                    isGroup: false,
-                    modelName: cellModel,
-                    key: modelKey,
-                    variantsMap: {},
-                    updated: false
-                };
-                store.itemsMap[modelKey] = itemObj;
-                store.itemsList.push(itemObj);
-            }
-
-            const itemObj = store.itemsMap[modelKey];
-
-            let colorOrQuality = '';
-            let price = '';
-
-            for (let c = modelColIndex + 1; c < row.length; c++) {
-                let val = cleanStr(row[c]);
-                if (!val) continue;
-
-                if (!isNaN(val) && Number(val) > 0) {
-                    price = val;
-                } else if (isNaN(val)) {
-                    if (headers[c] && !headers[c].startsWith('نوع ')) {
-                        colorOrQuality = headers[c];
-                    } else {
-                        colorOrQuality = val;
-                    }
-                }
-            }
-
-            if (price && colorOrQuality) {
-                itemObj.variantsMap[colorOrQuality] = price;
-            } else if (price && !colorOrQuality) {
-                let defaultQuality = headers[modelColIndex + 1] || 'السعر';
-                itemObj.variantsMap[defaultQuality] = price;
-            }
-        }
-    }
-
-    function renderBrandTabs() {
-        const container = document.getElementById('brandTabs');
-        container.innerHTML = '';
-
-        Object.keys(masterStore).forEach(b => {
-            const btn = document.createElement('button');
-            btn.className = `brand-tab ${b === activeBrand ? 'active' : ''}`;
-            btn.innerText = b;
-            btn.onclick = () => {
-                activeBrand = b;
-                renderBrandTabs();
-                renderDisplay();
-            };
-            container.appendChild(btn);
-        });
-    }
-
-    function getQualityBadgeClass(qName) {
-        const q = qName.toLowerCase();
-        if (q.includes('orig') || q.includes('service') || q.includes('org') || q.includes('اصلي') || q.includes('أصلي')) return 'bg-original';
-        if (q.includes('oled') || q.includes('gx')) return 'bg-oled';
-        if (q.includes('incell') || q.includes('incel') || q.includes('copy') || q.includes('tft') || q.includes('تجاري')) return 'bg-incell';
-        return 'bg-other';
-    }
-
-    function renderDisplay() {
-        const container = document.getElementById('displayArea');
-        if (!activeBrand || !masterStore[activeBrand]) {
-            container.innerHTML = '<div class="empty-box">لا توجد بيانات متاحة</div>';
-            return;
-        }
-
-        const data = masterStore[activeBrand];
-        const items = data.itemsList;
-
-        let totalCount = 0;
-
-        if (currentViewMode === 'cards') {
-            let html = '<div class="cards-grid">';
-            
-            if (data.bannerTitle) {
-                html += `<div class="group-banner" data-group="true">${data.bannerTitle}</div>`;
-            }
-
-            items.forEach(item => {
-                totalCount++;
-                const modelTitle = item.modelName;
-                const safeModelAttr = modelTitle.toLowerCase().replace(/"/g, '&quot;');
-                
-                let pricesHtml = '';
-                const variantKeys = Object.keys(item.variantsMap);
-
-                variantKeys.forEach(vKey => {
-                    const priceVal = item.variantsMap[vKey];
-                    const badgeClass = getQualityBadgeClass(vKey);
-
-                    pricesHtml += `
-                    <div class="quality-box">
-                        <span class="quality-name">${vKey}</span>
-                        <span class="price-tag ${badgeClass}">${priceVal}</span>
-                    </div>`;
-                });
-
-                html += `
-                <div class="item-card" data-item="true" data-model="${safeModelAttr}">
-                    <div class="card-header">
-                        <div class="title-wrap">
-                            <span class="model-title">${modelTitle}</span>
-                        </div>
-                    </div>
-
-                    <div class="qualities-grid">
-                        ${pricesHtml || '<div style="color:var(--text-muted); font-size:0.8rem;">لا توجد أسعار</div>'}
-                    </div>
-                </div>`;
-            });
-
-            html += '</div>';
-            container.innerHTML = html;
-
-        } else {
-            let html = '<div class="table-card"><div class="table-wrapper"><table><thead><tr>';
-            html += `<th>الموديل / الصنف</th><th>النوع / اللون</th><th>السعر</th>`;
-            html += '</tr></thead><tbody>';
-
-            if (data.bannerTitle) {
-                html += `<tr data-group="true" class="group-banner"><td colspan="3">${data.bannerTitle}</td></tr>`;
-            }
-
-            items.forEach(item => {
-                totalCount++;
-                const modelTitle = item.modelName;
-                const safeModelAttr = modelTitle.toLowerCase().replace(/"/g, '&quot;');
-                const variantKeys = Object.keys(item.variantsMap);
-
-                variantKeys.forEach((vKey, idx) => {
-                    const priceVal = item.variantsMap[vKey];
-                    const badgeClass = getQualityBadgeClass(vKey);
-
-                    html += `<tr data-item="true" data-model="${safeModelAttr}">`;
-                    if (idx === 0) {
-                        html += `<td rowspan="${variantKeys.length}" style="vertical-align:middle; font-weight:bold;">${modelTitle}</td>`;
-                    }
-                    html += `<td>${vKey}</td>`;
-                    html += `<td><span class="price-tag ${badgeClass}">${priceVal}</span></td>`;
-                    html += '</tr>';
-                });
-            });
-
-            html += '</tbody></table></div></div>';
-            container.innerHTML = html;
-        }
-
-        document.getElementById('statTotalRows').innerText = totalCount;
-        applyFilter();
-    }
-
-    function applyFilter() {
-        const q = document.getElementById('searchInput').value.toLowerCase().trim();
-        let visible = 0;
-
-        const selector = currentViewMode === 'cards' 
-            ? '.item-card[data-item="true"]' 
-            : 'table tbody tr[data-item="true"]';
-
-        const elements = document.querySelectorAll(selector);
-
-        elements.forEach(el => {
-            const modelName = (el.getAttribute('data-model') || '').toLowerCase();
-            
-            if (q === '' || modelName.includes(q)) {
-                el.style.display = '';
-                visible++;
-            } else {
-                el.style.display = 'none';
-            }
-        });
-
-        document.getElementById('statFilteredRows').innerText = visible;
-    }
+start();
+})();
 </script>
-
 </body>
 </html>
