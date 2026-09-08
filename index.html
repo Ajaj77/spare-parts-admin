@@ -3,8 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>لوحة أسعار قطع الغيار المباشرة</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<title>لوحة أسعار قطع الغيار (تخزين محلي)</title>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
 *{box-sizing:border-box}
@@ -21,6 +20,8 @@ button:hover{background:#1d4ed8}
 button:disabled{opacity:.5;cursor:not-allowed}
 button.secondary{background:#1e293b;border:1px solid #334155;color:#e2e8f0}
 button.secondary:hover{background:#334155}
+button.danger{background:#991b1b;color:#fecaca}
+button.danger:hover{background:#7f1d1d}
 .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .status{margin-top:12px;padding:12px 16px;border-radius:10px;background:#0c141d;white-space:pre-wrap;line-height:1.6;font-size:13px}
 .ok{border:1px solid #10b981;color:#34d399;background:#062016}
@@ -41,10 +42,10 @@ th{background:#1a2332;color:#94a3b8}
   <div class="card">
     <div style="display:flex; justify-content:space-between; align-items:center;">
       <div>
-        <h1>🔧 لوحة إدارة أسعار قطع الغيار</h1>
-        <div class="muted">النسخة المباشرة والسريعة (بدون تسجيل دخول)</div>
+        <h1>📱 لوحة أسعار قطع الغيار (على الهاتف)</h1>
+        <div class="muted">تخزين محلي يعمل بدون إنترنت على متصفح الهاتف</div>
       </div>
-      <button id="versionBtn" class="secondary" style="width:auto">فحص النسخة</button>
+      <button id="clearBtn" class="danger" style="width:auto">مسح البيانات</button>
     </div>
   </div>
 
@@ -68,12 +69,12 @@ th{background:#1a2332;color:#94a3b8}
         <button id="previewBtn" class="secondary">معاينة البيانات</button>
       </div>
       <div id="preview" class="hidden"></div>
-      <button id="importBtn" disabled style="margin-top:12px">بدء الاستيراد وحفظ البيانات</button>
+      <button id="importBtn" disabled style="margin-top:12px">حفظ البيانات على الهاتف</button>
       <div id="importStatus" class="status hidden"></div>
     </section>
 
     <section id="tab-products" class="card hidden">
-      <h2>المنتجات المسجلة</h2>
+      <h2>المنتجات المحفوظة على الهاتف</h2>
       <div class="row">
         <input id="productSearch" placeholder="ابحث بالموديل، الكود أو اللون…">
         <button id="searchBtn" class="secondary">بحث</button>
@@ -82,7 +83,7 @@ th{background:#1a2332;color:#94a3b8}
     </section>
 
     <section id="tab-history" class="card hidden">
-      <h2>سجل التحديثات</h2>
+      <h2>سجل عمليات الحفظ</h2>
       <div id="historyTable">جاري التحميل…</div>
     </section>
   </main>
@@ -92,13 +93,13 @@ th{background:#1a2332;color:#94a3b8}
 (function(){
 "use strict";
 
-const SUPABASE_URL="https://zqwyzzvszwifwplqkydw.supabase.co";
-const SUPABASE_PUBLISHABLE_KEY="sb_publishable_YZXVg7MZl1ev57CnpPgIPQ_8Ox_b-qX";
-let client=null, rows=[], selectedFile=null;
+const DB_NAME = "SparePartsPhoneDB";
+const DB_VERSION = 1;
+let db = null, parsedRows = [], selectedFile = null;
 
-const $=id=>document.getElementById(id);
+const $ = id => document.getElementById(id);
 
-function status(el, msg, ok=false){
+function status(el, msg, ok = false){
   if(!el) return;
   el.textContent = msg;
   el.className = "status " + (ok ? "ok" : "err");
@@ -122,9 +123,95 @@ function slug(v){
   return clean(v).toLowerCase().replace(/\s+/g, "_").replace(/[^\p{L}\p{N}._+/-]/gu, "");
 }
 
-function key(c, m, i, col){
-  return [c, m, i || "", col || ""].map(slug).join("|");
+// --- إدارة التخزين المحلي (IndexedDB) ---
+
+function openDB(){
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(DB_NAME, DB_VERSION);
+    request.onupgradeneeded = e => {
+      const d = e.target.result;
+      if (!d.objectStoreNames.contains("products")) {
+        const store = d.createObjectStore("products", { keyPath: "key" });
+        store.createIndex("model", "model", { unique: false });
+        store.createIndex("category", "category", { unique: false });
+      }
+      if (!d.objectStoreNames.contains("history")) {
+        d.createObjectStore("history", { keyPath: "id", autoIncrement: true });
+      }
+    };
+    request.onsuccess = e => { db = e.target.result; resolve(db); };
+    request.onerror = e => reject("خطأ في فتح تخزين الهاتف المحلي");
+  });
 }
+
+function saveProductsToPhone(items){
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(["products"], "readwrite");
+    const store = tx.objectStore("products");
+    items.forEach(item => store.put(item));
+    tx.oncomplete = () => resolve();
+    tx.onerror = e => reject(e.target.error);
+  });
+}
+
+function searchLocalProducts(query = ""){
+  return new Promise((resolve) => {
+    const tx = db.transaction(["products"], "readonly");
+    const store = tx.objectStore("products");
+    const req = store.openCursor();
+    const results = [];
+    const q = query.toLowerCase().trim();
+
+    req.onsuccess = e => {
+      const cursor = e.target.result;
+      if (cursor) {
+        const item = cursor.value;
+        const match = !q || 
+          (item.model && item.model.toLowerCase().includes(q)) || 
+          (item.itemCode && item.itemCode.toLowerCase().includes(q)) || 
+          (item.color && item.color.toLowerCase().includes(q)) ||
+          (item.category && item.category.toLowerCase().includes(q));
+
+        if (match) results.push(item);
+        if (results.length >= 100) return resolve(results);
+        cursor.continue();
+      } else {
+        resolve(results);
+      }
+    };
+  });
+}
+
+function saveHistoryLog(entry){
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(["history"], "readwrite");
+    const store = tx.objectStore("history");
+    store.add(entry);
+    tx.oncomplete = () => resolve();
+    tx.onerror = e => reject(e.target.error);
+  });
+}
+
+function getLocalHistory(){
+  return new Promise((resolve) => {
+    const tx = db.transaction(["history"], "readonly");
+    const store = tx.objectStore("history");
+    const req = store.getAll();
+    req.onsuccess = () => resolve((req.result || []).reverse());
+  });
+}
+
+function clearAllData(){
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(["products", "history"], "readwrite");
+    tx.objectStore("products").clear();
+    tx.objectStore("history").clear();
+    tx.oncomplete = () => resolve();
+    tx.onerror = e => reject(e.target.error);
+  });
+}
+
+// --- معالجة الملفات وتقسيم البيانات ---
 
 function matrix(ws){ return XLSX.utils.sheet_to_json(ws, {header:1, defval:"", raw:true}); }
 
@@ -135,31 +222,6 @@ function headerIndex(a){
   }
   return 1;
 }
-
-$("versionBtn").onclick = async () => {
-  try{
-    const r = await client.from("app_settings").select("value,updated_at").eq("key", "database_version").maybeSingle();
-    if(r.error) throw r.error;
-    status($("importStatus"), "الإصدار الحالي للبيانات: " + (r.data?.value || "0") + "\nآخر تحديث: " + (r.data?.updated_at || "-"), true);
-  }catch(e){ status($("importStatus"), e.message || String(e)); }
-};
-
-document.querySelectorAll(".tabs button").forEach(b => b.onclick = () => {
-  document.querySelectorAll(".tabs button").forEach(x => x.classList.remove("active"));
-  b.classList.add("active");
-  document.querySelectorAll("main section").forEach(x => x.classList.add("hidden"));
-  $("tab-" + b.dataset.tab).classList.remove("hidden");
-  if(b.dataset.tab === "products") loadProducts();
-  if(b.dataset.tab === "history") loadHistory();
-});
-
-$("file").onchange = e => {
-  selectedFile = e.target.files[0] || null;
-  $("preview").classList.add("hidden");
-  $("importBtn").disabled = true;
-};
-
-// --- خوارزميات تحليل ملفات Excel ---
 
 function parseSamsung(wb){
   const a = matrix(wb.Sheets[wb.SheetNames[0]]), out = [];
@@ -262,21 +324,38 @@ function parseAndroid(wb){
   return out;
 }
 
-async function preview(){
+// --- الأزرار والتفاعل ---
+
+document.querySelectorAll(".tabs button").forEach(b => b.onclick = () => {
+  document.querySelectorAll(".tabs button").forEach(x => x.classList.remove("active"));
+  b.classList.add("active");
+  document.querySelectorAll("main section").forEach(x => x.classList.add("hidden"));
+  $("tab-" + b.dataset.tab).classList.remove("hidden");
+  if(b.dataset.tab === "products") loadProducts();
+  if(b.dataset.tab === "history") loadHistory();
+});
+
+$("file").onchange = e => {
+  selectedFile = e.target.files[0] || null;
+  $("preview").classList.add("hidden");
+  $("importBtn").disabled = true;
+};
+
+$("previewBtn").onclick = async () => {
   if(!selectedFile){ status($("importStatus"), "يرجى اختيار ملف Excel أولاً."); return; }
   try{
     const wb = XLSX.read(await selectedFile.arrayBuffer(), {type:"array"});
     const cat = $("category").value;
     
-    rows = cat === "Samsung" ? parseSamsung(wb) :
-           cat === "iPhone"  ? parseIphone(wb) :
-           cat === "SVC"     ? parseSvc(wb) : parseAndroid(wb);
+    parsedRows = cat === "Samsung" ? parseSamsung(wb) :
+                 cat === "iPhone"  ? parseIphone(wb) :
+                 cat === "SVC"     ? parseSvc(wb) : parseAndroid(wb);
 
-    if(!rows.length) throw new Error("لم يتم العثور على بيانات أسعار صالحة في الملف.");
+    if(!parsedRows.length) throw new Error("لم يتم العثور على بيانات أسعار صالحة في الملف.");
 
-    let html = "<div class='status ok'>تم تحليل الملف بنجاح! تم استخراج " + rows.length + " منتج. (عرض أول 10 عناصر):</div>";
-    html += "<div style='overflow:auto'><table><tr><th>الماركة</th><th>الموديل</th><th>الكود</th><th>اللون</th><th>الأسعار المستخرجة</th></tr>";
-    html += rows.slice(0, 10).map(x => 
+    let html = "<div class='status ok'>تم تحليل الملف بنجاح! تم استخراج " + parsedRows.length + " منتج. (معاينة أول 10 عناصر):</div>";
+    html += "<div style='overflow:auto'><table><tr><th>الماركة</th><th>الموديل</th><th>الكود</th><th>اللون</th><th>الأسعار</th></tr>";
+    html += parsedRows.slice(0, 10).map(x => 
       "<tr><td><span class='badge'>" + esc(x.category) + "</span></td><td>" + esc(x.model) + "</td><td>" + esc(x.itemCode) + "</td><td>" + esc(x.color) + "</td><td>" + esc(x.prices.map(p=>p[0]+": "+p[1]+" د.ل").join(" | ")) + "</td></tr>"
     ).join("");
     html += "</table></div>";
@@ -284,159 +363,79 @@ async function preview(){
     $("preview").innerHTML = html;
     $("preview").classList.remove("hidden");
     $("importBtn").disabled = false;
-    status($("importStatus"), "المعاينة جاهزة لعملية الحفظ.", true);
+    status($("importStatus"), "جاهز للحفظ المحلي على الهاتف.", true);
   }catch(e){
     status($("importStatus"), "خطأ في قراءة وتحليل الملف:\n" + (e.message || e));
   }
-}
-
-$("previewBtn").onclick = preview;
-
-async function getCategory(name){
-  let r = await client.from("categories").select("id").eq("name", name).maybeSingle();
-  if(r.error) throw r.error;
-  if(r.data) return r.data.id;
-  
-  r = await client.from("categories").insert({name, code: slug(name)}).select("id").single();
-  if(r.error) throw r.error;
-  return r.data.id;
-}
-
-async function bump(){
-  let r = await client.from("app_settings").select("value").eq("key", "database_version").maybeSingle();
-  if(r.error) throw r.error;
-  const v = Number(r.data?.value || 0) + 1;
-  r = await client.from("app_settings").upsert({key:"database_version", value:String(v), updated_at:new Date().toISOString()}, {onConflict:"key"});
-  if(r.error) throw r.error;
-  return v;
-}
+};
 
 $("importBtn").onclick = async () => {
   $("importBtn").disabled = true;
-  let updateId = null;
-
   try{
-    const selectedCat = $("category").value;
-    const initialCid = await getCategory(selectedCat);
+    const payload = parsedRows.map(x => ({
+      key: [x.category, x.model, x.itemCode || "", x.color || ""].map(slug).join("|"),
+      category: x.category,
+      model: x.model,
+      itemCode: x.itemCode,
+      color: x.color,
+      prices: x.prices,
+      updatedAt: new Date().toISOString()
+    }));
 
-    const u = await client.from("updates").insert({
-      category_id: initialCid,
-      file_name: selectedFile.name,
-      version: 0,
-      updated_by: null,
-      total_products: rows.length,
-      status: "processing"
-    }).select("id").single();
+    await saveProductsToPhone(payload);
+    await saveHistoryLog({
+      fileName: selectedFile.name,
+      totalProducts: parsedRows.length,
+      category: $("category").value,
+      date: new Date().toISOString()
+    });
 
-    if(u.error) throw u.error;
-    updateId = u.data.id;
-
-    const catMap = new Map();
-    catMap.set(selectedCat, initialCid);
-
-    let count = 0, priceCount = 0;
-
-    for(let i = 0; i < rows.length; i += 40){
-      const batch = rows.slice(i, i + 40);
-
-      const payload = await Promise.all(batch.map(async x => {
-        const itemCat = x.category || selectedCat;
-        if(!catMap.has(itemCat)){
-          const cid = await getCategory(itemCat);
-          catMap.set(itemCat, cid);
-        }
-        const pKey = key(itemCat, x.model, x.itemCode, x.color);
-        return {
-          category_id: catMap.get(itemCat),
-          item_code: x.itemCode || null,
-          model: x.model,
-          color: x.color || null,
-          product_key: pKey,
-          active: true,
-          updated_at: new Date().toISOString()
-        };
-      }));
-
-      const p = await client.from("products").upsert(payload, {onConflict:"product_key"}).select("id,product_key");
-      if(p.error) throw p.error;
-
-      const ids = new Map(p.data.map(x => [x.product_key, x.id]));
-      const pricePayload = [];
-
-      batch.forEach((x, idx) => {
-        const pKey = payload[idx].product_key;
-        const id = ids.get(pKey);
-        if(id){
-          x.prices.forEach(z => pricePayload.push({
-            product_id: id,
-            price_type: z[0],
-            price: z[1],
-            currency: "LYD",
-            updated_at: new Date().toISOString()
-          }));
-        }
-      });
-
-      if(pricePayload.length){
-        const q = await client.from("prices").upsert(pricePayload, {onConflict:"product_id,price_type"});
-        if(q.error) throw q.error;
-        priceCount += pricePayload.length;
-      }
-
-      count += batch.length;
-      status($("importStatus"), `جاري رفع وحفظ البيانات… (${count}/${rows.length})\nعدد الأسعار المسجلة: ${priceCount}`, true);
-    }
-
-    const v = await bump();
-    await client.from("updates").update({version: v, status: "completed"}).eq("id", updateId);
-    status($("importStatus"), `✅ اكتملت عملية الاستيراد بنجاح!\nإجمالي المنتجات: ${count}\nإجمالي الأسعار: ${priceCount}\nرقم النسخة المحدثة: ${v}`, true);
-
+    status($("importStatus"), `✅ تم حفظ ${parsedRows.length} منتج بنجاح في ذاكرة الهاتف المحلية!`, true);
   }catch(e){
-    if(updateId){
-      await client.from("updates").update({status: "failed"}).eq("id", updateId);
-    }
-    status($("importStatus"), "❌ حدث خطأ أثناء الاستيراد:\n" + (e.message || e));
+    status($("importStatus"), "❌ حدث خطأ أثناء الحفظ على الهاتف:\n" + (e.message || e));
   }finally{
     $("importBtn").disabled = false;
   }
 };
 
 async function loadProducts(){
-  const rawQ = $("productSearch").value.trim();
-  const q = rawQ.replace(/[\(\),%]/g, "");
+  const query = $("productSearch").value;
+  const list = await searchLocalProducts(query);
   
-  let r = client.from("products").select("model,item_code,color,active,updated_at").order("updated_at", {ascending:false}).limit(100);
-  if(q) r = r.or(`model.ilike.%${q}%,item_code.ilike.%${q}%,color.ilike.%${q}%`);
-  
-  r = await r;
-  if(r.error){ $("productsTable").textContent = r.error.message; return; }
+  if(!list.length){
+    $("productsTable").innerHTML = "<div class='muted'>لا توجد منتجات محفوظة تطابق البحث.</div>";
+    return;
+  }
 
-  $("productsTable").innerHTML = "<div class='muted' style='margin-bottom:8px'>أول 100 نتيجة:</div><div style='overflow:auto'><table><tr><th>الموديل</th><th>الكود</th><th>اللون</th><th>الحالة</th></tr>" +
-    (r.data || []).map(p => `<tr><td>${esc(p.model)}</td><td>${esc(p.item_code)}</td><td>${esc(p.color)}</td><td>${p.active ? "نشط" : "غير نشط"}</td></tr>`).join("") +
+  $("productsTable").innerHTML = "<div class='muted' style='margin-bottom:8px'>عرض " + list.length + " نتيجة من الهاتف:</div><div style='overflow:auto'><table><tr><th>الماركة</th><th>الموديل</th><th>الكود</th><th>اللون</th><th>الأسعار المسجلة</th></tr>" +
+    list.map(p => `<tr><td><span class='badge'>${esc(p.category)}</span></td><td>${esc(p.model)}</td><td>${esc(p.itemCode)}</td><td>${esc(p.color)}</td><td>${esc(p.prices.map(z=>z[0]+": "+z[1]+" د.ل").join(" | "))}</td></tr>`).join("") +
     "</table></div>";
 }
 
 $("searchBtn").onclick = loadProducts;
 
 async function loadHistory(){
-  const r = await client.from("updates").select("file_name,version,total_products,status,created_at").order("created_at", {ascending:false}).limit(50);
-  if(r.error){ $("historyTable").textContent = r.error.message; return; }
+  const history = await getLocalHistory();
+  if(!history.length){
+    $("historyTable").innerHTML = "<div class='muted'>لا يوجد سجل استيراد محلي حتى الآن.</div>";
+    return;
+  }
 
-  $("historyTable").innerHTML = "<div style='overflow:auto'><table><tr><th>اسم الملف</th><th>الإصدار</th><th>عدد المنتجات</th><th>الحالة</th><th>التاريخ</th></tr>" +
-    (r.data || []).map(x => `<tr><td>${esc(x.file_name)}</td><td><span class='badge'>v${x.version}</span></td><td>${x.total_products}</td><td>${esc(x.status)}</td><td>${esc(new Date(x.created_at).toLocaleString('ar-LY'))}</td></tr>`).join("") +
+  $("historyTable").innerHTML = "<div style='overflow:auto'><table><tr><th>اسم الملف</th><th>التصنيف</th><th>عدد المنتجات</th><th>تاريخ الحفظ</th></tr>" +
+    history.map(x => `<tr><td>${esc(x.fileName)}</td><td><span class='badge'>${esc(x.category)}</span></td><td>${x.totalProducts}</td><td>${esc(new Date(x.date).toLocaleString('ar-LY'))}</td></tr>`).join("") +
     "</table></div>";
 }
 
-function start(){
-  try{
-    if(!window.supabase) throw new Error("لم يتم تحميل مكتبة Supabase.");
-    client = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
-  }catch(e){
-    alert("❌ خطأ في تشغيل لوحة التحكم:\n" + (e.message || e));
+$("clearBtn").onclick = async () => {
+  if(confirm("هل أنت تأكد من رغبتك في مسح كافة البيانات المسجلة على الهاتف؟")){
+    await clearAllData();
+    alert("تم مسح جميع البيانات المحلية بنجاح.");
+    loadProducts();
+    loadHistory();
   }
-}
+};
 
-start();
+openDB().catch(err => alert("⚠️ لم يتم الوصول إلى ذاكرة التخزين المحلية بالهاتف: " + err));
 })();
 </script>
 </body>
