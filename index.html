@@ -19,7 +19,6 @@
             --success: #10b981;
         }
 
-        /* متغيرات الوضع المظلم */
         body.dark {
             --bg: #0f172a;
             --card-bg: #1e293b;
@@ -52,7 +51,6 @@
             gap: 10px;
         }
 
-        /* TOP CONTROL PANEL */
         .top-panel {
             background: var(--card-bg);
             border-radius: 12px;
@@ -131,22 +129,10 @@
             font-weight: 600;
         }
 
-        body.dark .stats-bar {
-            background: #0f172a;
-        }
+        body.dark .stats-bar { background: #0f172a; }
+        .stats-bar strong { color: var(--primary); font-size: 0.95rem; }
+        .save-indicator { color: var(--success); font-size: 0.78rem; font-weight: 800; }
 
-        .stats-bar strong {
-            color: var(--primary);
-            font-size: 0.95rem;
-        }
-
-        .save-indicator {
-            color: var(--success);
-            font-size: 0.78rem;
-            font-weight: 800;
-        }
-
-        /* BRAND TABS */
         .brand-tabs {
             display: flex;
             gap: 6px;
@@ -166,18 +152,13 @@
             font-size: 0.85rem;
         }
 
-        body.dark .brand-tab {
-            background: #334155;
-            color: #cbd5e1;
-        }
-
+        body.dark .brand-tab { background: #334155; color: #cbd5e1; }
         .brand-tab.active {
             background: var(--primary);
             color: white !important;
             box-shadow: 0 2px 4px rgba(2, 132, 199, 0.3);
         }
 
-        /* CARDS VIEW */
         .cards-grid {
             display: flex;
             flex-direction: column;
@@ -260,19 +241,9 @@
             gap: 4px;
         }
 
-        body.dark .info-badge {
-            background: rgba(255, 255, 255, 0.05);
-        }
-
-        .info-title {
-            color: var(--text-muted);
-            font-weight: 600;
-        }
-
-        .info-value {
-            color: var(--primary);
-            font-weight: 700;
-        }
+        body.dark .info-badge { background: rgba(255, 255, 255, 0.05); }
+        .info-title { color: var(--text-muted); font-weight: 600; }
+        .info-value { color: var(--primary); font-weight: 700; }
 
         .qualities-grid {
             display: grid;
@@ -307,31 +278,30 @@
             width: 100%;
         }
 
-        /* ألوان الجودات */
         .bg-original { background-color: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
         body.dark .bg-original { background-color: #064e3b; color: #6ee7b7; border-color: #047857; }
-
         .bg-oled { background-color: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
         body.dark .bg-oled { background-color: #0c4a6e; color: #7dd3fc; border-color: #0284c7; }
-
         .bg-incell { background-color: #fef3c7; color: #b45309; border: 1px solid #fde68a; }
         body.dark .bg-incell { background-color: #78350f; color: #fde047; border-color: #a16207; }
-
         .bg-other { background-color: #f3e8ff; color: #6b21a8; border: 1px solid #e9d5ff; }
         body.dark .bg-other { background-color: #581c87; color: #e9d5ff; border-color: #7e22ce; }
 
+        /* 🎨 الشريط العلوي المحسن لنفس تصميم صورة 2 */
         .group-banner {
             background: var(--primary);
-            color: white;
-            padding: 8px 14px;
-            border-radius: 8px;
-            font-weight: 800;
-            font-size: 0.95rem;
+            color: #ffffff;
+            padding: 12px 16px;
+            border-radius: 10px;
+            font-weight: 900;
+            font-size: 1.05rem;
             text-align: center;
             margin-top: 6px;
+            letter-spacing: 0.5px;
+            box-shadow: 0 2px 6px rgba(2, 132, 199, 0.25);
+            text-transform: uppercase;
         }
 
-        /* TABLE VIEW */
         .table-card {
             background: var(--card-bg);
             border-radius: 12px;
@@ -340,46 +310,13 @@
             box-shadow: 0 1px 4px rgba(0,0,0,0.03);
         }
 
-        .table-wrapper {
-            max-height: 70vh;
-            overflow-y: auto;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            text-align: center;
-        }
-
-        thead {
-            position: sticky;
-            top: 0;
-            background: #0f172a;
-            color: #ffffff;
-            z-index: 20;
-        }
-
+        .table-wrapper { max-height: 70vh; overflow-y: auto; }
+        table { width: 100%; border-collapse: collapse; text-align: center; }
+        thead { position: sticky; top: 0; background: #0f172a; color: #ffffff; z-index: 20; }
         body.dark thead { background: #0284c7; }
-
-        th {
-            padding: 10px 6px;
-            font-weight: 700;
-            font-size: 0.82rem;
-            border-bottom: 2px solid var(--border);
-        }
-
-        th:first-child, td:first-child {
-            text-align: right;
-            padding-right: 12px;
-            font-weight: 800;
-        }
-
-        td {
-            padding: 10px 6px;
-            border-bottom: 1px solid var(--border);
-            font-size: 0.88rem;
-        }
-
+        th { padding: 10px 6px; font-weight: 700; font-size: 0.82rem; border-bottom: 2px solid var(--border); }
+        th:first-child, td:first-child { text-align: right; padding-right: 12px; font-weight: 800; }
+        td { padding: 10px 6px; border-bottom: 1px solid var(--border); font-size: 0.88rem; }
         tbody tr:nth-child(even) { background-color: rgba(0,0,0,0.02); }
         body.dark tbody tr:nth-child(even) { background-color: rgba(255,255,255,0.03); }
 
@@ -395,7 +332,6 @@
 
 <div class="app-container">
 
-    <!-- SHIRIT CONTROL & SEARCH -->
     <div class="top-panel">
         <div class="search-box-wrap">
             <input type="text" id="searchInput" placeholder="🔍 ابحث باسم الموديل فقط (مثال: 12, Note9, A52)..." onkeyup="applyFilter()">
@@ -417,7 +353,6 @@
         <div class="brand-tabs" id="brandTabs"></div>
     </div>
 
-    <!-- MAIN DISPLAY AREA -->
     <div id="displayArea">
         <div class="empty-box">
             لا توجد بيانات محفوظة حالياً.<br>اضغط على <strong>"📥 رفع إكسل"</strong> لإضافة الملفات.
@@ -543,6 +478,27 @@
         return filename.replace(/\.[^/.]+$/, "");
     }
 
+    /* 🎯 دالة لتنسيق شريط العنوان والتاريخ مثل صورة 2 */
+    function formatBannerText(rawText, brandKey) {
+        let str = cleanStr(rawText).toUpperCase();
+        
+        if (str.includes('PRICE OF')) return str;
+
+        // استخراج التاريخ من النص
+        let dateMatch = str.match(/(\d{1,4}[\/\.-]\d{1,2}[\/\.-]\d{1,4})/);
+        if (dateMatch) {
+            let dateStr = dateMatch[0].replace(/[\/-]/g, '.');
+            let parts = dateStr.split('.');
+            if (parts.length === 3 && parts[0].length === 2 && parts[2].length === 4) {
+                // تحويل التاريخ لـ YYYY.MM.DD
+                dateStr = `${parts[2]}.${parts[1]}.${parts[0]}`;
+            }
+            return `PRICE OF ${brandKey.toUpperCase()} DATE ${dateStr}`;
+        }
+        
+        return `PRICE OF ${brandKey.toUpperCase()} DATE ${str}`;
+    }
+
     function processSmartData(brandKey, rawRows) {
         let maxCols = 0;
         for (let r = 0; r < Math.min(15, rawRows.length); r++) {
@@ -572,9 +528,8 @@
         if (seqHeaders.includes(col0Header)) {
             modelColIndex = 1;
         } else {
-            let col0IsNumbers = true;
-            let col1HasText = false;
             let numCount = 0;
+            let col1HasText = false;
             for (let r = 0; r < Math.min(15, rawRows.length); r++) {
                 let v0 = cleanStr(rawRows[r][0]);
                 let v1 = cleanStr(rawRows[r][1]);
@@ -605,19 +560,25 @@
         store.headers = detectedHeaders;
         store.modelColIndex = modelColIndex;
 
+        const ignoreHeaderList = ['no', 'n', '#', 'م', 'ت', 'تسلسل', 'الرقم', 'id', 'modle', 'model', 'الموديل', 'الصنف', 'الموديل/الصنف'];
+
         for (let r = 0; r < rawRows.length; r++) {
             const row = rawRows[r];
             if (!row || row.every(c => cleanStr(c) === '')) continue;
 
             const nonNull = row.filter(c => cleanStr(c) !== '');
-            const isGroup = nonNull.length === 1 && typeof nonNull[0] === 'string' && isNaN(nonNull[0]) && !nonNull[0].match(/^\d{1,2}[\/\.-]/);
+            const isGroup = nonNull.length === 1 && typeof nonNull[0] === 'string' && isNaN(nonNull[0]);
 
             if (isGroup) {
                 const groupName = cleanStr(nonNull[0]);
-                if (!store.itemsMap['GRP_' + groupName]) {
-                    const gObj = { isGroup: true, name: groupName };
-                    store.itemsMap['GRP_' + groupName] = gObj;
-                    store.itemsList.push(gObj);
+                // تجنب إضافة الهيدر كعنوان مجموعة إذا كان كلمة مثل NO أو Modle
+                if (!ignoreHeaderList.includes(groupName.toLowerCase())) {
+                    const formattedTitle = formatBannerText(groupName, brandKey);
+                    if (!store.itemsMap['GRP_' + formattedTitle]) {
+                        const gObj = { isGroup: true, name: formattedTitle };
+                        store.itemsMap['GRP_' + formattedTitle] = gObj;
+                        store.itemsList.push(gObj);
+                    }
                 }
                 continue;
             }
@@ -629,15 +590,28 @@
                 }
             }
 
-            if (!modelName || modelName.toLowerCase().includes('model') || keywords.some(k => modelName.toLowerCase() === k)) continue;
+            const lowerModel = (modelName || '').toLowerCase();
+
+            /* 🚫 استبعاد صف الهيدر والعناوين لعدم إنشائها ككارت مستقل (حل مشكلة صورة 1) */
+            if (!modelName || ignoreHeaderList.includes(lowerModel) || keywords.some(k => lowerModel === k)) {
+                continue;
+            }
+
+            const vals = [];
+            let headerMatches = 0;
+            for (let c = 0; c < detectedHeaders.length; c++) {
+                let cellVal = cleanStr(row[c]);
+                vals.push(cellVal);
+                if (cellVal && detectedHeaders[c] && cellVal.toLowerCase() === detectedHeaders[c].toLowerCase()) {
+                    headerMatches++;
+                }
+            }
+
+            // إذا تكررت أسماء الأعمدة داخل الصف يتم تتجاهله (هيدر مكرر)
+            if (headerMatches >= 2) continue;
 
             const key = modelName.toLowerCase();
             const existing = store.itemsMap[key];
-
-            const vals = [];
-            for (let c = 0; c < detectedHeaders.length; c++) {
-                vals.push(cleanStr(row[c]));
-            }
 
             if (existing) {
                 for (let c = 0; c < vals.length; c++) {
@@ -701,7 +675,7 @@
             let html = '<div class="cards-grid">';
             items.forEach(item => {
                 if (item.isGroup) {
-                    html += `<div class="group-banner" data-group="true">${item.name.toUpperCase()}</div>`;
+                    html += `<div class="group-banner" data-group="true">${item.name}</div>`;
                 } else {
                     totalCount++;
                     const modelTitle = item.modelName || item.values[modelIdx] || 'غير معنون';
@@ -771,7 +745,7 @@
 
             items.forEach(item => {
                 if (item.isGroup) {
-                    html += `<tr data-group="true" class="group-banner"><td colspan="${headers.length}">${item.name.toUpperCase()}</td></tr>`;
+                    html += `<tr data-group="true" class="group-banner"><td colspan="${headers.length}">${item.name}</td></tr>`;
                 } else {
                     totalCount++;
                     const modelTitle = item.modelName || item.values[modelIdx] || '';
@@ -803,7 +777,6 @@
         applyFilter();
     }
 
-    /* 🎯 دالة البحث المحصورة باسم الموديل فقط */
     function applyFilter() {
         const q = document.getElementById('searchInput').value.toLowerCase().trim();
         let visible = 0;
