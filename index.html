@@ -1,401 +1,792 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>لوحة أسعار قطع الغيار المباشرة</title>
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#1a1a2e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>📱 دليل أسعار قطع الغيار</title>
+<link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoi2K/Ys9mI2YrZhiDYt9in2YTYqNit2YrYryDYp9mE2YXYsdmK2K8iLCJzaG9ydF9uYW1lIjoi2KfZhNmF2LHZitivIiwic3RhcnRfdXJsIjoiLiIsImRpc3BsYXkiOiJzdGFuZGFsb25lIiwiYmFja2dyb3VuZF9jb2xvciI6IiMxYTFhMmUiLCJ0aGVtZV9jb2xvciI6IiMxYTFhMmUifQ==">
+<script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.mini.min.js"></script>
 <style>
-*{box-sizing:border-box}
-body{margin:0;background:#0b1016;color:#eee;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
-.wrap{max-width:960px;margin:auto;padding:16px}
-.card{background:#131b25;border:1px solid #2b3745;border-radius:16px;padding:20px;margin-bottom:16px;box-shadow:0 4px 12px rgba(0,0,0,0.3)}
-h1{font-size:20px;margin:0 0 6px;color:#3b82f6}
-h2{font-size:17px;margin:0 0 14px;color:#f3f4f6}
-.muted{color:#9aa7b5;font-size:13px}
-input,select,button{width:100%;padding:12px 14px;border-radius:10px;border:1px solid #3a4756;background:#0d141c;color:#fff;font-size:14px;outline:none;transition:all .2s}
-input:focus,select:focus{border-color:#3b82f6;box-shadow:0 0 0 2px rgba(59,130,246,0.2)}
-button{background:#2563eb;border:0;font-weight:600;cursor:pointer}
-button:hover{background:#1d4ed8}
-button:disabled{opacity:.5;cursor:not-allowed}
-button.secondary{background:#1e293b;border:1px solid #334155;color:#e2e8f0}
-button.secondary:hover{background:#334155}
-button.danger{background:#991b1b;color:#fecaca}
-button.danger:hover{background:#7f1d1d}
-.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.status{margin-top:12px;padding:12px 16px;border-radius:10px;background:#0c141d;white-space:pre-wrap;line-height:1.6;font-size:13px}
-.ok{border:1px solid #10b981;color:#34d399;background:#062016}
-.err{border:1px solid #ef4444;color:#f87171;background:#241014}
-.hidden{display:none}
-.tabs{display:flex;gap:8px;overflow-x:auto;margin-bottom:14px;padding-bottom:4px}
-.tabs button{width:auto;white-space:nowrap;padding:10px 18px;border-radius:8px;background:#1e293b;border:1px solid #334155}
-.tabs button.active{background:#2563eb;border-color:#2563eb;color:#fff}
-table{width:100%;border-collapse:collapse;font-size:13px;margin-top:10px}
-th,td{padding:10px;border-bottom:1px solid #2b3745;text-align:right;white-space:nowrap}
-th{background:#1a2332;color:#94a3b8}
-.badge{display:inline-block;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:bold;background:#1e293b;color:#38bdf8}
-@media(max-width:650px){.row{grid-template-columns:1fr}}
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body {
+    font-family: 'Segoe UI', 'Tahoma', system-ui, sans-serif;
+    background: #0f0f1a;
+    color: #e0e0e0;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  .app-header {
+    position: sticky; top: 0; z-index: 100;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    padding: 12px 16px;
+    border-bottom: 1px solid #2a2a4a;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+  }
+  .app-title {
+    font-size: 18px; font-weight: 700;
+    color: #00d4ff;
+    text-align: center;
+    margin-bottom: 10px;
+    letter-spacing: 0.5px;
+  }
+  .search-box {
+    position: relative;
+    width: 100%;
+  }
+  .search-box input {
+    width: 100%;
+    padding: 12px 44px 12px 16px;
+    border: 1px solid #2a2a4a;
+    border-radius: 14px;
+    background: #0f0f1a;
+    color: #fff;
+    font-size: 15px;
+    outline: none;
+    transition: all 0.2s;
+  }
+  .search-box input:focus {
+    border-color: #00d4ff;
+    box-shadow: 0 0 0 3px rgba(0,212,255,0.15);
+  }
+  .search-box input::placeholder { color: #666; }
+  .search-icon {
+    position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+    color: #00d4ff; font-size: 18px;
+  }
+  .stats-bar {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 8px 16px;
+    background: #16162a;
+    border-bottom: 1px solid #1f1f3a;
+    font-size: 12px;
+    color: #888;
+  }
+  .stats-bar span { display: flex; align-items: center; gap: 4px; }
+  .brand-filters {
+    display: flex; gap: 6px;
+    padding: 10px 16px;
+    overflow-x: auto;
+    background: #0f0f1a;
+    border-bottom: 1px solid #1f1f3a;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .brand-filters::-webkit-scrollbar { display: none; }
+  .brand-chip {
+    flex-shrink: 0;
+    padding: 6px 14px;
+    border-radius: 20px;
+    background: #1a1a2e;
+    border: 1px solid #2a2a4a;
+    color: #aaa;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .brand-chip.active {
+    background: linear-gradient(135deg, #00d4ff, #0099cc);
+    color: #000;
+    border-color: transparent;
+    box-shadow: 0 2px 12px rgba(0,212,255,0.3);
+  }
+  .product-list {
+    padding: 8px 12px 100px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .product-card {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    border: 1px solid #2a2a4a;
+    border-radius: 14px;
+    padding: 14px 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .product-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, #00d4ff, #7b2cbf);
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .product-card:active { transform: scale(0.98); }
+  .product-card:hover::before, .product-card.expanded::before { opacity: 1; }
+  .product-card.expanded {
+    border-color: #00d4ff;
+    box-shadow: 0 4px 20px rgba(0,212,255,0.1);
+  }
+  .product-header {
+    display: flex; justify-content: space-between; align-items: flex-start;
+  }
+  .product-model {
+    font-size: 15px; font-weight: 700;
+    color: #fff;
+    line-height: 1.3;
+  }
+  .product-brand {
+    font-size: 11px; font-weight: 600;
+    color: #00d4ff;
+    background: rgba(0,212,255,0.1);
+    padding: 2px 8px;
+    border-radius: 10px;
+    margin-top: 4px;
+    display: inline-block;
+  }
+  .product-type {
+    font-size: 10px; color: #888;
+    margin-top: 2px;
+  }
+  .product-prices-preview {
+    text-align: left;
+    direction: ltr;
+  }
+  .price-tag {
+    display: inline-block;
+    background: rgba(0,212,255,0.1);
+    color: #00d4ff;
+    padding: 3px 10px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 700;
+    margin-left: 4px;
+  }
+  .price-details {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid #2a2a4a;
+    display: none;
+    animation: fadeIn 0.2s ease;
+  }
+  .product-card.expanded .price-details { display: block; }
+  @keyframes fadeIn { from { opacity:0; transform: translateY(-5px); } to { opacity:1; transform: translateY(0); } }
+  .price-row {
+    display: flex; justify-content: space-between;
+    padding: 6px 0;
+    border-bottom: 1px solid #1f1f3a;
+  }
+  .price-row:last-child { border-bottom: none; }
+  .price-label { font-size: 13px; color: #aaa; }
+  .price-value { font-size: 14px; font-weight: 700; color: #00ff88; direction: ltr; }
+  .no-results {
+    text-align: center; padding: 60px 20px;
+    color: #666;
+  }
+  .no-results-icon { font-size: 48px; margin-bottom: 12px; }
+  .bottom-nav {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: linear-gradient(180deg, transparent 0%, #0f0f1a 20%);
+    padding: 10px 16px 24px;
+    display: flex; justify-content: center; gap: 12px;
+    z-index: 100;
+    backdrop-filter: blur(10px);
+  }
+  .nav-btn {
+    padding: 12px 24px;
+    border-radius: 14px;
+    border: none;
+    font-size: 14px; font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .nav-btn.primary {
+    background: linear-gradient(135deg, #00d4ff, #0099cc);
+    color: #000;
+    box-shadow: 0 4px 16px rgba(0,212,255,0.3);
+  }
+  .nav-btn.secondary {
+    background: #1a1a2e;
+    color: #aaa;
+    border: 1px solid #2a2a4a;
+  }
+  .nav-btn:active { transform: scale(0.95); }
+  .modal {
+    display: none;
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.8);
+    z-index: 200;
+    align-items: center; justify-content: center;
+    padding: 20px;
+    backdrop-filter: blur(5px);
+  }
+  .modal.show { display: flex; }
+  .modal-content {
+    background: linear-gradient(135deg, #1a1a2e, #16213e);
+    border: 1px solid #2a2a4a;
+    border-radius: 20px;
+    padding: 24px;
+    width: 100%;
+    max-width: 400px;
+    max-height: 80vh;
+    overflow-y: auto;
+    animation: slideUp 0.3s ease;
+  }
+  @keyframes slideUp { from { transform: translateY(50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  .modal-title {
+    font-size: 18px; font-weight: 700;
+    color: #00d4ff;
+    margin-bottom: 16px;
+    text-align: center;
+  }
+  .upload-area {
+    border: 2px dashed #2a2a4a;
+    border-radius: 16px;
+    padding: 30px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-bottom: 16px;
+    background: #0f0f1a;
+  }
+  .upload-area:hover, .upload-area.dragover {
+    border-color: #00d4ff;
+    background: rgba(0,212,255,0.05);
+  }
+  .upload-area input { display: none; }
+  .upload-icon { font-size: 36px; margin-bottom: 8px; }
+  .upload-text { font-size: 13px; color: #888; }
+  .file-list {
+    max-height: 200px;
+    overflow-y: auto;
+    margin-bottom: 16px;
+  }
+  .file-item {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 12px;
+    background: #0f0f1a;
+    border-radius: 10px;
+    margin-bottom: 6px;
+    border: 1px solid #1f1f3a;
+  }
+  .file-name { font-size: 12px; color: #ccc; }
+  .file-status { font-size: 11px; padding: 2px 8px; border-radius: 8px; }
+  .file-status.pending { background: #333; color: #aaa; }
+  .file-status.done { background: rgba(0,255,136,0.15); color: #00ff88; }
+  .file-status.error { background: rgba(255,50,50,0.15); color: #ff4444; }
+  .progress-bar {
+    width: 100%; height: 4px;
+    background: #1f1f3a;
+    border-radius: 2px;
+    margin-top: 8px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%; width: 0%;
+    background: linear-gradient(90deg, #00d4ff, #00ff88);
+    border-radius: 2px;
+    transition: width 0.3s;
+  }
+  .close-btn {
+    position: absolute; top: 12px; left: 12px;
+    background: none; border: none;
+    color: #888; font-size: 20px;
+    cursor: pointer;
+    width: 36px; height: 36px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 50%;
+  }
+  .close-btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
+  .toast {
+    position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px);
+    background: linear-gradient(135deg, #00d4ff, #0099cc);
+    color: #000;
+    padding: 12px 24px;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 14px;
+    z-index: 300;
+    transition: transform 0.3s ease;
+    box-shadow: 0 4px 20px rgba(0,212,255,0.3);
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+  .edit-price-btn {
+    background: rgba(0,212,255,0.1);
+    border: 1px solid #00d4ff;
+    color: #00d4ff;
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-size: 11px;
+    cursor: pointer;
+    margin-right: 8px;
+  }
+  .price-input {
+    background: #0f0f1a;
+    border: 1px solid #2a2a4a;
+    color: #fff;
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-size: 13px;
+    width: 80px;
+    text-align: center;
+  }
+  .highlight { background: rgba(255,215,0,0.2); color: #ffd700; padding: 0 2px; border-radius: 3px; }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <div class="card">
-    <div style="display:flex; justify-content:space-between; align-items:center;">
-      <div>
-        <h1>🔧 لوحة أسعار قطع الغيار</h1>
-        <div class="muted">مباشرة على الهاتف (بدون حساب أو سيرفر)</div>
-      </div>
-      <button id="clearBtn" class="danger" style="width:auto">مسح الكل</button>
-    </div>
+
+<div class="app-header">
+  <div class="app-title">📱 دليل أسعار قطع الغيار</div>
+  <div class="search-box">
+    <span class="search-icon">🔍</span>
+    <input type="text" id="searchInput" placeholder="ابحث عن موديل (مثال: S23, iPhone 14, Note 10...)" autocomplete="off">
   </div>
-
-  <div class="tabs">
-    <button class="active" data-tab="import">📥 استيراد Excel</button>
-    <button data-tab="products">📦 البحث والمنتجات</button>
-    <button data-tab="history">🕘 السجل المحلى</button>
-  </div>
-
-  <main>
-    <section id="tab-import" class="card">
-      <h2>استيراد ملف أسعار جديد</h2>
-      <input id="file" type="file" accept=".xlsx,.xls,.csv">
-      <div class="row" style="margin-top:12px">
-        <select id="category">
-          <option value="Samsung">Samsung</option>
-          <option value="iPhone">iPhone</option>
-          <option value="SVC">SVC (قطع صيانة)</option>
-          <option value="Android">Android (متعدد الماركات)</option>
-        </select>
-        <button id="previewBtn" class="secondary">معاينة الملف</button>
-      </div>
-      <div id="preview" class="hidden"></div>
-      <button id="importBtn" disabled style="margin-top:12px">حفظ البيانات على الهاتف</button>
-      <div id="importStatus" class="status hidden"></div>
-    </section>
-
-    <section id="tab-products" class="card hidden">
-      <h2>المنتجات والأسعار المحفوظة</h2>
-      <div class="row">
-        <input id="productSearch" placeholder="ابحث بالموديل، الكود أو اللون…">
-        <button id="searchBtn" class="secondary">بحث</button>
-      </div>
-      <div id="productsTable" style="margin-top:12px"></div>
-    </section>
-
-    <section id="tab-history" class="card hidden">
-      <h2>سجل التحديثات المحلية</h2>
-      <div id="historyTable">جاري التحميل…</div>
-    </section>
-  </main>
 </div>
 
+<div class="stats-bar">
+  <span id="totalCount">📦 جاري التحميل...</span>
+  <span id="lastUpdate">🔄 تاريخ التحديث: 10/08/2026</span>
+</div>
+
+<div class="brand-filters" id="brandFilters"></div>
+
+<div class="product-list" id="productList"></div>
+
+<div class="bottom-nav">
+  <button class="nav-btn secondary" onclick="resetData()">🔄 استعادة</button>
+  <button class="nav-btn primary" onclick="openUploadModal()">📁 تحديث الأسعار</button>
+</div>
+
+<!-- Upload Modal -->
+<div class="modal" id="uploadModal">
+  <div class="modal-content" style="position:relative;">
+    <button class="close-btn" onclick="closeUploadModal()">✕</button>
+    <div class="modal-title">📁 تحديث أسعار جديدة</div>
+    <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click()">
+      <div class="upload-icon">📂</div>
+      <div class="upload-text">اضغط هنا أو اسحب ملفات Excel<br><small>(.xlsx)</small></div>
+      <input type="file" id="fileInput" accept=".xlsx" multiple onchange="handleFiles(this.files)">
+    </div>
+    <div class="file-list" id="fileList"></div>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    <button class="nav-btn primary" style="width:100%; justify-content:center; margin-top:12px;" onclick="processFiles()">🚀 بدء التحديث</button>
+    <p style="font-size:11px; color:#666; text-align:center; margin-top:10px;">
+      💡 الملفات المدعومة: Samsung, iPhone, SVC, INF/HW/XI/ITEL
+    </p>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
 <script>
-(function(){
-"use strict";
+// ===== DATA =====
+const DEFAULT_DATA = [{"id": 1, "brand": "Samsung", "model": "S2/i9100", "type": "LCD", "prices": {"Original": "65"}}, {"id": 2, "brand": "Samsung", "model": "S2/i9105", "type": "LCD", "prices": {"Original": "65"}}, {"id": 3, "brand": "Samsung", "model": "S3/I9300", "type": "LCD", "prices": {"Original": "70"}}, {"id": 4, "brand": "Samsung", "model": "S3/i9301", "type": "LCD", "prices": {"Original": "70"}}, {"id": 5, "brand": "Samsung", "model": "S3mini", "type": "LCD", "prices": {"Original": "70"}}, {"id": 6, "brand": "Samsung", "model": "S4/i9500", "type": "LCD", "prices": {"Original": "90"}}, {"id": 7, "brand": "Samsung", "model": "S4/I9505", "type": "LCD", "prices": {"Original": "90"}}, {"id": 8, "brand": "Samsung", "model": "S4mini", "type": "LCD", "prices": {"Original": "90"}}, {"id": 9, "brand": "Samsung", "model": "S5/G900", "type": "LCD", "prices": {"Original": "95"}}, {"id": 10, "brand": "Samsung", "model": "S5mini/G800", "type": "LCD", "prices": {"Original": "100"}}, {"id": 11, "brand": "Samsung", "model": "S6/G920", "type": "LCD", "prices": {"Original": "115"}}, {"id": 12, "brand": "Samsung", "model": "S6edga /G925", "type": "LCD", "prices": {"Original": "275"}}, {"id": 13, "brand": "Samsung", "model": "S6edga plus/G928", "type": "LCD", "prices": {"Original": "395"}}, {"id": 14, "brand": "Samsung", "model": "S7/G930", "type": "LCD", "prices": {"Original": "250"}}, {"id": 15, "brand": "Samsung", "model": "S7edga/G935", "type": "LCD", "prices": {"Original": "440", "OLED": "375"}}, {"id": 16, "brand": "Samsung", "model": "S8/G9500", "type": "LCD", "prices": {"Original": "460", "OLED": "430", "OLED2": "170"}}, {"id": 17, "brand": "Samsung", "model": "S8plus/G9550", "type": "LCD", "prices": {"Original": "650", "OLED": "550", "OLED2": "200"}}, {"id": 18, "brand": "Samsung", "model": "S9/G9600", "type": "LCD", "prices": {"Original": "490", "OLED": "430", "OLED2": "200"}}, {"id": 19, "brand": "Samsung", "model": "S9plus/G9650", "type": "LCD", "prices": {"Original": "680", "OLED": "550", "OLED2": "200"}}, {"id": 20, "brand": "Samsung", "model": "S10 /G9730", "type": "LCD", "prices": {"OLED": "740", "OLED2": "230"}}, {"id": 21, "brand": "Samsung", "model": "S10+ /G9750", "type": "LCD", "prices": {"Original": "1050", "OLED": "820", "OLED2": "250"}}, {"id": 22, "brand": "Samsung", "model": "S20FE", "type": "LCD", "prices": {"OLED": "315"}}, {"id": 23, "brand": "Samsung", "model": "S20", "type": "LCD", "prices": {"OLED": "510"}}, {"id": 24, "brand": "Samsung", "model": "S20+", "type": "LCD", "prices": {"OLED": "450"}}, {"id": 25, "brand": "Samsung", "model": "S20 ULTRA", "type": "LCD", "prices": {"OLED": "550"}}, {"id": 26, "brand": "Samsung", "model": "S21FE", "type": "LCD", "prices": {"OLED": "350"}}, {"id": 27, "brand": "Samsung", "model": "S21", "type": "LCD", "prices": {"OLED": "540"}}, {"id": 28, "brand": "Samsung", "model": "S21u", "type": "LCD", "prices": {"OLED": "590"}}, {"id": 29, "brand": "Samsung", "model": "S22 ULTARA", "type": "LCD", "prices": {"OLED": "595"}}, {"id": 30, "brand": "Samsung", "model": "S23 ULTRA", "type": "LCD", "prices": {"OLED": "595"}}, {"id": 31, "brand": "Samsung", "model": "S24u", "type": "LCD", "prices": {"OLED": "650"}}, {"id": 32, "brand": "Samsung", "model": "Note2/N7100", "type": "LCD", "prices": {"Original": "95"}}, {"id": 33, "brand": "Samsung", "model": "Note3/N900/N9005", "type": "LCD", "prices": {"Original": "100"}}, {"id": 34, "brand": "Samsung", "model": "note3 mini/NOTE3 NEO", "type": "LCD", "prices": {"Original": "110"}}, {"id": 35, "brand": "Samsung", "model": "note4/N910", "type": "LCD", "prices": {"Original": "110"}}, {"id": 36, "brand": "Samsung", "model": "note5 /N920", "type": "LCD", "prices": {"Original": "165"}}, {"id": 37, "brand": "Samsung", "model": "note8/N9500", "type": "LCD", "prices": {"Original": "770", "OLED": "595", "OLED2": "260"}}, {"id": 38, "brand": "Samsung", "model": "Note9/N9600", "type": "LCD", "prices": {"Original": "810", "OLED": "595", "OLED2": "260"}}, {"id": 39, "brand": "Samsung", "model": "Note10", "type": "LCD", "prices": {"Original": "870", "OLED": "520"}}, {"id": 40, "brand": "Samsung", "model": "note10plus", "type": "LCD", "prices": {"Original": "1300", "OLED": "440"}}, {"id": 41, "brand": "Samsung", "model": "note10 lite", "type": "LCD", "prices": {"OLED": "440"}}, {"id": 42, "brand": "Samsung", "model": "NOTE20", "type": "LCD", "prices": {"OLED": "440"}}, {"id": 43, "brand": "Samsung", "model": "NOTE 20 ULTRA", "type": "LCD", "prices": {"OLED": "550"}}, {"id": 44, "brand": "Samsung", "model": "F13", "type": "LCD", "prices": {"Original": "75"}}, {"id": 45, "brand": "Samsung", "model": "F16", "type": "LCD", "prices": {"OLED": "big+f 275"}}, {"id": 46, "brand": "Samsung", "model": "m127", "type": "LCD", "prices": {"Original": "65"}}, {"id": 47, "brand": "Samsung", "model": "M06", "type": "LCD", "prices": {"Original": "85"}}, {"id": 48, "brand": "Samsung", "model": "M13", "type": "LCD", "prices": {"Original": "80"}}, {"id": 49, "brand": "Samsung", "model": "M146/M14 5", "type": "LCD", "prices": {"Original": "80"}}, {"id": 50, "brand": "Samsung", "model": "m336", "type": "LCD", "prices": {"Original": "65"}}, {"id": 51, "brand": "Samsung", "model": "m236", "type": "LCD", "prices": {"Original": "70"}}, {"id": 52, "brand": "Samsung", "model": "A20/M10S", "type": "LCD", "prices": {"Original": "200", "OLED": "W/F 173", "OLED2": "70"}}, {"id": 53, "brand": "Samsung", "model": "A21S/A217", "type": "LCD", "prices": {"OLED2": "57"}}, {"id": 54, "brand": "Samsung", "model": "A225 4G", "type": "LCD", "prices": {"OLED": "W/F 175", "OLED2": "85"}}, {"id": 55, "brand": "Samsung", "model": "A15/A15s", "type": "LCD", "prices": {"OLED": "w/f small 180 big 225", "OLED2": "85"}}, {"id": 56, "brand": "Samsung", "model": "A165/A166", "type": "LCD", "prices": {"OLED": "w/f small 190 big 225", "OLED2": "90"}}, {"id": 57, "brand": "Samsung", "model": "A176", "type": "LCD", "prices": {"OLED": "big 225", "OLED2": "90"}}, {"id": 58, "brand": "Samsung", "model": "A24", "type": "LCD", "prices": {"Original": "380", "OLED": "w/f small 185 big 225", "OLED2": "100"}}, {"id": 59, "brand": "Samsung", "model": "A25", "type": "LCD", "prices": {"OLED": "w/f small 185 big 225", "OLED2": "95"}}, {"id": 60, "brand": "Samsung", "model": "A26", "type": "LCD", "prices": {"OLED": "w/f 240", "OLED2": "100"}}, {"id": 61, "brand": "Samsung", "model": "A3", "type": "LCD", "prices": {"Original": "95"}}, {"id": 62, "brand": "Samsung", "model": "A310", "type": "LCD", "prices": {"Original": "160", "OLED": "130"}}, {"id": 63, "brand": "Samsung", "model": "A320", "type": "LCD", "prices": {"Original": "160", "OLED": "120"}}, {"id": 64, "brand": "Samsung", "model": "A30", "type": "LCD", "prices": {"Original": "340", "OLED": "W/F 175", "OLED2": "75"}}, {"id": 65, "brand": "Samsung", "model": "A30S", "type": "LCD", "prices": {"OLED": "W/F 175", "OLED2": "75"}}, {"id": 66, "brand": "Samsung", "model": "A31", "type": "LCD", "prices": {"Original": "390", "OLED": "W/F 180", "OLED2": "75"}}, {"id": 67, "brand": "Samsung", "model": "A325", "type": "LCD", "prices": {"OLED": "W/F 175", "OLED2": "80"}}, {"id": 68, "brand": "Samsung", "model": "A33", "type": "LCD", "prices": {"OLED": "W/F 200", "OLED2": "105"}}, {"id": 69, "brand": "Samsung", "model": "A34", "type": "LCD", "prices": {"OLED": "W/F 205 big 245", "OLED2": "105"}}, {"id": 70, "brand": "Samsung", "model": "A35", "type": "LCD", "prices": {"OLED": "big 220", "OLED2": "110"}}, {"id": 71, "brand": "Samsung", "model": "A36", "type": "LCD", "prices": {"OLED": "W/F 220", "OLED2": "110"}}, {"id": 72, "brand": "Samsung", "model": "A37", "type": "LCD", "prices": {"OLED": "W/F 240"}}, {"id": 73, "brand": "Samsung", "model": "A40", "type": "LCD", "prices": {"OLED2": "105"}}, {"id": 74, "brand": "Samsung", "model": "A40S", "type": "LCD", "prices": {"Original": "315"}}, {"id": 75, "brand": "Samsung", "model": "A41", "type": "LCD", "prices": {"OLED2": "140"}}, {"id": 76, "brand": "Samsung", "model": "A42", "type": "LCD", "prices": {"Original": "370", "OLED": "W/F 250", "OLED2": "130"}}, {"id": 77, "brand": "Samsung", "model": "A5", "type": "LCD", "prices": {"Original": "100"}}, {"id": 78, "brand": "Samsung", "model": "A510", "type": "LCD", "prices": {"Original": "160", "OLED": "110"}}, {"id": 79, "brand": "Samsung", "model": "A520", "type": "LCD", "prices": {"Original": "190", "OLED": "110"}}, {"id": 80, "brand": "Samsung", "model": "A530/A8 2018", "type": "LCD", "prices": {"Original": "200", "OLED": "170", "OLED2": "90"}}, {"id": 81, "brand": "Samsung", "model": "A50", "type": "LCD", "prices": {"Original": "340", "OLED": "W/F 175", "OLED2": "75"}}, {"id": 82, "brand": "Samsung", "model": "A50S", "type": "LCD", "prices": {"OLED": "W/F 175", "OLED2": "75"}}, {"id": 83, "brand": "Samsung", "model": "A51", "type": "LCD", "prices": {"OLED": "W/F 180 big 195", "OLED2": "85"}}, {"id": 84, "brand": "Samsung", "model": "A52", "type": "LCD", "prices": {"Original": "490", "OLED": "W/F 180 big215", "OLED2": "105"}}, {"id": 85, "brand": "Samsung", "model": "A53", "type": "LCD", "prices": {"OLED": "W/F 190 /210", "OLED2": "110"}}, {"id": 86, "brand": "Samsung", "model": "A54", "type": "LCD", "prices": {"OLED": "W/F 190 /210", "OLED2": "110"}}, {"id": 87, "brand": "Samsung", "model": "A55", "type": "LCD", "prices": {"OLED": "w/f 220 big/205small", "OLED2": "125"}}, {"id": 88, "brand": "Samsung", "model": "A56", "type": "LCD", "prices": {"OLED": "w/f big 215", "OLED2": "125"}}, {"id": 89, "brand": "Samsung", "model": "A57", "type": "LCD", "prices": {"OLED": "w/f big 395"}}, {"id": 90, "brand": "Samsung", "model": "A60/M40", "type": "LCD", "prices": {"Original": "135"}}, {"id": 91, "brand": "Samsung", "model": "A6plus", "type": "LCD", "prices": {"OLED": "big 215", "OLED2": "70"}}, {"id": 92, "brand": "Samsung", "model": "A7/A7 2015", "type": "LCD", "prices": {"Original": "100"}}, {"id": 93, "brand": "Samsung", "model": "A710/A7 2016", "type": "LCD", "prices": {"Original": "170"}}, {"id": 94, "brand": "Samsung", "model": "A720/A7 2017", "type": "LCD", "prices": {"Original": "290", "OLED": "145"}}, {"id": 95, "brand": "Samsung", "model": "A730/A8+ 2018", "type": "LCD", "prices": {"Original": "350", "OLED": "big 210", "OLED2": "85"}}, {"id": 96, "brand": "Samsung", "model": "A750/A7 2018", "type": "LCD", "prices": {"Original": "310 F/290noframe", "OLED": "big195 w/f220", "OLED2": "85"}}, {"id": 97, "brand": "Samsung", "model": "A70", "type": "LCD", "prices": {"Original": "430", "OLED": "W/F small130 BIG 230", "OLED2": "85"}}, {"id": 98, "brand": "Samsung", "model": "A71/A715", "type": "LCD", "prices": {"Original": "560", "OLED": "W/F 170 BIG 190", "OLED2": "85"}}, {"id": 99, "brand": "Samsung", "model": "A72", "type": "LCD", "prices": {"OLED": "W/F 190 big 205", "OLED2": "110"}}, {"id": 100, "brand": "Samsung", "model": "A73", "type": "LCD", "prices": {"OLED": "W/F 190 big 205", "OLED2": "110"}}, {"id": 101, "brand": "Samsung", "model": "A8", "type": "LCD", "prices": {"Original": "140"}}, {"id": 102, "brand": "Samsung", "model": "A810", "type": "LCD", "prices": {"Original": "140"}}, {"id": 103, "brand": "Samsung", "model": "A8S/g8875/g8870", "type": "LCD", "prices": {"Original": "185"}}, {"id": 104, "brand": "Samsung", "model": "A80", "type": "LCD", "prices": {"Original": "590", "OLED": "495"}}, {"id": 105, "brand": "Samsung", "model": "A9", "type": "LCD", "prices": {"Original": "300"}}, {"id": 106, "brand": "Samsung", "model": "A910/A9PRO", "type": "LCD", "prices": {"Original": "300"}}, {"id": 107, "brand": "Samsung", "model": "A920/A9 2018", "type": "LCD", "prices": {"OLED": "nofram 195/220+fram"}}, {"id": 108, "brand": "Samsung", "model": "A9 STAR /A8 STAR/G8850", "type": "LCD", "prices": {"Original": "420", "OLED": "290"}}, {"id": 109, "brand": "Samsung", "model": "A90", "type": "LCD", "prices": {"Original": "620", "OLED": "395"}}, {"id": 110, "brand": "Samsung", "model": "M30/M315/M31", "type": "LCD", "prices": {"OLED": "W/F 200", "OLED2": "95"}}, {"id": 111, "brand": "Samsung", "model": "M32", "type": "LCD", "prices": {"OLED": "W/F 210", "OLED2": "95"}}, {"id": 112, "brand": "Samsung", "model": "m31S", "type": "LCD", "prices": {"OLED": "big w/f 220", "OLED2": "95"}}, {"id": 113, "brand": "Samsung", "model": "M40/A60", "type": "LCD", "prices": {"Original": "135"}}, {"id": 114, "brand": "Samsung", "model": "M34", "type": "LCD", "prices": {"OLED": "w/f big 280"}}, {"id": 115, "brand": "Samsung", "model": "M51", "type": "LCD", "prices": {"OLED": "w/f big 225"}}, {"id": 116, "brand": "Samsung", "model": "M52", "type": "LCD", "prices": {"OLED": "w/f big 250"}}, {"id": 117, "brand": "Samsung", "model": "M53", "type": "LCD", "prices": {"OLED": "w/f big 280", "OLED2": "110"}}, {"id": 118, "brand": "Samsung", "model": "M54", "type": "LCD", "prices": {"OLED": "w/f big 250"}}, {"id": 119, "brand": "Samsung", "model": "M62/F62", "type": "LCD", "prices": {"OLED": "w/f big 270", "OLED2": "110"}}, {"id": 120, "brand": "Samsung", "model": "j110/J1 AEC", "type": "LCD", "prices": {"Original": "100", "OLED": "65", "OLED2": "45"}}, {"id": 121, "brand": "Samsung", "model": "J2", "type": "LCD", "prices": {"Original": "60", "OLED": "45"}}, {"id": 122, "brand": "Samsung", "model": "J120", "type": "LCD", "prices": {"Original": "90", "OLED": "60", "OLED2": "45"}}, {"id": 123, "brand": "Samsung", "model": "J250/J2PRO", "type": "LCD", "prices": {"Original": "130", "OLED": "80", "OLED2": "60"}}, {"id": 124, "brand": "Samsung", "model": "J320/J3", "type": "LCD", "prices": {"Original": "100", "OLED": "70", "OLED2": "45"}}, {"id": 125, "brand": "Samsung", "model": "J3110/J3pro", "type": "LCD", "prices": {"Original": "110"}}, {"id": 126, "brand": "Samsung", "model": "J4", "type": "LCD", "prices": {"Original": "140", "OLED": "100", "OLED2": "60"}}, {"id": 127, "brand": "Samsung", "model": "J5/J5 2015", "type": "LCD", "prices": {"Original": "100", "OLED": "65", "OLED2": "45"}}, {"id": 128, "brand": "Samsung", "model": "J510/J5 2016", "type": "LCD", "prices": {"Original": "125"}}, {"id": 129, "brand": "Samsung", "model": "J530/J5 2017", "type": "LCD", "prices": {"Original": "140", "OLED": "80", "OLED2": "55"}}, {"id": 130, "brand": "Samsung", "model": "J6", "type": "LCD", "prices": {"Original": "190", "OLED": "175", "OLED2": "65"}}, {"id": 131, "brand": "Samsung", "model": "J7", "type": "LCD", "prices": {"Original": "125", "OLED": "100"}}, {"id": 132, "brand": "Samsung", "model": "J710", "type": "LCD", "prices": {"Original": "125"}}, {"id": 133, "brand": "Samsung", "model": "J720", "type": "LCD", "prices": {"OLED": "120"}}, {"id": 134, "brand": "Samsung", "model": "J730", "type": "LCD", "prices": {"Original": "165", "OLED": "95", "OLED2": "60"}}, {"id": 135, "brand": "Samsung", "model": "j701/J7 CORE", "type": "LCD", "prices": {"Original": "135", "OLED": "100"}}, {"id": 136, "brand": "Samsung", "model": "J7plus/C8", "type": "LCD", "prices": {"Original": "150", "OLED": "110"}}, {"id": 137, "brand": "Samsung", "model": "J7 MAX", "type": "LCD", "prices": {"Original": "150"}}, {"id": 138, "brand": "Samsung", "model": "J8/J810", "type": "LCD", "prices": {"Original": "320", "OLED": "220", "OLED2": "65"}}, {"id": 139, "brand": "Samsung", "model": "E5", "type": "LCD", "prices": {"Original": "100"}}, {"id": 140, "brand": "Samsung", "model": "E7", "type": "LCD", "prices": {"Original": "100"}}, {"id": 141, "brand": "Samsung", "model": "C5", "type": "LCD", "prices": {"Original": "130", "OLED": "110"}}, {"id": 142, "brand": "Samsung", "model": "C5pro/C5010", "type": "LCD", "prices": {"Original": "220", "OLED": "135"}}, {"id": 143, "brand": "Samsung", "model": "C7", "type": "LCD", "prices": {"Original": "150", "OLED": "110"}}, {"id": 144, "brand": "Samsung", "model": "C7pro/C7010", "type": "LCD", "prices": {"Original": "270", "OLED": "140"}}, {"id": 145, "brand": "Samsung", "model": "C8", "type": "LCD", "prices": {"Original": "150", "OLED": "125"}}, {"id": 146, "brand": "Samsung", "model": "C9", "type": "LCD", "prices": {"Original": "230", "OLED": "160"}}, {"id": 147, "brand": "Samsung", "model": "C9pro/C9010", "type": "LCD", "prices": {"Original": "240", "OLED": "160"}}, {"id": 148, "brand": "Samsung", "model": "G850", "type": "LCD", "prices": {"Original": "75"}}, {"id": 149, "brand": "iPhone", "model": "5GSC", "type": "LCD", "prices": {"Copy": "50"}}, {"id": 150, "brand": "iPhone", "model": "6G", "type": "LCD", "prices": {"Copy": "60"}}, {"id": 151, "brand": "iPhone", "model": "6P", "type": "LCD", "prices": {"Copy": "68"}}, {"id": 152, "brand": "iPhone", "model": "6S", "type": "LCD", "prices": {"Copy": "60"}}, {"id": 153, "brand": "iPhone", "model": "6SP", "type": "LCD", "prices": {"Copy": "68"}}, {"id": 154, "brand": "iPhone", "model": "7G", "type": "LCD", "prices": {"Copy": "63"}}, {"id": 155, "brand": "iPhone", "model": "7 P", "type": "LCD", "prices": {"Copy": "70"}}, {"id": 156, "brand": "iPhone", "model": "8G", "type": "LCD", "prices": {"Copy": "60"}}, {"id": 157, "brand": "iPhone", "model": "8P", "type": "LCD", "prices": {"Copy": "70", "FOG": "140"}}, {"id": 158, "brand": "iPhone", "model": "X", "type": "LCD", "prices": {"Second Hand": "420", "Change Glass": "360", "FOG": "260", "Original GX": "160", "Copy GX": "115", "WD INCELL": "98", "HD UTC TFT": "80"}}, {"id": 159, "brand": "iPhone", "model": "XS", "type": "LCD", "prices": {"Second Hand": "420", "Change Glass": "360", "FOG": "260", "Original GX": "160", "Copy GX": "115", "WD INCELL": "98", "HD UTC TFT": "80"}}, {"id": 160, "brand": "iPhone", "model": "xsmax", "type": "LCD", "prices": {"Second Hand": "495", "Change Glass": "420", "FOG": "330", "Original GX": "220", "Copy GX": "135", "WD INCELL": "115", "HD UTC TFT": "95"}}, {"id": 161, "brand": "iPhone", "model": "XR", "type": "LCD", "prices": {"Second Hand": "270", "Change Glass": "200", "FOG": "115", "Original GX": "90", "HD UTC TFT": "80"}}, {"id": 162, "brand": "iPhone", "model": "11", "type": "LCD", "prices": {"Second Hand": "270", "Change Glass": "200", "FOG": "115", "Original GX": "90", "HD UTC TFT": "80"}}, {"id": 163, "brand": "iPhone", "model": "11pro", "type": "LCD", "prices": {"Second Hand": "495", "Change Glass": "390", "FOG": "330", "Original GX": "190", "Copy GX": "140", "WD INCELL": "110", "HD UTC TFT": "95"}}, {"id": 164, "brand": "iPhone", "model": "11pm", "type": "LCD", "prices": {"Second Hand": "795", "Change Glass": "530", "FOG": "395", "Original GX": "250", "Copy GX": "160", "WD INCELL": "130", "HD UTC TFT": "100"}}, {"id": 165, "brand": "iPhone", "model": "12pro", "type": "LCD", "prices": {"Second Hand": "490", "Change Glass": "420", "FOG": "395", "Original GX": "250", "Copy GX": "160", "WD INCELL": "130", "HD UTC TFT": "95"}}, {"id": 166, "brand": "iPhone", "model": "12 MINI", "type": "LCD", "prices": {"Second Hand": "600", "Change Glass": "510", "FOG": "430", "Original GX": "370", "Copy GX": "230", "HD UTC TFT": "140"}}, {"id": 167, "brand": "iPhone", "model": "12pm", "type": "LCD", "prices": {"Second Hand": "1120", "Change Glass": "930", "FOG": "420", "Original GX": "320", "Copy GX": "220", "WD INCELL": "195", "HD UTC TFT": "120"}}, {"id": 168, "brand": "iPhone", "model": "13", "type": "LCD", "prices": {"Second Hand": "630", "Change Glass": "520", "FOG": "425", "Original GX": "275", "Copy GX": "200", "WD INCELL": "170", "HD UTC TFT": "120"}}, {"id": 169, "brand": "iPhone", "model": "13 MINI", "type": "LCD", "prices": {"Second Hand": "950", "Change Glass": "820", "FOG": "580", "Original GX": "380", "Copy GX": "230", "HD UTC TFT": "130"}}, {"id": 170, "brand": "iPhone", "model": "13 PRO", "type": "LCD", "prices": {"Second Hand": "850", "Change Glass": "740", "FOG": "440", "Original GX": "310/390ARAX", "Copy GX": "210", "WD INCELL": "190", "HD UTC TFT": "140"}}, {"id": 171, "brand": "iPhone", "model": "13 PRO MAX", "type": "LCD", "prices": {"Second Hand": "1090", "Change Glass": "910", "FOG": "500", "Original GX": "320/395ARAX", "Copy GX": "250", "WD INCELL": "215", "HD UTC TFT": "175"}}, {"id": 172, "brand": "iPhone", "model": "14", "type": "LCD", "prices": {"Second Hand": "690", "Change Glass": "590", "FOG": "430", "Original GX": "280", "WD INCELL": "205", "HD UTC TFT": "135"}}, {"id": 173, "brand": "iPhone", "model": "14 PLUS", "type": "LCD", "prices": {"Second Hand": "980", "Change Glass": "900", "Original GX": "320", "WD INCELL": "240", "HD UTC TFT": "155"}}, {"id": 174, "brand": "iPhone", "model": "14 PRO", "type": "LCD", "prices": {"Second Hand": "1120", "Change Glass": "940", "FOG": "650", "Original GX": "390/470ARAX", "Copy GX": "280", "WD INCELL": "225", "HD UTC TFT": "190"}}, {"id": 175, "brand": "iPhone", "model": "14 PRO MAX", "type": "LCD", "prices": {"Second Hand": "1690", "Change Glass": "1450", "FOG": "680", "Original GX": "450/550ARAX", "Copy GX": "340", "WD INCELL": "290", "HD UTC TFT": "220"}}, {"id": 176, "brand": "iPhone", "model": "15", "type": "LCD", "prices": {"Second Hand": "1050", "Change Glass": "950", "Original GX": "395", "Copy GX": "290", "WD INCELL": "250", "HD UTC TFT": "185"}}, {"id": 177, "brand": "iPhone", "model": "15 PLUS", "type": "LCD", "prices": {"Second Hand": "1050", "Change Glass": "950", "Original GX": "410", "WD INCELL": "290", "HD UTC TFT": "200"}}, {"id": 178, "brand": "iPhone", "model": "15 PRO", "type": "LCD", "prices": {"Second Hand": "1650", "Change Glass": "1450", "FOG": "770", "Original GX": "400/550ARAX", "Copy GX": "300", "WD INCELL": "250", "HD UTC TFT": "195"}}, {"id": 179, "brand": "iPhone", "model": "15 PRO MAX", "type": "LCD", "prices": {"Second Hand": "1880", "Change Glass": "1650", "FOG": "820", "Original GX": "480/650ARAX", "Copy GX": "380", "WD INCELL": "290", "HD UTC TFT": "230"}}, {"id": 180, "brand": "iPhone", "model": "16", "type": "LCD", "prices": {"Second Hand": "1260", "Change Glass": "1130", "Original GX": "420"}}, {"id": 181, "brand": "iPhone", "model": "16 plus", "type": "LCD", "prices": {"Second Hand": "1100", "Change Glass": "970", "Original GX": "420"}}, {"id": 182, "brand": "iPhone", "model": "16 pro", "type": "LCD", "prices": {"Second Hand": "1690", "Change Glass": "1500", "FOG": "780", "Original GX": "495", "WD INCELL": "360"}}, {"id": 183, "brand": "iPhone", "model": "16 PRO MAX", "type": "LCD", "prices": {"Second Hand": "2150", "Change Glass": "2090", "FOG": "1040", "Original GX": "520/850ARAX", "WD INCELL": "395"}}, {"id": 184, "brand": "iPhone", "model": "17", "type": "LCD", "prices": {"Second Hand": "1950", "FOG": "850"}}, {"id": 185, "brand": "iPhone", "model": "17air", "type": "LCD", "prices": {"Second Hand": "2650", "FOG": "1400"}}, {"id": 186, "brand": "iPhone", "model": "17pro", "type": "LCD", "prices": {"Second Hand": "2500", "FOG": "1000", "WD INCELL": "450"}}, {"id": 187, "brand": "iPhone", "model": "17pro max", "type": "LCD", "prices": {"Second Hand": "2850", "FOG": "1450", "Original GX": "1050ARAX", "Copy GX": "600 DD", "WD INCELL": "470"}}, {"id": 188, "brand": "Samsung", "model": "A013", "type": "Service Pack", "prices": {"Price": "57"}, "colors": ["BLACK"]}, {"id": 189, "brand": "Samsung", "model": "A015 (A01-F) SMALL connector", "type": "Service Pack", "prices": {"Price": "57"}, "colors": ["BLACK"]}, {"id": 190, "brand": "Samsung", "model": "A015 (A01-M) BIG connector", "type": "Service Pack", "prices": {"Price": "57"}, "colors": ["BLACK"]}, {"id": 191, "brand": "Samsung", "model": "A022", "type": "Service Pack", "prices": {"Price": "59"}, "colors": ["BLACK"]}, {"id": 192, "brand": "Samsung", "model": "A027 (A02-S)/F025/A037", "type": "Service Pack", "prices": {"Price": "59"}, "colors": ["BLACK"]}, {"id": 193, "brand": "Samsung", "model": "A032 /A03 CORE", "type": "Service Pack", "prices": {"Price": "59"}, "colors": ["BLACK"]}, {"id": 194, "brand": "Samsung", "model": "A042", "type": "Service Pack", "prices": {"Price": "59"}, "colors": ["BLACK"]}, {"id": 195, "brand": "Samsung", "model": "A045", "type": "Service Pack", "prices": {"Price": "59"}, "colors": ["BLACK"]}, {"id": 196, "brand": "Samsung", "model": "A047/A136", "type": "Service Pack", "prices": {"Price": "59"}, "colors": ["BLACK"]}, {"id": 197, "brand": "Samsung", "model": "A055", "type": "Service Pack", "prices": {"Price": "62"}, "colors": ["BLACK"]}, {"id": 198, "brand": "Samsung", "model": "A057", "type": "Service Pack", "prices": {"Price": "70"}, "colors": ["BLACK"]}, {"id": 199, "brand": "Samsung", "model": "A065", "type": "Service Pack", "prices": {"Price": "63"}, "colors": ["BLACK"]}, {"id": 200, "brand": "Samsung", "model": "A07", "type": "Service Pack", "prices": {"Price": "65"}, "colors": ["BLACK"]}, {"id": 201, "brand": "Samsung", "model": "A105 (A10)", "type": "Service Pack", "prices": {"Price": "57"}, "colors": ["BLACK"]}, {"id": 202, "brand": "Samsung", "model": "A107 (A10 S)", "type": "Service Pack", "prices": {"Price": "57"}, "colors": ["BLACK"]}, {"id": 203, "brand": "Samsung", "model": "A115 (A11)", "type": "Service Pack", "prices": {"Price": "65"}, "colors": ["BLACK"]}, {"id": 204, "brand": "Samsung", "model": "A127/125/A022", "type": "Service Pack", "prices": {"Price": "59"}, "colors": ["BLACK"]}, {"id": 205, "brand": "Samsung", "model": "A137/A135/A235/M236/M336", "type": "Service Pack", "prices": {"Price": "63"}, "colors": ["BLACK"]}, {"id": 206, "brand": "Samsung", "model": "A145 (A14 4G)", "type": "Service Pack", "prices": {"Price": "65"}, "colors": ["BLACK"]}, {"id": 207, "brand": "Samsung", "model": "A146 (A14 5G)", "type": "Service Pack", "prices": {"Price": "65"}, "colors": ["BLACK"]}, {"id": 208, "brand": "Samsung", "model": "A155/A156", "type": "Service Pack", "prices": {"Price": "310"}, "colors": ["WITH FRAME"]}, {"id": 209, "brand": "Samsung", "model": "A165 (A16 4G)", "type": "Service Pack", "prices": {"Price": "380"}, "colors": ["WITH FRAME"]}, {"id": 210, "brand": "Samsung", "model": "A166 (A16 5G)", "type": "Service Pack", "prices": {"Price": "300"}, "colors": ["WITH FRAME"]}, {"id": 211, "brand": "Samsung", "model": "A175 (A17 4G)", "type": "Service Pack", "prices": {"Price": "370"}, "colors": []}, {"id": 212, "brand": "Samsung", "model": "A176 (A17 5G)", "type": "Service Pack", "prices": {"Price": "330"}, "colors": ["BLACK"]}, {"id": 213, "brand": "Samsung", "model": "A202 A20E", "type": "Service Pack", "prices": {"Price": "68"}, "colors": ["BLACK"]}, {"id": 214, "brand": "Samsung", "model": "A205", "type": "Service Pack", "prices": {"Price": "280"}, "colors": ["BLACK"]}, {"id": 215, "brand": "Samsung", "model": "A207 (A20S)", "type": "Service Pack", "prices": {"Price": "60"}, "colors": ["BLACK"]}, {"id": 216, "brand": "Samsung", "model": "A217 (A21-S)", "type": "Service Pack", "prices": {"Price": "75"}, "colors": ["BLACK"]}, {"id": 217, "brand": "Samsung", "model": "A225 (A22 4G)", "type": "Service Pack", "prices": {"Price": "230"}, "colors": ["with FRAME BLK"]}, {"id": 218, "brand": "Samsung", "model": "A226 (A22 5G)", "type": "Service Pack", "prices": {"Price": "68"}, "colors": ["BLACK"]}, {"id": 219, "brand": "Samsung", "model": "A235", "type": "Service Pack", "prices": {"Price": "68"}, "colors": ["BLACK"]}, {"id": 220, "brand": "Samsung", "model": "A245 (A24 5G)", "type": "Service Pack", "prices": {"Price": "380"}, "colors": ["BLACK"]}, {"id": 221, "brand": "Samsung", "model": "A25", "type": "Service Pack", "prices": {"Price": "380"}, "colors": ["BLACK"]}, {"id": 222, "brand": "Samsung", "model": "A266 (A26)", "type": "Service Pack", "prices": {"Price": "420", "green": "420", "pink": "390", "white": "420"}, "colors": ["BLACK", "green", "pink", "white"]}, {"id": 223, "brand": "Samsung", "model": "A276 (A27)", "type": "Service Pack", "prices": {"Price": "520"}, "colors": []}, {"id": 224, "brand": "Samsung", "model": "A260", "type": "Service Pack", "prices": {"Price": "62"}, "colors": ["BLACK"]}, {"id": 225, "brand": "Samsung", "model": "A305 (A30)", "type": "Service Pack", "prices": {"Price": "430"}, "colors": ["BLACK"]}, {"id": 226, "brand": "Samsung", "model": "A307 (A30s)", "type": "Service Pack", "prices": {"Price": "380"}, "colors": ["BLACK"]}, {"id": 227, "brand": "Samsung", "model": "A315 (A31 2020)", "type": "Service Pack", "prices": {"Price": "410"}, "colors": ["BLACK + FRAME"]}, {"id": 228, "brand": "Samsung", "model": "A325", "type": "Service Pack", "prices": {"Price": "490"}, "colors": ["BLK + FRAME"]}, {"id": 229, "brand": "Samsung", "model": "A336 (A33-5G)\nA336 (A33-5G)", "type": "Service Pack", "prices": {"Price": "560", "BLUE": "540", "GOLD": "570", "WHT": "540"}, "colors": ["BLACK", "BLUE", "GOLD", "WHT"]}, {"id": 230, "brand": "Samsung", "model": "A346 (A34 5G 2023)", "type": "Service Pack", "prices": {"Price": "530", "Green": "460", "SILVER": "480", "Violet": "490"}, "colors": ["Black", "Green", "SILVER", "Violet"]}, {"id": 231, "brand": "Samsung", "model": "A356 No Frame", "type": "Service Pack", "prices": {"Price": "410"}, "colors": ["No Frame"]}, {"id": 232, "brand": "Samsung", "model": "A356 + FRAME", "type": "Service Pack", "prices": {"Price": "480", "BLUE": "480", "YELLOW": "480", "LAVENDER": "480"}, "colors": ["BLACK", "BLUE", "YELLOW", "LAVENDER"]}, {"id": 233, "brand": "Samsung", "model": "A36 (A366)", "type": "Service Pack", "prices": {"Price": "560", "LAVENDER": "550", "Green": "550", "WHITE": "550"}, "colors": ["BLACK", "LAVENDER", "Green", "WHITE"]}, {"id": 234, "brand": "Samsung", "model": "A37 5G (A376)", "type": "Service Pack", "prices": {"Price": "580", "Green": "580", "VIOLET": "580", "WHITE": "580"}, "colors": ["BLACK", "Green", "VIOLET", "WHITE"]}, {"id": 235, "brand": "Samsung", "model": "A405", "type": "Service Pack", "prices": {"Price": "430"}, "colors": ["BLACK"]}, {"id": 236, "brand": "Samsung", "model": "A415 (A41 2020)", "type": "Service Pack", "prices": {"Price": "540"}, "colors": ["BLACK"]}, {"id": 237, "brand": "Samsung", "model": "A42", "type": "Service Pack", "prices": {"Price": "400"}, "colors": ["BLACK"]}, {"id": 238, "brand": "Samsung", "model": "A505", "type": "Service Pack", "prices": {"Price": "450"}, "colors": ["BLK"]}, {"id": 239, "brand": "Samsung", "model": "A515", "type": "Service Pack", "prices": {"Price": "580"}, "colors": ["BLACK"]}, {"id": 240, "brand": "Samsung", "model": "A525/A526/A528\nA525/A526/A528", "type": "Service Pack", "prices": {"Price": "595", "BLUE": "595", "VIOLET": "570", "WHITE": "590"}, "colors": ["BLK", "BLUE", "VIOLET", "WHITE"]}, {"id": 241, "brand": "Samsung", "model": "A528/A526/A525 A52S", "type": "Service Pack", "prices": {"Price": "595", "GREEN": "610", "VIOLET": "570", "WHITE": "590"}, "colors": ["BLK", "GREEN", "VIOLET", "WHITE"]}, {"id": 242, "brand": "Samsung", "model": "A536 (A53)", "type": "Service Pack", "prices": {"Price": "465"}, "colors": ["No Frame"]}, {"id": 243, "brand": "Samsung", "model": "A536 (A53-5G)\nA536 (A53-5G)", "type": "Service Pack", "prices": {"Price": "590", "Blue": "630", "GOLD": "530", "WHITE": "590"}, "colors": ["Black", "Blue", "GOLD", "WHITE"]}, {"id": 244, "brand": "Samsung", "model": "A546 NO FRAME", "type": "Service Pack", "prices": {"Price": "420"}, "colors": ["NO FRAME"]}, {"id": 245, "brand": "Samsung", "model": "A546 (A54 5G 2023)", "type": "Service Pack", "prices": {"Price": "480", "Violet": "480", "Green": "480", "WHITE": "480"}, "colors": ["Black", "Violet", "Green", "WHITE"]}, {"id": 246, "brand": "Samsung", "model": "A556  (A55 5G)", "type": "Service Pack", "prices": {"Price": "420", "BLUE": "510", "BLACK": "510", "LAVENDER": "510", "YELLOW": "510"}, "colors": ["NO Frame", "BLUE", "BLACK", "LAVENDER", "YELLOW"]}, {"id": 247, "brand": "Samsung", "model": "A56   (A566) NO FRAME", "type": "Service Pack", "prices": {"Price": "490"}, "colors": ["NO Frame"]}, {"id": 248, "brand": "Samsung", "model": "A56   (A566)", "type": "Service Pack", "prices": {"Price": "590", "GRAY": "590", "GREEN": "590", "PINK": "590"}, "colors": ["BLACK", "GRAY", "GREEN", "PINK"]}, {"id": 249, "brand": "Samsung", "model": "A576 (A57)", "type": "Service Pack", "prices": {"Price": "500"}, "colors": ["No Frame"]}, {"id": 250, "brand": "Samsung", "model": "A576 (A57)", "type": "Service Pack", "prices": {"Price": "610", "LIGHT BLUE": "610", "NAVY": "610"}, "colors": ["GRAY", "LIGHT BLUE", "NAVY"]}, {"id": 251, "brand": "Samsung", "model": "A600/J600", "type": "Service Pack", "prices": {"Price": "210"}, "colors": ["BLACK  J600"]}, {"id": 252, "brand": "Samsung", "model": "A605", "type": "Service Pack", "prices": {"Price": "370"}, "colors": ["BLACK"]}, {"id": 253, "brand": "Samsung", "model": "A60", "type": "Service Pack", "prices": {"Price": "135"}, "colors": ["BLACK"]}, {"id": 254, "brand": "Samsung", "model": "A705 (A70)", "type": "Service Pack", "prices": {"Price": "550"}, "colors": ["BLACK"]}, {"id": 255, "brand": "Samsung", "model": "A715 (A71)", "type": "Service Pack", "prices": {"Price": "630"}, "colors": ["BLACK"]}, {"id": 256, "brand": "Samsung", "model": "A725 A725", "type": "Service Pack", "prices": {"Price": "635", "VIOLET": "670", "WHITE": "670"}, "colors": ["BLACK", "BLUE", "VIOLET", "WHITE"]}, {"id": 257, "brand": "Samsung", "model": "A730 (A8 PLUS)", "type": "Service Pack", "prices": {}, "colors": ["BLACK"]}, {"id": 258, "brand": "Samsung", "model": "A736 (A73)\nA736 (A73)", "type": "Service Pack", "prices": {"Price": "430", "Mint/Green": "430", "WHT": "430"}, "colors": ["BLACK", "Mint/Green", "WHT"]}, {"id": 259, "brand": "Samsung", "model": "A750", "type": "Service Pack", "prices": {}, "colors": ["BLACK"]}, {"id": 260, "brand": "Samsung", "model": "A805", "type": "Service Pack", "prices": {"Price": "670"}, "colors": ["BLACK"]}, {"id": 261, "brand": "Samsung", "model": "A805", "type": "Service Pack", "prices": {"Price": "600"}, "colors": ["GOLD"]}, {"id": 262, "brand": "Samsung", "model": "A920", "type": "Service Pack", "prices": {"Price": "330"}, "colors": ["BLACK"]}, {"id": 263, "brand": "Samsung", "model": "F711 (Z Flip 3) Inner", "type": "Service Pack", "prices": {"Black Inner": "1650", "CREAM INNER": "1650", "Green Inner": "1650", "LAVENDER": "1650", "WHITE": "1650"}, "colors": ["No frame", "Black Inner", "CREAM INNER", "Green Inner", "LAVENDER", "WHITE"]}, {"id": 264, "brand": "Samsung", "model": "F721 (Z Flip 4 2022)", "type": "Service Pack", "prices": {"Price": "380"}, "colors": ["Blue outer"]}, {"id": 265, "brand": "Samsung", "model": "F721 (Z Flip 4 2022)", "type": "Service Pack", "prices": {"Price": "2200", "Blue inner": "2150", "Gold Inner": "2200", "Graphite Grey Inner": "2150", "Pink Gold Inner": "2150", "White Inner": "2150", "Violet/Purple Inner": "2050"}, "colors": ["black", "Blue inner", "Gold Inner", "Graphite Grey Inner", "Pink Gold Inner", "White Inner", "Violet/Purple Inner"]}, {"id": 266, "brand": "Samsung", "model": "F731 (F731 Flip 5 5g 2022)", "type": "Service Pack", "prices": {"Price": "430"}, "colors": ["outer"]}, {"id": 267, "brand": "Samsung", "model": "F731 (F731 Flip 5 5g 2022)\nF731 (F731 Flip 5 5g 2022)", "type": "Service Pack", "prices": {"Price": "2150", "Cream Inner": "2150", "Levender Inner": "2150", "Mint/Green Inner": "2150"}, "colors": ["Graphite Grey Inner", "Cream Inner", "Levender Inner", "Mint/Green Inner"]}, {"id": 268, "brand": "Samsung", "model": "F741 (Z FLIP6)", "type": "Service Pack", "prices": {"Price": "460"}, "colors": ["outer"]}, {"id": 269, "brand": "Samsung", "model": "F741 (Z FLIP6) INEER", "type": "Service Pack", "prices": {"Price": "1850", "MINT GREEN": "1850", "WHITE": "1850", "YELLOW": "1850"}, "colors": ["BLACK", "MINT GREEN", "WHITE", "YELLOW"]}, {"id": 270, "brand": "Samsung", "model": "F766 (Z FLIP7) INEER", "type": "Service Pack", "prices": {"Price": "2350", "BLUE": "2350", "GREEN": "2300", "outer": "600"}, "colors": ["BLACK", "BLUE", "GREEN", "outer"]}, {"id": 271, "brand": "Samsung", "model": "G570 ( J5 PRIME)\nG570 ( J5 PRIME)", "type": "Service Pack", "prices": {"Price": "60", "WHITE": "60", "GOLD": "60"}, "colors": ["BLACK", "WHITE", "GOLD"]}, {"id": 272, "brand": "Samsung", "model": "G610\nG610", "type": "Service Pack", "prices": {"Price": "60", "GOLD": "60", "WHITE": "60"}, "colors": ["BLACK", "GOLD", "WHITE"]}, {"id": 273, "brand": "Samsung", "model": "G611 (J7 PRIME 2)", "type": "Service Pack", "prices": {"Price": "60"}, "colors": ["BLACK"]}, {"id": 274, "brand": "Samsung", "model": "G615 (J7 MAX)", "type": "Service Pack", "prices": {}, "colors": ["BLACK", "GOLD"]}, {"id": 275, "brand": "Samsung", "model": "G770 (S10 Lite)", "type": "Service Pack", "prices": {}, "colors": ["BLACK", "Blue", "White"]}, {"id": 276, "brand": "Samsung", "model": "G780/G781 (S20 FE)\nG780/G781 (S20 FE)", "type": "Service Pack", "prices": {"Price": "540", "LAVENDER": "650", "GREEN": "650", "CLOUD RED": "650", "navy  ازرق غامق": "680", "WHITE": "660"}, "colors": ["NO FRAME", "BLACK", "LAVENDER", "GREEN", "ORANGE", "CLOUD RED", "navy  ازرق غامق", "WHITE"]}, {"id": 277, "brand": "Samsung", "model": "G970 (S10 E)", "type": "Service Pack", "prices": {}, "colors": ["Prism Black", "blue", "PINK", "White"]}, {"id": 278, "brand": "Samsung", "model": "G973 (S10)\nG973 (S10)", "type": "Service Pack", "prices": {"Price": "990", "white": "1080"}, "colors": ["Black", "white", "BLUE", "GREEN"]}, {"id": 279, "brand": "Samsung", "model": "S10 PLUS  G975", "type": "Service Pack", "prices": {"Price": "1350", "SILVER/WHITE": "1200", "GREEN": "1350"}, "colors": ["black", "BLUE", "SILVER/WHITE", "Ceramic", "GREEN", "Pink"]}, {"id": 280, "brand": "Samsung", "model": "G980 S20", "type": "Service Pack", "prices": {}, "colors": ["No Frame"]}, {"id": 281, "brand": "Samsung", "model": "G980 S20\nG980 S20", "type": "Service Pack", "prices": {"Price": "1100", "BLACK/GREY": "1000"}, "colors": ["BLUE", "BLACK/GREY", "WHITE", "PINK"]}, {"id": 282, "brand": "Samsung", "model": "G985/G986 (S20 PLUS)", "type": "Service Pack", "prices": {"Price": "1370", "Grey Cosmi": "1300", "WHITE": "1340"}, "colors": ["Black", "BLUE", "Aura Blue", "Grey Cosmi", "WHITE"]}, {"id": 283, "brand": "Samsung", "model": "G988 (S20 ULTRA)\nG988 (S20 ULTRA)", "type": "Service Pack", "prices": {"BLK Cosmic": "1510", "grey": "1495", "wht": "1460"}, "colors": ["No Frame", "BLK Cosmic", "grey", "wht"]}, {"id": 284, "brand": "Samsung", "model": "G990 S21 FE\nG990 S21 FE", "type": "Service Pack", "prices": {"Price": "830", "Green\nWHITE": "780", "Violet": "780"}, "colors": ["Grey", "Green\nWHITE", "Violet"]}, {"id": 285, "brand": "Samsung", "model": "G991 S21 G991 S21", "type": "Service Pack", "prices": {"Price": "1100", "WHITE": "1100", "Violet": "1100"}, "colors": ["GREY  / blk", "WHITE", "Violet", "PINK"]}, {"id": 286, "brand": "Samsung", "model": "G996 S21 PLUS 5G\nG996 S21 PLUS 5G", "type": "Service Pack", "prices": {"Price": "1200", "SILVER": "1200", "Violet": "1200"}, "colors": ["BLACK", "SILVER", "Violet"]}, {"id": 287, "brand": "Samsung", "model": "G998 S21 ULTRA", "type": "Service Pack", "prices": {"Price": "1620", "SIL": "1620"}, "colors": ["BLK", "SIL"]}, {"id": 288, "brand": "Samsung", "model": "G998 S21 ULTRA", "type": "Service Pack", "prices": {"Price": "1500"}, "colors": ["NO FRAME"]}, {"id": 289, "brand": "Samsung", "model": "J260", "type": "Service Pack", "prices": {"Price": "58"}, "colors": ["BLACK"]}, {"id": 290, "brand": "Samsung", "model": "J320\nJ320", "type": "Service Pack", "prices": {}, "colors": ["BLACK", "GOLD", "WHITE"]}, {"id": 291, "brand": "Samsung", "model": "J3110", "type": "Service Pack", "prices": {}, "colors": ["WHITE"]}, {"id": 292, "brand": "Samsung", "model": "J330", "type": "Service Pack", "prices": {}, "colors": ["BLACK *", "GOLD*", "SILVER*"]}, {"id": 293, "brand": "Samsung", "model": "J4 PLUS/J6 PLUS", "type": "Service Pack", "prices": {"Price": "57"}, "colors": ["BLACK"]}, {"id": 294, "brand": "Samsung", "model": "J500\nJ500", "type": "Service Pack", "prices": {}, "colors": ["BLACK", "GOLD", "WHITE"]}, {"id": 295, "brand": "Samsung", "model": "J600", "type": "Service Pack", "prices": {}, "colors": ["BLACK"]}, {"id": 296, "brand": "Samsung", "model": "M11", "type": "Service Pack", "prices": {"Price": "75"}, "colors": ["black"]}, {"id": 297, "brand": "Samsung", "model": "M127", "type": "Service Pack", "prices": {}, "colors": ["BLACK"]}, {"id": 298, "brand": "Samsung", "model": "M135", "type": "Service Pack", "prices": {}, "colors": ["With Frame"]}, {"id": 299, "brand": "Samsung", "model": "M146", "type": "Service Pack", "prices": {}, "colors": ["BLACK"]}, {"id": 300, "brand": "Samsung", "model": "M205 (M20 2019)", "type": "Service Pack", "prices": {"Price": "63"}, "colors": ["BLACK"]}, {"id": 301, "brand": "Samsung", "model": "M215 / M307", "type": "Service Pack", "prices": {"Price": "480"}, "colors": ["BLK"]}, {"id": 302, "brand": "Samsung", "model": "M225/E225 (M22/F22 2021)", "type": "Service Pack", "prices": {"Price": "240"}, "colors": ["BLACK"]}, {"id": 303, "brand": "Samsung", "model": "M236/M336 (M23/M33)", "type": "Service Pack", "prices": {"Price": "310"}, "colors": ["BLACK+FRAME"]}, {"id": 304, "brand": "Samsung", "model": "M305", "type": "Service Pack", "prices": {}, "colors": ["BLACK"]}, {"id": 305, "brand": "Samsung", "model": "M307 (M30-S) / M215", "type": "Service Pack", "prices": {"Price": "480"}, "colors": ["BLACK"]}, {"id": 306, "brand": "Samsung", "model": "M315/M217/F415", "type": "Service Pack", "prices": {"Price": "450"}, "colors": ["BLACK+FRAME"]}, {"id": 307, "brand": "Samsung", "model": "M317  (M31-S)", "type": "Service Pack", "prices": {"Price": "600"}, "colors": ["BLACK"]}, {"id": 308, "brand": "Samsung", "model": "M325", "type": "Service Pack", "prices": {"Price": "450"}, "colors": ["BLACK"]}, {"id": 309, "brand": "Samsung", "model": "M346", "type": "Service Pack", "prices": {"Price": "410"}, "colors": []}, {"id": 310, "brand": "Samsung", "model": "M356", "type": "Service Pack", "prices": {"Price": "450"}, "colors": []}, {"id": 311, "brand": "Samsung", "model": "M515+FRAME", "type": "Service Pack", "prices": {"Price": "390"}, "colors": ["BLACK FRAME"]}, {"id": 312, "brand": "Samsung", "model": "M526 (M52S 5G 2021)", "type": "Service Pack", "prices": {"Price": "460"}, "colors": ["BLACK"]}, {"id": 313, "brand": "Samsung", "model": "M536", "type": "Service Pack", "prices": {"Price": "420"}, "colors": ["BLACK"]}, {"id": 314, "brand": "Samsung", "model": "M546", "type": "Service Pack", "prices": {"Price": "480"}, "colors": ["BLACK"]}, {"id": 315, "brand": "Samsung", "model": "M556", "type": "Service Pack", "prices": {"Price": "380"}, "colors": ["BLACK"]}, {"id": 316, "brand": "Samsung", "model": "M625/E625/M62/F62", "type": "Service Pack", "prices": {}, "colors": ["BLACK"]}, {"id": 317, "brand": "Samsung", "model": "N770 (Note 10 Lite)\nN770 (Note 10 Lite)", "type": "Service Pack", "prices": {"Price": "1050", "SILVER": "1050"}, "colors": ["BLACK", "SILVER", "RED"]}, {"id": 318, "brand": "Samsung", "model": "N970 NOTE 10\nN970 NOTE 10", "type": "Service Pack", "prices": {"Price": "1100", "WHITE/sil": "1100"}, "colors": ["Aura Black", "SILVER", "WHITE/sil"]}, {"id": 319, "brand": "Samsung", "model": "N975 NOTE 10 PLUS\nN975 NOTE 10 PLUS", "type": "Service Pack", "prices": {"BLACK": "1550", "SILVER": "1550"}, "colors": ["NO FRAME", "BLACK", "BLUE", "SILVER", "STAR WARS", "WHITE"]}, {"id": 320, "brand": "Samsung", "model": "N980/N981  NOTE20", "type": "Service Pack", "prices": {}, "colors": ["No Frame"]}, {"id": 321, "brand": "Samsung", "model": "N980/N981  NOTE20\nN980/N981  NOTE20", "type": "Service Pack", "prices": {"Price": "1050", "GREY": "1050", "green": "1000"}, "colors": ["BRONZE", "GREY", "green", "GREEN+battery"]}, {"id": 322, "brand": "Samsung", "model": "N985/N986 N20 ULTRA 4G/5G\nN985/N986 N20 ULTRA 4G/5G", "type": "Service Pack", "prices": {"Price": "1740", "BRONZE": "1740", "WHITE": "1680"}, "colors": ["BLACK", "BRONZE", "WHITE"]}, {"id": 323, "brand": "Samsung", "model": "S711 (S23 FE)", "type": "Service Pack", "prices": {"Price": "410"}, "colors": ["NO FRAME"]}, {"id": 324, "brand": "Samsung", "model": "S711 (S23 FE) + Frame", "type": "Service Pack", "prices": {"Price": "700", "SILVER": "630"}, "colors": ["BLACK", "SILVER"]}, {"id": 325, "brand": "Samsung", "model": "S721 S24FE NO FRAME", "type": "Service Pack", "prices": {"Price": "460"}, "colors": []}, {"id": 326, "brand": "Samsung", "model": "S721 S24FE +FRAME", "type": "Service Pack", "prices": {"Price": "620", "SILVER": "620"}, "colors": ["GRAPHITE", "SILVER"]}, {"id": 327, "brand": "Samsung", "model": "S731 (S25FE)", "type": "Service Pack", "prices": {"Price": "500", "BLACK": "680", "WHITE": "680"}, "colors": ["NO FRAME", "BLACK", "WHITE"]}, {"id": 328, "brand": "Samsung", "model": "S901 S22 5G", "type": "Service Pack", "prices": {"Price": "890", "BLACK": "1140", "Green": "1020", "PINK-GOLD": "1070", "VIOLET": "1070", "WHT/Cream/Sky blue": "1020"}, "colors": ["No Frame", "BLACK", "Green", "PINK-GOLD", "VIOLET", "WHT/Cream/Sky blue"]}, {"id": 329, "brand": "Samsung", "model": "S906 S22 PLUS\nS906 S22 PLUS", "type": "Service Pack", "prices": {"BLACK": "1200", "GREEN": "1070", "PINK-GOLD": "1030", "GRAPHITE/GREY": "1030", "WHITE": "1030"}, "colors": ["No FRAME", "BLACK", "GREEN", "PINK-GOLD", "GRAPHITE/GREY", "WHITE"]}, {"id": 330, "brand": "Samsung", "model": "S908 S22 Ultra\nS908 S22 Ultra", "type": "Service Pack", "prices": {"Price": "1420", "BLACK": "1700", "BURGUNDY": "1600", "WHITE": "1550", "Green": "1600", "Graphite/Red/Sky Blue": "1600"}, "colors": ["No Frame", "BLACK", "BURGUNDY", "WHITE", "Green", "Graphite/Red/Sky Blue"]}, {"id": 331, "brand": "Samsung", "model": "S911 S23 5G\nS911 S23 5G", "type": "Service Pack", "prices": {"Price": "880", "BLACK": "1050", "CREAM/Beige": "1050", "Green": "1050", "Levender/Light Pink": "1080"}, "colors": ["No Frame", "BLACK", "CREAM/Beige", "Green", "Levender/Light Pink"]}, {"id": 332, "brand": "Samsung", "model": "S916 S23 PLUS\nS916 S23 PLUS", "type": "Service Pack", "prices": {"Price": "810", "Black": "1100", "CREAM/Beige": "1030", "Green": "950", "Levender/Light Pink": "950"}, "colors": ["No Frame", "Black", "CREAM/Beige", "Green", "Graphite", "Levender/Light Pink"]}, {"id": 333, "brand": "Samsung", "model": "S918  S23 ULTRA", "type": "Service Pack", "prices": {"Price": "1750", "CREAM/Beige": "1750", "Graphite/Grey/Red": "1750", "GREEN": "1750", "Light Blue / Light Green/Silver": "1750", "Levender/Light Pink": "1750"}, "colors": ["BLACK", "CREAM/Beige", "Graphite/Grey/Red", "GREEN", "Light Blue / Light Green/Silver", "Levender/Light Pink"]}, {"id": 334, "brand": "Samsung", "model": "S918  S23 ULTRA", "type": "Service Pack", "prices": {"Price": "1520"}, "colors": ["NO FRAME"]}, {"id": 335, "brand": "Samsung", "model": "S921 (S24)", "type": "Service Pack", "prices": {"Price": "850"}, "colors": ["NO FRAME"]}, {"id": 336, "brand": "Samsung", "model": "S921 (S24) +FRAME", "type": "Service Pack", "prices": {"Price": "1050", "GREY": "1050"}, "colors": ["BLACK", "GREY", "GREEN", "ORANGE", "VIOLET"]}, {"id": 337, "brand": "Samsung", "model": "S926 (S24 PLUS)", "type": "Service Pack", "prices": {"Price": "1070"}, "colors": ["NO FRAME"]}, {"id": 338, "brand": "Samsung", "model": "S926 (S24 PLUS) + FRAME", "type": "Service Pack", "prices": {"Price": "1250", "BLUE": "1250", "GREY": "1250", "YELLOW": "1250", "ORANGE": "1250", "VIOLET": "1250"}, "colors": ["BLACK", "BLUE", "GREY", "YELLOW", "ORANGE", "VIOLET"]}, {"id": 339, "brand": "Samsung", "model": "S928 (S24 ULTRA)+frame", "type": "Service Pack", "prices": {"Price": "1620", "Grey/Orange/Violet": "1620", "Yellow": "1620"}, "colors": ["Tit. Black/light blue/light green", "Grey/Orange/Violet", "Yellow"]}, {"id": 340, "brand": "Samsung", "model": "S928 (S24 ULTRA)", "type": "Service Pack", "prices": {"Price": "1390"}, "colors": ["NO FRAME"]}, {"id": 341, "brand": "Samsung", "model": "S931  S25 NO FRAME", "type": "Service Pack", "prices": {"Price": "770"}, "colors": []}, {"id": 342, "brand": "Samsung", "model": "S931  S25", "type": "Service Pack", "prices": {"Price": "980"}, "colors": ["BLUE/BLACK"]}, {"id": 343, "brand": "Samsung", "model": "S936 S25 PLUS NO FRAME", "type": "Service Pack", "prices": {"Price": "970"}, "colors": []}, {"id": 344, "brand": "Samsung", "model": "S936 S25 PLUS", "type": "Service Pack", "prices": {"Price": "1170"}, "colors": ["BLACK"]}, {"id": 345, "brand": "Samsung", "model": "S937 S25 EDGE/SLIM", "type": "Service Pack", "prices": {"Price": "1750", "SILVER": "1750"}, "colors": ["BLACK", "SILVER"]}, {"id": 346, "brand": "Samsung", "model": "S938   S25ULTRA NOFREAM", "type": "Service Pack", "prices": {"Price": "1390"}, "colors": []}, {"id": 347, "brand": "Samsung", "model": "S938   S25ULTRA +frame", "type": "Service Pack", "prices": {"Price": "1600", "SILVER": "1600", "titanium": "1600"}, "colors": ["black", "SILVER", "titanium"]}, {"id": 348, "brand": "Samsung", "model": "S948 (S26 ULTRA)", "type": "Service Pack", "prices": {"Price": "1650"}, "colors": ["NO FRAME"]}, {"id": 349, "brand": "Samsung", "model": "S948 (S26 ULTRA)/FR", "type": "Service Pack", "prices": {"Price": "2080"}, "colors": ["BLACK"]}, {"id": 350, "brand": "Samsung", "model": "S948 (S26 ULTRA)/FR", "type": "Service Pack", "prices": {"Price": "2080"}, "colors": ["VIOLET"]}, {"id": 351, "brand": "Huawei", "model": "Y32017", "type": "LCD", "prices": {"AAA": "50"}}, {"id": 352, "brand": "Huawei", "model": "Y52017", "type": "LCD", "prices": {"AAA": "55"}}, {"id": 353, "brand": "Huawei", "model": "Y52018", "type": "LCD", "prices": {"AAA": "55"}}, {"id": 354, "brand": "Huawei", "model": "Y52019 V2.2", "type": "LCD", "prices": {"ORI": "60"}}, {"id": 355, "brand": "Huawei", "model": "Y52019 V4.4", "type": "LCD", "prices": {"AAA": "60", "ORI": "65"}}, {"id": 356, "brand": "Huawei", "model": "Y5P2020", "type": "LCD", "prices": {"AAA": "60"}}, {"id": 357, "brand": "Huawei", "model": "Y62018", "type": "LCD", "prices": {"AAA": "60"}}, {"id": 358, "brand": "Huawei", "model": "Y62019", "type": "LCD", "prices": {"AAA": "57", "ORI": "60", "ORG": "70"}}, {"id": 359, "brand": "Huawei", "model": "Y6P2020", "type": "LCD", "prices": {"ORI": "65"}}, {"id": 360, "brand": "Huawei", "model": "Y72017", "type": "LCD", "prices": {"AAA": "60"}}, {"id": 361, "brand": "Huawei", "model": "Y72018", "type": "LCD", "prices": {"ORI": "60"}}, {"id": 362, "brand": "Huawei", "model": "Y72019", "type": "LCD", "prices": {"AAA": "60", "ORI": "65", "ORG": "75"}}, {"id": 363, "brand": "Huawei", "model": "Y7PRO2019", "type": "LCD", "prices": {"AAA": "60", "ORI": "65"}}, {"id": 364, "brand": "Huawei", "model": "Y7P2020", "type": "LCD", "prices": {"ORI": "65", "ORG": "75"}}, {"id": 365, "brand": "Huawei", "model": "Y7A/PSMART2021", "type": "LCD", "prices": {"ORI": "65", "ORG": "75"}}, {"id": 366, "brand": "Huawei", "model": "Y8P 2020", "type": "LCD", "prices": {"AAA": "70", "ORG": "290"}}, {"id": 367, "brand": "Huawei", "model": "Y92018", "type": "LCD", "prices": {"AAA": "60"}}, {"id": 368, "brand": "Huawei", "model": "Y92019", "type": "LCD", "prices": {"AAA": "65", "ORI": "90", "ORG": "105"}}, {"id": 369, "brand": "Huawei", "model": "Y9PRIME2019", "type": "LCD", "prices": {"AAA": "65", "ORI": "90", "ORG": "105"}}, {"id": 370, "brand": "Huawei", "model": "Y9S", "type": "LCD", "prices": {"AAA": "65", "ORI": "90", "ORG": "105"}}, {"id": 371, "brand": "Huawei", "model": "Y9A", "type": "LCD", "prices": {"AAA": "70", "ORI": "100", "ORG": "105"}}, {"id": 372, "brand": "Huawei", "model": "P8LITE", "type": "LCD", "prices": {"AAA": "55"}}, {"id": 373, "brand": "Huawei", "model": "P9", "type": "LCD", "prices": {"ORI": "65"}}, {"id": 374, "brand": "Huawei", "model": "P9LITE", "type": "LCD", "prices": {"ORI": "65"}}, {"id": 375, "brand": "Huawei", "model": "P10", "type": "LCD", "prices": {"ORI": "85"}}, {"id": 376, "brand": "Huawei", "model": "P10+", "type": "LCD", "prices": {"ORI": "110"}}, {"id": 377, "brand": "Huawei", "model": "P10LITE", "type": "LCD", "prices": {"ORI": "65"}}, {"id": 378, "brand": "Huawei", "model": "P20", "type": "LCD", "prices": {"ORI": "135"}}, {"id": 379, "brand": "Huawei", "model": "P20LITE", "type": "LCD", "prices": {"ORI": "65", "ORG": "80"}}, {"id": 380, "brand": "Huawei", "model": "P20PRO", "type": "LCD", "prices": {"AAA": "100", "ORG WF": "450"}}, {"id": 381, "brand": "Huawei", "model": "P30", "type": "LCD", "prices": {"AAA": "90", "ORG WF": "280", "OLED": "220"}}, {"id": 382, "brand": "Huawei", "model": "P30LITE", "type": "LCD", "prices": {"AAA": "65", "ORI": "90", "ORG": "105"}}, {"id": 383, "brand": "Huawei", "model": "P30PRO", "type": "LCD", "prices": {"AAA": "100", "ORG WF": "380", "OLED": "300"}}, {"id": 384, "brand": "Huawei", "model": "P40", "type": "LCD", "prices": {"AAA": "100", "ORG WF": "700"}}, {"id": 385, "brand": "Huawei", "model": "P40LITE", "type": "LCD", "prices": {"AAA": "65", "ORI": "90", "ORG": "105"}}, {"id": 386, "brand": "Huawei", "model": "P40PRO", "type": "LCD", "prices": {"AAA": "140", "ORG WF": "800"}}, {"id": 387, "brand": "Huawei", "model": "P50", "type": "LCD", "prices": {"ORG": "320", "ORG WF": "750"}}, {"id": 388, "brand": "Huawei", "model": "P50PRO", "type": "LCD", "prices": {"ORG": "640", "ORG WF": "700"}}, {"id": 389, "brand": "Huawei", "model": "P60", "type": "LCD", "prices": {"ORG": "480", "ORG WF": "550"}}, {"id": 390, "brand": "Huawei", "model": "P60PRO", "type": "LCD", "prices": {"ORG": "480", "ORG WF": "550"}}, {"id": 391, "brand": "Huawei", "model": "P70PRO", "type": "LCD", "prices": {"ORG": "1200"}}, {"id": 392, "brand": "Huawei", "model": "MATE10", "type": "LCD", "prices": {"ORI": "255"}}, {"id": 393, "brand": "Huawei", "model": "MATE10PRO", "type": "LCD", "prices": {"AAA": "90", "OLED": "250"}}, {"id": 394, "brand": "Huawei", "model": "MATE10LITE", "type": "LCD", "prices": {"AAA": "60"}}, {"id": 395, "brand": "Huawei", "model": "MAATE20", "type": "LCD", "prices": {"ORI": "155"}}, {"id": 396, "brand": "Huawei", "model": "MATE20LITE", "type": "LCD", "prices": {"ORI": "65", "ORG": "80"}}, {"id": 397, "brand": "Huawei", "model": "MATE20PRO", "type": "LCD", "prices": {"AAA": "110", "ORG WF": "630"}}, {"id": 398, "brand": "Huawei", "model": "MATE30", "type": "LCD", "prices": {"AAA": "95", "ORG": "450"}}, {"id": 399, "brand": "Huawei", "model": "MATE30PRO", "type": "LCD", "prices": {"AAA": "110", "ORG": "600", "ORG WF": "720"}}, {"id": 400, "brand": "Huawei", "model": "MAET40PRO", "type": "LCD", "prices": {"ORG": "750"}}, {"id": 401, "brand": "Huawei", "model": "MATE50PRO", "type": "LCD", "prices": {"ORG": "750"}}, {"id": 402, "brand": "Huawei", "model": "MATE60PRO", "type": "LCD", "prices": {"ORG": "750"}}, {"id": 403, "brand": "Huawei", "model": "NOVA2", "type": "LCD", "prices": {"AAA": "65"}}, {"id": 404, "brand": "Huawei", "model": "NOVA2PLUS", "type": "LCD", "prices": {"AAA": "65"}}, {"id": 405, "brand": "Huawei", "model": "NOVA3", "type": "LCD", "prices": {"ORI": "65", "ORG": "80"}}, {"id": 406, "brand": "Huawei", "model": "NOVA3I", "type": "LCD", "prices": {"ORI": "65", "ORG": "80"}}, {"id": 407, "brand": "Huawei", "model": "NOVA4", "type": "LCD", "prices": {"AAA": "65", "ORI": "90", "ORG": "105"}}, {"id": 408, "brand": "Huawei", "model": "NOVA5I", "type": "LCD", "prices": {"AAA": "65", "ORI": "90", "ORG": "105"}}, {"id": 409, "brand": "Huawei", "model": "NOVA5T", "type": "LCD", "prices": {"AAA": "65", "ORI": "95", "ORG": "105"}}, {"id": 410, "brand": "Huawei", "model": "NOVA6", "type": "LCD", "prices": {"AAA": "85"}}, {"id": 411, "brand": "Huawei", "model": "NOVAY60", "type": "LCD", "prices": {"ORI": "65"}}, {"id": 412, "brand": "Huawei", "model": "NOVAY62", "type": "LCD", "prices": {"ORI": "70"}}, {"id": 413, "brand": "Huawei", "model": "NOVA7", "type": "LCD", "prices": {"AAA": "80", "ORG": "340"}}, {"id": 414, "brand": "Huawei", "model": "NOVA7I", "type": "LCD", "prices": {"AAA": "65", "ORI": "90", "ORG": "105"}}, {"id": 415, "brand": "Huawei", "model": "NOVAY70", "type": "LCD", "prices": {"ORI": "65"}}, {"id": 416, "brand": "Huawei", "model": "NOVA7SE", "type": "LCD", "prices": {"AAA": "70", "ORI": "80"}}, {"id": 417, "brand": "Huawei", "model": "NOVA8", "type": "LCD", "prices": {"ORG": "280"}}, {"id": 418, "brand": "Huawei", "model": "NOVA9", "type": "LCD", "prices": {"ORG": "280"}}, {"id": 419, "brand": "Huawei", "model": "NOVAY90", "type": "LCD", "prices": {"ORI": "70"}}, {"id": 420, "brand": "Huawei", "model": "NOVAY91", "type": "LCD", "prices": {"ORI": "150"}}, {"id": 421, "brand": "Huawei", "model": "NOVA9SE", "type": "LCD", "prices": {"AAA": "90", "ORI": "105"}}, {"id": 422, "brand": "Huawei", "model": "NOVA10", "type": "LCD", "prices": {"ORG": "230"}}, {"id": 423, "brand": "Huawei", "model": "NOVA10SE", "type": "LCD", "prices": {"AAA": "155", "ORG": "300"}}, {"id": 424, "brand": "Huawei", "model": "NOVA10PRO", "type": "LCD", "prices": {"ORG": "370"}}, {"id": 425, "brand": "Huawei", "model": "NOVA11", "type": "LCD", "prices": {"ORG": "230"}}, {"id": 426, "brand": "Huawei", "model": "NOVA11SE", "type": "LCD", "prices": {"AAA": "155", "ORG": "230"}}, {"id": 427, "brand": "Huawei", "model": "NOVA11PRO", "type": "LCD", "prices": {"ORG": "370"}}, {"id": 428, "brand": "Huawei", "model": "NOVA12", "type": "LCD", "prices": {"ORG": "230"}}, {"id": 429, "brand": "Huawei", "model": "NOVA12SE", "type": "LCD", "prices": {"AAA": "155", "ORG": "230"}}, {"id": 430, "brand": "Huawei", "model": "NOVA13", "type": "LCD", "prices": {"ORG": "230"}}, {"id": 431, "brand": "Huawei", "model": "NOVA14", "type": "LCD", "prices": {"ORG": "360"}}, {"id": 432, "brand": "Huawei", "model": "HONOR7X", "type": "LCD", "prices": {"AAA": "65"}}, {"id": 433, "brand": "Huawei", "model": "HONOR8X", "type": "LCD", "prices": {"AAA": "65", "ORI": "90", "ORG": "105"}}, {"id": 434, "brand": "Huawei", "model": "HONOR8C", "type": "LCD", "prices": {"ORI": "65"}}, {"id": 435, "brand": "Huawei", "model": "HONOR9X", "type": "LCD", "prices": {"AAA": "65", "ORI": "90", "ORG": "105"}}, {"id": 436, "brand": "Huawei", "model": "HONORPLAY", "type": "LCD", "prices": {"ORI": "65", "ORG": "85"}}, {"id": 437, "brand": "Huawei", "model": "HONORPLAY10", "type": "LCD", "prices": {"ORI": "70"}}, {"id": 438, "brand": "Huawei", "model": "HONOR50", "type": "LCD", "prices": {"ORG": "280", "ORG WF": "350"}}, {"id": 439, "brand": "Huawei", "model": "HONOR50PRO", "type": "LCD", "prices": {"ORG": "430"}}, {"id": 440, "brand": "Huawei", "model": "HONOR50LITE", "type": "LCD", "prices": {"AAA": "70", "ORI": "95", "ORG": "110"}}, {"id": 441, "brand": "Huawei", "model": "HONOR60", "type": "LCD", "prices": {"ORG": "250"}}, {"id": 442, "brand": "Huawei", "model": "HONOR70", "type": "LCD", "prices": {"ORG": "250"}}, {"id": 443, "brand": "Huawei", "model": "HONOR90", "type": "LCD", "prices": {"ORG": "240", "ORG WF": "300"}}, {"id": 444, "brand": "Huawei", "model": "HONOR10LITE", "type": "LCD", "prices": {"AAA": "65", "ORI": "90", "ORG": "105"}}, {"id": 445, "brand": "Huawei", "model": "HONOR100", "type": "LCD", "prices": {"ORG": "220"}}, {"id": 446, "brand": "Huawei", "model": "HONOR200LITE", "type": "LCD", "prices": {"ORG": "220"}}, {"id": 447, "brand": "Huawei", "model": "HONOR200", "type": "LCD", "prices": {"AAA": "155", "ORG": "230"}}, {"id": 448, "brand": "Huawei", "model": "HONOR200PRO", "type": "LCD", "prices": {"ORG": "260"}}, {"id": 449, "brand": "Huawei", "model": "HONOR300PRO", "type": "LCD", "prices": {"ORG": "260"}}, {"id": 450, "brand": "Huawei", "model": "HONOR400", "type": "LCD", "prices": {"ORG": "260"}}, {"id": 451, "brand": "Huawei", "model": "HONOR400LITE", "type": "LCD", "prices": {"ORG": "260"}}, {"id": 452, "brand": "Huawei", "model": "HONOR400PRO", "type": "LCD", "prices": {"ORG": "660"}}, {"id": 453, "brand": "Huawei", "model": "HONOR MAGIC4PRO", "type": "LCD", "prices": {"ORG": "300"}}, {"id": 454, "brand": "Huawei", "model": "HONOR MAGIC5PRO", "type": "LCD", "prices": {"ORG": "300"}}, {"id": 455, "brand": "Huawei", "model": "HONOR MAGIE6PRO", "type": "LCD", "prices": {"ORG": "680"}}, {"id": 456, "brand": "Huawei", "model": "HONOR MAGIE7PRO", "type": "LCD", "prices": {"ORG": "600"}}, {"id": 457, "brand": "Huawei", "model": "PURA 70 PRO", "type": "LCD", "prices": {"ORG": "1200"}}, {"id": 458, "brand": "Huawei", "model": "PURA70ULTRA", "type": "LCD", "prices": {"ORG": "1200"}}, {"id": 459, "brand": "Huawei", "model": "X52022", "type": "LCD", "prices": {"ORI": "65"}}, {"id": 460, "brand": "Huawei", "model": "X5C/X5CPIUS", "type": "LCD", "prices": {"ORI": "70"}}, {"id": 461, "brand": "Huawei", "model": "X5PLUS", "type": "LCD", "prices": {"ORI": "65"}}, {"id": 462, "brand": "Huawei", "model": "X62022", "type": "LCD", "prices": {"ORI": "65"}}, {"id": 463, "brand": "Huawei", "model": "X6A", "type": "LCD", "prices": {"ORI": "65"}}, {"id": 464, "brand": "Huawei", "model": "X6B", "type": "LCD", "prices": {"ORI": "65"}}, {"id": 465, "brand": "Huawei", "model": "X6C", "type": "LCD", "prices": {"ORI": "70"}}, {"id": 466, "brand": "Huawei", "model": "X72022", "type": "LCD", "prices": {"ORI": "65"}}, {"id": 467, "brand": "Huawei", "model": "X7A", "type": "LCD", "prices": {"ORI": "65"}}, {"id": 468, "brand": "Huawei", "model": "X7B", "type": "LCD", "prices": {"ORI": "75"}}, {"id": 469, "brand": "Huawei", "model": "X7C", "type": "LCD", "prices": {"ORI": "75"}}, {"id": 470, "brand": "Huawei", "model": "X82022", "type": "LCD", "prices": {"ORI": "70"}}, {"id": 471, "brand": "Huawei", "model": "X8A", "type": "LCD", "prices": {"ORI": "70"}}, {"id": 472, "brand": "Huawei", "model": "X8B", "type": "LCD", "prices": {"AAA": "155", "ORG": "205"}}, {"id": 473, "brand": "Huawei", "model": "X8C", "type": "LCD", "prices": {"AAA": "155", "ORG": "200"}}, {"id": 474, "brand": "Huawei", "model": "X8D", "type": "LCD", "prices": {"ORG WF": "350"}}, {"id": 475, "brand": "Huawei", "model": "X9 5G", "type": "LCD", "prices": {"ORI": "75"}}, {"id": 476, "brand": "Huawei", "model": "X92022", "type": "LCD", "prices": {"ORI": "75"}}, {"id": 477, "brand": "Huawei", "model": "X9A", "type": "LCD", "prices": {"AAA": "140", "ORG": "220", "ORG WF": "250B/280GR"}}, {"id": 478, "brand": "Huawei", "model": "X9B", "type": "LCD", "prices": {"AAA": "155", "ORG": "260", "ORG WF": "290B/320GR"}}, {"id": 479, "brand": "Huawei", "model": "X9C", "type": "LCD", "prices": {"ORG": "280", "ORG WF": "300B/330GR"}}, {"id": 480, "brand": "Huawei", "model": "X9D", "type": "LCD", "prices": {"ORG": "280", "ORG WF": "300B/330GR"}}, {"id": 481, "brand": "Huawei", "model": "X7D", "type": "LCD", "prices": {"ORI": "75"}}, {"id": 482, "brand": "Huawei", "model": "X9C SMART", "type": "LCD", "prices": {"ORI": "75"}}, {"id": 483, "brand": "Infinx", "model": "SMARTHD", "type": "LCD", "prices": {"ORI": "59"}}, {"id": 484, "brand": "Infinx", "model": "SMART3+", "type": "LCD", "prices": {"ORI": "60"}}, {"id": 485, "brand": "Infinx", "model": "SMART4", "type": "LCD", "prices": {"ORI": "58"}}, {"id": 486, "brand": "Infinx", "model": "SMART5", "type": "LCD", "prices": {"ORI": "59", "ORG": "70"}}, {"id": 487, "brand": "Infinx", "model": "SMART6", "type": "LCD", "prices": {"ORI": "59", "ORG": "70"}}, {"id": 488, "brand": "Infinx", "model": "SAMRT6HD", "type": "LCD", "prices": {"ORI": "59", "ORG": "70"}}, {"id": 489, "brand": "Infinx", "model": "SMART6+", "type": "LCD", "prices": {"ORI": "65", "ORG": "80"}}, {"id": 490, "brand": "Infinx", "model": "SMART7/SMART7HD", "type": "LCD", "prices": {"ORI": "59", "ORG": "75"}}, {"id": 491, "brand": "Infinx", "model": "SMART8/SMART8HD", "type": "LCD", "prices": {"ORI": "59", "ORG": "70"}}, {"id": 492, "brand": "Infinx", "model": "SMART10", "type": "LCD", "prices": {"ORI": "60", "ORG": "75"}}, {"id": 493, "brand": "Infinx", "model": "SMART9", "type": "LCD", "prices": {"ORI": "60", "ORG": "75"}}, {"id": 494, "brand": "Infinx", "model": "NOTE7", "type": "LCD", "prices": {"ORI": "75"}}, {"id": 495, "brand": "Infinx", "model": "NOTE7LITE", "type": "LCD", "prices": {"ORI": "60", "ORG": "75"}}, {"id": 496, "brand": "Infinx", "model": "NOTE8", "type": "LCD", "prices": {"ORI": "75"}}, {"id": 497, "brand": "Infinx", "model": "NOTE10", "type": "LCD", "prices": {"ORI": "75", "ORG": "85"}}, {"id": 498, "brand": "Infinx", "model": "NOTE10PRO", "type": "LCD", "prices": {"ORI": "75", "ORG": "85"}}, {"id": 499, "brand": "Infinx", "model": "NOTE11", "type": "LCD", "prices": {"TFT": "70", "ORG": "280", "OLED": "230"}}, {"id": 500, "brand": "Infinx", "model": "NOTE11S", "type": "LCD", "prices": {"ORI": "75", "ORG": "85"}}, {"id": 501, "brand": "Infinx", "model": "NOTE11PRO", "type": "LCD", "prices": {"ORI": "75", "ORG": "85"}}, {"id": 502, "brand": "Infinx", "model": "NOTE12", "type": "LCD", "prices": {"TFT": "70", "ORG": "280", "OLED": "230"}}, {"id": 503, "brand": "Infinx", "model": "NOTE12I", "type": "LCD", "prices": {"ORI": "75", "ORG": "80"}}, {"id": 504, "brand": "Infinx", "model": "NOTE12VIP", "type": "LCD", "prices": {"TFT": "95", "ORG": "280"}}, {"id": 505, "brand": "Infinx", "model": "NOTE30", "type": "LCD", "prices": {"ORI": "70", "ORG": "80"}}, {"id": 506, "brand": "Infinx", "model": "NOTE30PRO", "type": "LCD", "prices": {"TFT": "75", "ORG": "230"}}, {"id": 507, "brand": "Infinx", "model": "NOTE40 4G", "type": "LCD", "prices": {"TFT": "75", "ORG": "250"}}, {"id": 508, "brand": "Infinx", "model": "NOTE40 5G", "type": "LCD", "prices": {"TFT": "75", "ORG": "250"}}, {"id": 509, "brand": "Infinx", "model": "NOTE40PRO/NOTE40PRO+", "type": "LCD", "prices": {"TFT": "85", "ORG": "250NOFR/310/FR"}}, {"id": 510, "brand": "Infinx", "model": "NOTE50", "type": "LCD", "prices": {"TFT": "75", "ORG": "250NOFR/310/FR"}}, {"id": 511, "brand": "Infinx", "model": "NOTE50S", "type": "LCD", "prices": {"ORG": "250NOFR/350/FR"}}, {"id": 512, "brand": "Infinx", "model": "NOTE50PRO/NOTE50PRO+", "type": "LCD", "prices": {"TFT": "75", "ORG": "250NOFR/350/FR"}}, {"id": 513, "brand": "Infinx", "model": "HOT7", "type": "LCD", "prices": {"ORI": "60"}}, {"id": 514, "brand": "Infinx", "model": "HOT8", "type": "LCD", "prices": {"ORI": "59", "ORG": "705"}}, {"id": 515, "brand": "Infinx", "model": "HOT9", "type": "LCD", "prices": {"ORI": "60", "ORG": "75"}}, {"id": 516, "brand": "Infinx", "model": "HOT9PLAY", "type": "LCD", "prices": {"ORI": "65", "ORG": "75"}}, {"id": 517, "brand": "Infinx", "model": "HOT10", "type": "LCD", "prices": {"ORI": "65", "ORG": "80"}}, {"id": 518, "brand": "Infinx", "model": "HOT10I", "type": "LCD", "prices": {"ORI": "58", "ORG": "70"}}, {"id": 519, "brand": "Infinx", "model": "HOT10S/HOT10T", "type": "LCD", "prices": {"ORI": "65", "ORG": "80"}}, {"id": 520, "brand": "Infinx", "model": "HOT10PLAY/HOT11PLAY", "type": "LCD", "prices": {"ORI": "65", "ORG": "80"}}, {"id": 521, "brand": "Infinx", "model": "HOT11", "type": "LCD", "prices": {"ORI": "60", "ORG": "75"}}, {"id": 522, "brand": "Infinx", "model": "HOT11S", "type": "LCD", "prices": {"ORI": "65", "ORG": "80"}}, {"id": 523, "brand": "Infinx", "model": "HOT11PLAY", "type": "LCD", "prices": {"ORI": "65", "ORG": "80"}}, {"id": 524, "brand": "Infinx", "model": "HOT12", "type": "LCD", "prices": {"ORI": "67", "ORG": "80"}}, {"id": 525, "brand": "Infinx", "model": "HOT12I", "type": "LCD", "prices": {"ORI": "59", "ORG": "80"}}, {"id": 526, "brand": "Infinx", "model": "HOT12PRO", "type": "LCD", "prices": {"ORI": "67", "ORG": "75"}}, {"id": 527, "brand": "Infinx", "model": "HOT12PLAY", "type": "LCD", "prices": {"ORI": "67", "ORG": "80"}}, {"id": 528, "brand": "Infinx", "model": "HOT20", "type": "LCD", "prices": {"ORI": "67", "ORG": "80"}}, {"id": 529, "brand": "Infinx", "model": "HOT20I", "type": "LCD", "prices": {"ORI": "69", "ORG": "80"}}, {"id": 530, "brand": "Infinx", "model": "HOT20S", "type": "LCD", "prices": {"ORI": "65", "ORG": "80"}}, {"id": 531, "brand": "Infinx", "model": "HOT20PLAY", "type": "LCD", "prices": {"ORI": "67", "ORG": "80"}}, {"id": 532, "brand": "Infinx", "model": "HOT30", "type": "LCD", "prices": {"ORI": "65", "ORG": "80"}}, {"id": 533, "brand": "Infinx", "model": "HOT30I", "type": "LCD", "prices": {"ORI": "59", "ORG": "80"}}, {"id": 534, "brand": "Infinx", "model": "HOT30PLAY", "type": "LCD", "prices": {"ORI": "67", "ORG": "80"}}, {"id": 535, "brand": "Infinx", "model": "HOT40", "type": "LCD", "prices": {"ORI": "65", "ORG": "80"}}, {"id": 536, "brand": "Infinx", "model": "HOT40I", "type": "LCD", "prices": {"ORI": "60", "ORG": "80"}}, {"id": 537, "brand": "Infinx", "model": "HOT40PRO", "type": "LCD", "prices": {"ORI": "65", "ORG": "80"}}, {"id": 538, "brand": "Infinx", "model": "HOT50", "type": "LCD", "prices": {"ORI": "70", "ORG": "90"}}, {"id": 539, "brand": "Infinx", "model": "HOT50I", "type": "LCD", "prices": {"ORI": "60", "ORG": "80"}}, {"id": 540, "brand": "Infinx", "model": "HOT50PRO", "type": "LCD", "prices": {"TFT": "75", "ORG": "260"}}, {"id": 541, "brand": "Infinx", "model": "HOT50PRO+", "type": "LCD", "prices": {"TFT": "90", "ORG": "250NOFR/310/FR"}}, {"id": 542, "brand": "Infinx", "model": "S3", "type": "LCD", "prices": {"ORI": "60"}}, {"id": 543, "brand": "Infinx", "model": "S4", "type": "LCD", "prices": {"ORI": "60"}}, {"id": 544, "brand": "Infinx", "model": "S5", "type": "LCD", "prices": {"ORI": "59", "ORG": "80"}}, {"id": 545, "brand": "Infinx", "model": "S5PRO", "type": "LCD", "prices": {"ORI": "70"}}, {"id": 546, "brand": "Infinx", "model": "INFINIX GT 10PRO", "type": "LCD", "prices": {"TFT": "75", "ORG": "230"}}, {"id": 547, "brand": "Infinx", "model": "INFINIX GT 20PRO", "type": "LCD", "prices": {"TFT": "75", "ORG": "250"}}, {"id": 548, "brand": "Infinx", "model": "INFINIX GT 30PRO", "type": "LCD", "prices": {"TFT": "95", "ORG": "270"}}, {"id": 549, "brand": "Infinx", "model": "HOT 60 PRO", "type": "LCD", "prices": {"ORG": "270"}}, {"id": 550, "brand": "Infinx", "model": "HOT60PRO+", "type": "LCD", "prices": {"TFT": "120", "ORG": "270NOFR/350/FR"}}, {"id": 551, "brand": "Tecno", "model": "SPAKR3", "type": "LCD", "prices": {"ORI": "62"}}, {"id": 552, "brand": "Tecno", "model": "SPARK4", "type": "LCD", "prices": {"ORI": "59", "ORG": "70"}}, {"id": 553, "brand": "Tecno", "model": "SPARK4LITE", "type": "LCD", "prices": {"ORI": "59", "ORG": "70"}}, {"id": 554, "brand": "Tecno", "model": "SPARK5", "type": "LCD", "prices": {"ORI": "60", "ORG": "80"}}, {"id": 555, "brand": "Tecno", "model": "SPARK5AIR", "type": "LCD", "prices": {"ORI": "65", "ORG": "80"}}, {"id": 556, "brand": "Tecno", "model": "SPAKR5PRO", "type": "LCD", "prices": {"ORI": "60", "ORG": "80"}}, {"id": 557, "brand": "Tecno", "model": "SPARK6", "type": "LCD", "prices": {"ORI": "67", "ORG": "80"}}, {"id": 558, "brand": "Tecno", "model": "SPAKR6GO", "type": "LCD", "prices": {"ORI": "59", "ORG": "80"}}, {"id": 559, "brand": "Tecno", "model": "SPARK6AIR", "type": "LCD", "prices": {"ORI": "57", "ORG": "80"}}, {"id": 560, "brand": "Tecno", "model": "SPARK7/SPARK7T", "type": "LCD", "prices": {"ORI": "59", "ORG": "75"}}, {"id": 561, "brand": "Tecno", "model": "SAPRK7PRO", "type": "LCD", "prices": {"ORI": "65", "ORG": "75"}}, {"id": 562, "brand": "Tecno", "model": "SPARK8/KG6K", "type": "LCD", "prices": {"ORI": "60", "ORG": "70"}}, {"id": 563, "brand": "Tecno", "model": "SPARK8PRO", "type": "LCD", "prices": {"ORI": "65", "ORG": "75"}}, {"id": 564, "brand": "Tecno", "model": "SPAKR8C", "type": "LCD", "prices": {"ORI": "60", "ORG": "75"}}, {"id": 565, "brand": "Tecno", "model": "SPARK8P", "type": "LCD", "prices": {"ORI": "65", "ORG": "75"}}, {"id": 566, "brand": "Tecno", "model": "SPARK8T", "type": "LCD", "prices": {"ORI": "60", "ORG": "75"}}, {"id": 567, "brand": "Tecno", "model": "SPARK9", "type": "LCD", "prices": {"ORI": "60", "ORG": "75"}}, {"id": 568, "brand": "Tecno", "model": "SPARK9PRO", "type": "LCD", "prices": {"ORI": "60", "ORG": "75"}}, {"id": 569, "brand": "Tecno", "model": "SPARK9T", "type": "LCD", "prices": {"ORI": "60", "ORG": "75"}}, {"id": 570, "brand": "Tecno", "model": "SPAKR10/SPARK10C", "type": "LCD", "prices": {"ORI": "60", "ORG": "75"}}, {"id": 571, "brand": "Tecno", "model": "SPARK10PRO", "type": "LCD", "prices": {"ORI": "65", "ORG": "75"}}, {"id": 572, "brand": "Tecno", "model": "SPARK20/SPARK20C", "type": "LCD", "prices": {"ORI": "60", "ORG": "75"}}, {"id": 573, "brand": "Tecno", "model": "SPARK20PRO", "type": "LCD", "prices": {"ORI": "65", "ORG": "75"}}, {"id": 574, "brand": "Tecno", "model": "SPARK20PRO+", "type": "LCD", "prices": {"TFT": "90", "ORG": "250NOFR/320/FR"}}, {"id": 575, "brand": "Tecno", "model": "SPARK30", "type": "LCD", "prices": {"ORI": "75", "ORG": "85"}}, {"id": 576, "brand": "Tecno", "model": "SPARK30C", "type": "LCD", "prices": {"ORI": "65", "ORG": "80"}}, {"id": 577, "brand": "Tecno", "model": "SPARK30PRO", "type": "LCD", "prices": {"TFT": "85", "ORG": "250"}}, {"id": 578, "brand": "Tecno", "model": "SPARK40PROPLUS", "type": "LCD", "prices": {"TFT": "130", "ORG": "260NOFR/350/FR"}}, {"id": 579, "brand": "Tecno", "model": "SPARKGO1", "type": "LCD", "prices": {"ORI": "65", "ORG": "80"}}, {"id": 580, "brand": "Tecno", "model": "SPARKGO2", "type": "LCD", "prices": {"ORI": "62", "ORG": "80"}}, {"id": 581, "brand": "Tecno", "model": "SPAKRGO2020", "type": "LCD", "prices": {"ORI": "60", "ORG": "80"}}, {"id": 582, "brand": "Tecno", "model": "SPARKGO2021", "type": "LCD", "prices": {"ORI": "60", "ORG": "80"}}, {"id": 583, "brand": "Tecno", "model": "SPAKRGO2022", "type": "LCD", "prices": {"ORI": "60", "ORG": "80"}}, {"id": 584, "brand": "Tecno", "model": "SPAKRGO2023", "type": "LCD", "prices": {"ORI": "60", "ORG": "80"}}, {"id": 585, "brand": "Tecno", "model": "SPARKGO2024", "type": "LCD", "prices": {"ORI": "60", "ORG": "80"}}, {"id": 586, "brand": "Tecno", "model": "SPARKGO2024/BG6M", "type": "LCD", "prices": {"ORI": "62", "ORG": "80"}}, {"id": 587, "brand": "Tecno", "model": "POP2F/B1G", "type": "LCD", "prices": {"TFT": "60"}}, {"id": 588, "brand": "Tecno", "model": "POP3", "type": "LCD", "prices": {"TFT": "62"}}, {"id": 589, "brand": "Tecno", "model": "POP4", "type": "LCD", "prices": {"TFT": "57"}}, {"id": 590, "brand": "Tecno", "model": "POP4PRO", "type": "LCD", "prices": {"TFT": "62"}}, {"id": 591, "brand": "Tecno", "model": "POP4LITE", "type": "LCD", "prices": {"TFT": "62"}}, {"id": 592, "brand": "Tecno", "model": "POP5", "type": "LCD", "prices": {"TFT": "62"}}, {"id": 593, "brand": "Tecno", "model": "POP5PRO", "type": "LCD", "prices": {"TFT": "60"}}, {"id": 594, "brand": "Tecno", "model": "POP5LITE", "type": "LCD", "prices": {"ORI": "60", "ORG": "80"}}, {"id": 595, "brand": "Tecno", "model": "POP6", "type": "LCD", "prices": {"ORI": "62"}}, {"id": 596, "brand": "Tecno", "model": "POP6PRO", "type": "LCD", "prices": {"ORI": "62"}}, {"id": 597, "brand": "Tecno", "model": "POP7/POP7PRO", "type": "LCD", "prices": {"ORI": "60", "ORG": "80"}}, {"id": 598, "brand": "Tecno", "model": "POP8", "type": "LCD", "prices": {"ORI": "60", "ORG": "80"}}, {"id": 599, "brand": "Tecno", "model": "POP9", "type": "LCD", "prices": {"ORI": "62", "ORG": "80"}}, {"id": 600, "brand": "Tecno", "model": "POVA SLIM", "type": "LCD", "prices": {"ORG": "320"}}, {"id": 601, "brand": "Tecno", "model": "POVA1", "type": "LCD", "prices": {"ORI": "67", "ORG": "80"}}, {"id": 602, "brand": "Tecno", "model": "POVANEO", "type": "LCD", "prices": {"ORI": "65", "ORG": "80"}}, {"id": 603, "brand": "Tecno", "model": "POVA2", "type": "LCD", "prices": {"ORI": "75", "ORG": "85"}}, {"id": 604, "brand": "Tecno", "model": "POVANEO2", "type": "LCD", "prices": {"ORI": "67", "ORG": "80"}}, {"id": 605, "brand": "Tecno", "model": "POVA3", "type": "LCD", "prices": {"ORI": "75", "ORG": "85"}}, {"id": 606, "brand": "Tecno", "model": "POVANEO3", "type": "LCD", "prices": {"ORI": "70", "ORG": "80"}}, {"id": 607, "brand": "Tecno", "model": "POVA4", "type": "LCD", "prices": {"ORI": "70", "ORG": "80"}}, {"id": 608, "brand": "Tecno", "model": "POVA4PRO", "type": "LCD", "prices": {"TFT": "85"}}, {"id": 609, "brand": "Tecno", "model": "POVA5", "type": "LCD", "prices": {"ORI": "65", "ORG": "80"}}, {"id": 610, "brand": "Tecno", "model": "POVA6", "type": "LCD", "prices": {"TFT": "80", "ORG": "250"}}, {"id": 611, "brand": "Tecno", "model": "POVA6PRO", "type": "LCD", "prices": {"TFT": "80", "ORG": "259"}}, {"id": 612, "brand": "Tecno", "model": "POVA7", "type": "LCD", "prices": {"ORI": "65", "ORG": "90"}}, {"id": 613, "brand": "Tecno", "model": "POVUOR3AIR/LC6", "type": "LCD", "prices": {"TFT": "62"}}, {"id": 614, "brand": "Tecno", "model": "POVUOR4AIR", "type": "LCD", "prices": {"ORI": "70", "ORG": "80"}}, {"id": 615, "brand": "Tecno", "model": "CAMON12PRO", "type": "LCD", "prices": {"TFT": "85"}}, {"id": 616, "brand": "Tecno", "model": "CAMON15", "type": "LCD", "prices": {"ORI": "60", "ORG": "80"}}, {"id": 617, "brand": "Tecno", "model": "CAMON15pro", "type": "LCD", "prices": {"ORI": "65", "ORG": "80"}}, {"id": 618, "brand": "Tecno", "model": "CAMON16", "type": "LCD", "prices": {"ORI": "70", "ORG": "80"}}, {"id": 619, "brand": "Tecno", "model": "CAMON16 pro", "type": "LCD", "prices": {"ORI": "95"}}, {"id": 620, "brand": "Tecno", "model": "CAMON16PRIME", "type": "LCD", "prices": {"ORI": "70"}}, {"id": 621, "brand": "Tecno", "model": "CAMON17", "type": "LCD", "prices": {"ORI": "70", "ORG": "80"}}, {"id": 622, "brand": "Tecno", "model": "CAMON17PRO", "type": "LCD", "prices": {"ORI": "75"}}, {"id": 623, "brand": "Tecno", "model": "CAMON18", "type": "LCD", "prices": {"ORI": "65", "ORG": "80"}}, {"id": 624, "brand": "Tecno", "model": "CAMON18PRIME", "type": "LCD", "prices": {"ORI": "110"}}, {"id": 625, "brand": "Tecno", "model": "CAMON19/CAMON19PRO", "type": "LCD", "prices": {"ORI": "70", "ORG": "80"}}, {"id": 626, "brand": "Tecno", "model": "CAMON19NEO", "type": "LCD", "prices": {"ORI": "65", "ORG": "80"}}, {"id": 627, "brand": "Tecno", "model": "CAMON20", "type": "LCD", "prices": {"TFT": "75", "ORG": "250"}}, {"id": 628, "brand": "Tecno", "model": "CAMON20PRO", "type": "LCD", "prices": {"TFT": "75", "ORG": "250"}}, {"id": 629, "brand": "Tecno", "model": "CAMON30", "type": "LCD", "prices": {"TFT": "75", "ORG": "270"}}, {"id": 630, "brand": "Tecno", "model": "CAMON30PRO", "type": "LCD", "prices": {"ORG": "270"}}, {"id": 631, "brand": "Tecno", "model": "COMMON30PRIME", "type": "LCD", "prices": {"ORG": "410"}}, {"id": 632, "brand": "Tecno", "model": "CAMON40", "type": "LCD", "prices": {"TFT": "75", "ORG": "250"}}, {"id": 633, "brand": "Tecno", "model": "CAMON40PRO", "type": "LCD", "prices": {"ORG": "250NOFR/320/FR"}}, {"id": 634, "brand": "Tecno", "model": "COMMON50PRO", "type": "LCD", "prices": {"ORG": "400"}}, {"id": 635, "brand": "Tecno", "model": "PHANTOMX", "type": "LCD", "prices": {"ORG": "450"}}, {"id": 636, "brand": "Tecno", "model": "ZERO8", "type": "LCD", "prices": {"ORI": "90"}}, {"id": 637, "brand": "Tecno", "model": "ZERO8I", "type": "LCD", "prices": {"ORI": "90"}}, {"id": 638, "brand": "Tecno", "model": "ZERO20", "type": "LCD", "prices": {"TFT": "80", "ORG": "300"}}, {"id": 639, "brand": "Tecno", "model": "ZERO30 4G/5G", "type": "LCD", "prices": {"TFT": "90", "ORG": "300"}}, {"id": 640, "brand": "Tecno", "model": "ZERO40 4G/5G", "type": "LCD", "prices": {"TFT": "90", "ORG": "300"}}, {"id": 641, "brand": "Tecno", "model": "ZERO XPRO", "type": "LCD", "prices": {"TFT": "70", "ORG": "300"}}, {"id": 642, "brand": "Tecno", "model": "ZERO ULTRA", "type": "LCD", "prices": {"ORG": "350"}}, {"id": 643, "brand": "Itel", "model": "A16+", "type": "LCD", "prices": {"TFT/AAA": "LCD/40"}}, {"id": 644, "brand": "Itel", "model": "A17", "type": "LCD", "prices": {"TFT/AAA": "60"}}, {"id": 645, "brand": "Itel", "model": "A26", "type": "LCD", "prices": {"TFT/AAA": "60"}}, {"id": 646, "brand": "Itel", "model": "A27", "type": "LCD", "prices": {"TFT/AAA": "60"}}, {"id": 647, "brand": "Itel", "model": "A35", "type": "LCD", "prices": {"TFT/AAA": "65"}}, {"id": 648, "brand": "Itel", "model": "A36", "type": "LCD", "prices": {"TFT/AAA": "65"}}, {"id": 649, "brand": "Itel", "model": "A37", "type": "LCD", "prices": {"TFT/AAA": "65"}}, {"id": 650, "brand": "Itel", "model": "A48", "type": "LCD", "prices": {"TFT/AAA": "65"}}, {"id": 651, "brand": "Itel", "model": "A49", "type": "LCD", "prices": {"ORI": "60", "ORG": "70"}}, {"id": 652, "brand": "Itel", "model": "A56", "type": "LCD", "prices": {"TFT/AAA": "60"}}, {"id": 653, "brand": "Itel", "model": "A57", "type": "LCD", "prices": {"TFT/AAA": "65"}}, {"id": 654, "brand": "Itel", "model": "A58/A58PRO", "type": "LCD", "prices": {"ORI": "60", "ORG": "75"}}, {"id": 655, "brand": "Itel", "model": "A58LITE", "type": "LCD", "prices": {"TFT/AAA": "65"}}, {"id": 656, "brand": "Itel", "model": "A05S", "type": "LCD", "prices": {"ORI": "60", "ORG": "70"}}, {"id": 657, "brand": "Itel", "model": "A50", "type": "LCD", "prices": {"ORI": "60", "ORG": "70"}}, {"id": 658, "brand": "Itel", "model": "A50C", "type": "LCD", "prices": {"ORI": "60", "ORG": "80"}}, {"id": 659, "brand": "Itel", "model": "A60", "type": "LCD", "prices": {"ORI": "60", "ORG": "75"}}, {"id": 660, "brand": "Itel", "model": "A70", "type": "LCD", "prices": {"ORI": "60", "ORG": "75"}}, {"id": 661, "brand": "Itel", "model": "A80", "type": "LCD", "prices": {"ORI": "65", "ORG": "75"}}, {"id": 662, "brand": "Itel", "model": "S15/S15PRO", "type": "LCD", "prices": {"TFT/AAA": "65"}}, {"id": 663, "brand": "Itel", "model": "S16", "type": "LCD", "prices": {"ORI": "60", "ORG": "80"}}, {"id": 664, "brand": "Itel", "model": "S16PRO", "type": "LCD", "prices": {"ORI": "70"}}, {"id": 665, "brand": "Itel", "model": "S17", "type": "LCD", "prices": {"ORI": "60", "ORG": "80"}}, {"id": 666, "brand": "Itel", "model": "S18", "type": "LCD", "prices": {"ORI": "60", "ORG": "80"}}, {"id": 667, "brand": "Itel", "model": "P17", "type": "LCD", "prices": {"TFT/AAA": "60"}}, {"id": 668, "brand": "Itel", "model": "P32", "type": "LCD", "prices": {"TFT/AAA": "60"}}, {"id": 669, "brand": "Itel", "model": "P33", "type": "LCD", "prices": {"TFT/AAA": "65"}}, {"id": 670, "brand": "Itel", "model": "P36/P37", "type": "LCD", "prices": {"ORI": "60", "ORG": "80"}}, {"id": 671, "brand": "Itel", "model": "P36PLAY", "type": "LCD", "prices": {"ORI": "65"}}, {"id": 672, "brand": "Itel", "model": "P38", "type": "LCD", "prices": {"ORI": "60", "ORG": "75"}}, {"id": 673, "brand": "Itel", "model": "P38PRO", "type": "LCD", "prices": {"ORI": "65", "ORG": "75"}}, {"id": 674, "brand": "Itel", "model": "P40", "type": "LCD", "prices": {"ORI": "60", "ORG": "75"}}, {"id": 675, "brand": "Itel", "model": "VISION1", "type": "LCD", "prices": {"ORI": "65"}}, {"id": 676, "brand": "Itel", "model": "VISION1+", "type": "LCD", "prices": {"ORI": "60", "ORG": "75"}}, {"id": 677, "brand": "Itel", "model": "VISION2", "type": "LCD", "prices": {"ORI": "65"}}, {"id": 678, "brand": "Itel", "model": "VISION2+", "type": "LCD", "prices": {"ORI": "65", "ORG": "75"}}, {"id": 679, "brand": "Itel", "model": "VISION3", "type": "LCD", "prices": {"ORI": "65", "ORG": "75"}}, {"id": 680, "brand": "Itel", "model": "VISION3+", "type": "LCD", "prices": {"ORI": "70", "ORG": "75"}}, {"id": 681, "brand": "Itel", "model": "VISION5", "type": "LCD", "prices": {"ORI": "60", "ORG": "80"}}, {"id": 682, "brand": "Itel", "model": "VISION5+", "type": "LCD", "prices": {"ORI": "60", "ORG": "80"}}, {"id": 683, "brand": "Redmi", "model": "REDMI4X", "type": "LCD", "prices": {"TFT/AAA": "60"}}, {"id": 684, "brand": "Redmi", "model": "REDMI5", "type": "LCD", "prices": {"ORI": "70"}}, {"id": 685, "brand": "Redmi", "model": "REDMI5A", "type": "LCD", "prices": {"TFT/AAA": "60"}}, {"id": 686, "brand": "Redmi", "model": "REDMI6/REDMI6A", "type": "LCD", "prices": {"ORI": "65"}}, {"id": 687, "brand": "Redmi", "model": "REDM6PRO", "type": "LCD", "prices": {"ORI": "70"}}, {"id": 688, "brand": "Redmi", "model": "REDMI7A", "type": "LCD", "prices": {"ORI": "65"}}, {"id": 689, "brand": "Redmi", "model": "REDMI7", "type": "LCD", "prices": {"ORI": "70"}}, {"id": 690, "brand": "Redmi", "model": "REDMI8/REDMI8A", "type": "LCD", "prices": {"ORI": "60", "ORG": "75"}}, {"id": 691, "brand": "Redmi", "model": "REDMI9", "type": "LCD", "prices": {"ORI": "60", "ORG": "75"}}, {"id": 692, "brand": "Redmi", "model": "REDMI9A/9C/10A", "type": "LCD", "prices": {"ORI": "60", "ORG": "75"}}, {"id": 693, "brand": "Redmi", "model": "REDMI9T/POCOM3", "type": "LCD", "prices": {"ORI": "65", "ORG": "75"}}, {"id": 694, "brand": "Redmi", "model": "REDMI10 4G", "type": "LCD", "prices": {"ORI": "70", "ORG": "80"}}, {"id": 695, "brand": "Redmi", "model": "REDMI10 5G", "type": "LCD", "prices": {"ORI": "70", "ORG": "80"}}, {"id": 696, "brand": "Redmi", "model": "REDMI12", "type": "LCD", "prices": {"ORI": "68", "ORG": "80"}}, {"id": 697, "brand": "Redmi", "model": "REDMI10C/C40", "type": "LCD", "prices": {"ORI": "65", "ORG": "76"}}, {"id": 698, "brand": "Redmi", "model": "REDMI13", "type": "LCD", "prices": {"ORI": "68", "ORG": "80"}}, {"id": 699, "brand": "Redmi", "model": "REDMI12C/C51", "type": "LCD", "prices": {"ORI": "65", "ORG": "75"}}, {"id": 700, "brand": "Redmi", "model": "REDMI13C /C65", "type": "LCD", "prices": {"ORI": "60", "ORG": "75"}}, {"id": 701, "brand": "Redmi", "model": "REDMI14C/C75", "type": "LCD", "prices": {"ORI": "65", "ORG": "75"}}, {"id": 702, "brand": "Redmi", "model": "REDMI 15", "type": "LCD", "prices": {"ORI": "90", "ORG": "105"}}, {"id": 703, "brand": "Redmi", "model": "REDMI15C", "type": "LCD", "prices": {"ORI": "65", "ORG": "80"}}, {"id": 704, "brand": "Redmi", "model": "REDMIA1+/A2+", "type": "LCD", "prices": {"ORI": "60", "ORG": "75"}}, {"id": 705, "brand": "Redmi", "model": "REDMIA3", "type": "LCD", "prices": {"ORI": "65", "ORG": "75"}}, {"id": 706, "brand": "Redmi", "model": "REDMIA5", "type": "LCD", "prices": {"ORI": "65", "ORG": "75"}}, {"id": 707, "brand": "Redmi", "model": "REDMI A5PRO", "type": "LCD", "prices": {"ORI": "65"}}, {"id": 708, "brand": "Redmi", "model": "REDMI A7", "type": "LCD", "prices": {"ORI": "70"}}, {"id": 709, "brand": "Redmi", "model": "REDMI A7PRO", "type": "LCD", "prices": {"ORI": "75"}}, {"id": 710, "brand": "Redmi", "model": "REDMINOTE5", "type": "LCD", "prices": {"TFT/AAA": "70"}}, {"id": 711, "brand": "Redmi", "model": "REDMINOTE6", "type": "LCD", "prices": {"TFT/AAA": "75"}}, {"id": 712, "brand": "Redmi", "model": "REDMINOTE8", "type": "LCD", "prices": {"ORI": "65", "ORG": "75"}}, {"id": 713, "brand": "Redmi", "model": "REDMINOTE8T", "type": "LCD", "prices": {"ORI": "65", "ORG": "75"}}, {"id": 714, "brand": "Redmi", "model": "REDMINOTE8PRO", "type": "LCD", "prices": {"TFT/AAA": "65", "ORG": "95"}}, {"id": 715, "brand": "Redmi", "model": "REDMINOTE9", "type": "LCD", "prices": {"ORI": "65", "ORG": "80"}}, {"id": 716, "brand": "Redmi", "model": "REDMINOTE9T", "type": "LCD", "prices": {"ORI": "70", "ORG": "80"}}, {"id": 717, "brand": "Redmi", "model": "REDMINOTE9S/REDMINOTE9PRO", "type": "LCD", "prices": {"ORI": "65", "ORG": "75"}}, {"id": 718, "brand": "Redmi", "model": "REDMINOTE10 5G", "type": "LCD", "prices": {"ORI": "70", "ORG": "80"}}, {"id": 719, "brand": "Redmi", "model": "REDMINOTE10 4G", "type": "LCD", "prices": {"TFT/AAA": "70", "ORG": "450", "OLED": "185"}}, {"id": 720, "brand": "Redmi", "model": "REDMINOTE10 S", "type": "LCD", "prices": {"TFT/AAA": "70", "ORG": "450", "OLED": "185"}}, {"id": 721, "brand": "Redmi", "model": "REDMINOTE10PRO", "type": "LCD", "prices": {"TFT/AAA": "75", "ORG": "550", "OLED": "185"}}, {"id": 722, "brand": "Redmi", "model": "REDMINOTE10T 5G", "type": "LCD", "prices": {"OLED": "125"}}, {"id": 723, "brand": "Redmi", "model": "REDMINOTE11E", "type": "LCD", "prices": {"ORI": "70", "ORG": "80"}}, {"id": 724, "brand": "Redmi", "model": "REDMINOTE11 4G", "type": "LCD", "prices": {"TFT/AAA": "70", "ORG": "430", "OLED": "200"}}, {"id": 725, "brand": "Redmi", "model": "REDMINOTE11PRO", "type": "LCD", "prices": {"TFT/AAA": "75", "ORG": "550", "OLED": "185"}}, {"id": 726, "brand": "Redmi", "model": "REDMINOTE12 4G", "type": "LCD", "prices": {"TFT/AAA": "75", "ORG": "550", "OLED": "185"}}, {"id": 727, "brand": "Redmi", "model": "REDMINOTE12S", "type": "LCD", "prices": {"TFT/AAA": "70", "ORG": "430", "OLED": "185"}}, {"id": 728, "brand": "Redmi", "model": "REDMINOTE12PRO 4G", "type": "LCD", "prices": {"TFT/AAA": "75", "ORG": "550", "OLED": "185"}}, {"id": 729, "brand": "Redmi", "model": "REDMINOTE12PRO 5G", "type": "LCD", "prices": {"TFT/AAA": "85", "ORG": "220"}}, {"id": 730, "brand": "Redmi", "model": "REDMINOTE13 4G", "type": "LCD", "prices": {"TFT/AAA": "75", "ORG": "430", "OLED": "185"}}, {"id": 731, "brand": "Redmi", "model": "REDMINOTE13 5G", "type": "LCD", "prices": {"TFT/AAA": "85", "ORG": "230"}}, {"id": 732, "brand": "Redmi", "model": "REDMINOTE13PRO 4G", "type": "LCD", "prices": {"TFT/AAA": "80", "ORG": "230"}}, {"id": 733, "brand": "Redmi", "model": "REDMINOTE13PRO 5G", "type": "LCD", "prices": {"TFT/AAA": "80", "ORG": "230"}}, {"id": 734, "brand": "Redmi", "model": "REDMINOTE13PRO PLUS", "type": "LCD", "prices": {"TFT/AAA": "90", "ORG": "230"}}, {"id": 735, "brand": "Redmi", "model": "REDMINOTE14 4G/5G", "type": "LCD", "prices": {"TFT/AAA": "75", "ORG": "430", "OLED": "185"}}, {"id": 736, "brand": "Redmi", "model": "REDMINOTE14PRO 4G", "type": "LCD", "prices": {"TFT/AAA": "90", "ORG": "250"}}, {"id": 737, "brand": "Redmi", "model": "REDMINOTE14PRO 5G", "type": "LCD", "prices": {"TFT/AAA": "90", "ORG": "250"}}, {"id": 738, "brand": "Redmi", "model": "REDMINOTE15 5G", "type": "LCD", "prices": {"TFT/AAA": "90", "ORG": "330"}}, {"id": 739, "brand": "Redmi", "model": "REDMI NOTE15PRO 4G", "type": "LCD", "prices": {"TFT/AAA": "90", "ORG": "330"}}, {"id": 740, "brand": "Redmi", "model": "REDMI NOTE15PRO 5G", "type": "LCD", "prices": {"TFT/AAA": "90", "ORG": "290"}}, {"id": 741, "brand": "Redmi", "model": "REDMI NOTE 15PRO PLUS", "type": "LCD", "prices": {"ORG": "320"}}, {"id": 742, "brand": "Poco", "model": "POCOF1", "type": "LCD", "prices": {"ORI": "70"}}, {"id": 743, "brand": "Poco", "model": "POCOF2", "type": "LCD", "prices": {"ORI": "80"}}, {"id": 744, "brand": "Poco", "model": "POCOF2PRO", "type": "LCD", "prices": {"TFT/AAA": "95", "ORG": "400"}}, {"id": 745, "brand": "Poco", "model": "POCOF3", "type": "LCD", "prices": {"TFT/AAA": "75", "ORG": "330", "OLED": "220"}}, {"id": 746, "brand": "Poco", "model": "POCOF3PRO", "type": "LCD", "prices": {"TFT/AAA": "75", "ORG": "330", "OLED": "220"}}, {"id": 747, "brand": "Poco", "model": "POCOF4", "type": "LCD", "prices": {"TFT/AAA": "75", "ORG": "330", "OLED": "220"}}, {"id": 748, "brand": "Poco", "model": "POCOF4GT", "type": "LCD", "prices": {"TFT/AAA": "95", "ORG": "270"}}, {"id": 749, "brand": "Poco", "model": "POCOF4PRO", "type": "LCD", "prices": {"TFT/AAA": "80", "ORG": "330", "OLED": "220"}}, {"id": 750, "brand": "Poco", "model": "POCOF5", "type": "LCD", "prices": {"TFT/AAA": "85", "ORG": "250"}}, {"id": 751, "brand": "Poco", "model": "POCOF5PRO", "type": "LCD", "prices": {"TFT/AAA": "90", "ORG": "450", "OLED": "280"}}, {"id": 752, "brand": "Poco", "model": "POCOF6", "type": "LCD", "prices": {"TFT/AAA": "85", "ORG": "220"}}, {"id": 753, "brand": "Poco", "model": "POCOF6PRO", "type": "LCD", "prices": {"TFT/AAA": "90", "ORG": "500", "OLED": "280"}}, {"id": 754, "brand": "Poco", "model": "POCOF7", "type": "LCD", "prices": {"ORG": "360"}}, {"id": 755, "brand": "Poco", "model": "POCOF7PRO", "type": "LCD", "prices": {"ORG": "630"}}, {"id": 756, "brand": "Poco", "model": "POCOF7ULTRA", "type": "LCD", "prices": {"ORG": "630"}}, {"id": 757, "brand": "Poco", "model": "POCOX3/PCOX3PRO", "type": "LCD", "prices": {"TFT/AAA": "75", "ORI": "100", "ORG": "115"}}, {"id": 758, "brand": "Poco", "model": "POCOX3GT", "type": "LCD", "prices": {"ORI": "70", "ORG": "85"}}, {"id": 759, "brand": "Poco", "model": "POCOX4PRO", "type": "LCD", "prices": {"TFT/AAA": "75", "ORG": "550", "OLED": "185"}}, {"id": 760, "brand": "Poco", "model": "POCOX4GT", "type": "LCD", "prices": {"ORI": "95", "ORG": "110"}}, {"id": 761, "brand": "Poco", "model": "POCOX5", "type": "LCD", "prices": {"TFT/AAA": "85", "ORG": "550", "OLED": "185"}}, {"id": 762, "brand": "Poco", "model": "POCOX5PRO", "type": "LCD", "prices": {"TFT/AAA": "85", "ORG": "220"}}, {"id": 763, "brand": "Poco", "model": "POCOX6", "type": "LCD", "prices": {"TFT/AAA": "85", "ORG": "220"}}, {"id": 764, "brand": "Poco", "model": "POCOX6PRO", "type": "LCD", "prices": {"TFT/AAA": "85", "ORG": "220"}}, {"id": 765, "brand": "Poco", "model": "POCOX7", "type": "LCD", "prices": {"TFT/AAA": "90", "ORG": "250"}}, {"id": 766, "brand": "Poco", "model": "POCOX7PRO", "type": "LCD", "prices": {"TFT/AAA": "155", "ORG": "330"}}, {"id": 767, "brand": "Poco", "model": "POCOM3/M3PRO", "type": "LCD", "prices": {"ORI": "65", "ORG": "75"}}, {"id": 768, "brand": "Poco", "model": "POCOM4 5G", "type": "LCD", "prices": {"ORI": "70", "ORG": "80"}}, {"id": 769, "brand": "Poco", "model": "POCOM4PRO 4G", "type": "LCD", "prices": {"TFT/AAA": "70", "ORG": "450", "OLED": "185"}}, {"id": 770, "brand": "Poco", "model": "POCO M4PRO 5G", "type": "LCD", "prices": {"ORI": "75", "ORG": "85"}}, {"id": 771, "brand": "Poco", "model": "POCOM5", "type": "LCD", "prices": {"ORI": "70", "ORG": "80"}}, {"id": 772, "brand": "Poco", "model": "POCOM5S", "type": "LCD", "prices": {"TFT/AAA": "70", "ORG": "450", "OLED": "185"}}, {"id": 773, "brand": "Poco", "model": "POCO M6PRO", "type": "LCD", "prices": {"TFT/AAA": "85", "ORG": "230"}}, {"id": 774, "brand": "Poco", "model": "POCOM7PRO 5G", "type": "LCD", "prices": {"TFT/AAA": "85", "ORG": "450", "OLED": "220"}}, {"id": 775, "brand": "Xiaomi", "model": "MIA1", "type": "LCD", "prices": {"ORI": "70"}}, {"id": 776, "brand": "Xiaomi", "model": "MIA2", "type": "LCD", "prices": {"ORI": "70"}}, {"id": 777, "brand": "Xiaomi", "model": "MIA3", "type": "LCD", "prices": {"INCELL": "70", "ORG": "260", "OLED": "220"}}, {"id": 778, "brand": "Xiaomi", "model": "MI8", "type": "LCD", "prices": {"INCELL": "95", "ORG": "160"}}, {"id": 779, "brand": "Xiaomi", "model": "MI8LITE", "type": "LCD", "prices": {"ORI": "75", "ORG": "85"}}, {"id": 780, "brand": "Xiaomi", "model": "MI8SE", "type": "LCD", "prices": {"INCELL": "95", "ORG": "220"}}, {"id": 781, "brand": "Xiaomi", "model": "MI9", "type": "LCD", "prices": {"INCELL": "100", "OLED": "190"}}, {"id": 782, "brand": "Xiaomi", "model": "MI9T/MI9TPRO", "type": "LCD", "prices": {"INCELL": "80", "ORG": "380", "OLED": "270"}}, {"id": 783, "brand": "Xiaomi", "model": "MI9LITE", "type": "LCD", "prices": {"INCELL": "95", "OLED": "185"}}, {"id": 784, "brand": "Xiaomi", "model": "MI9SE", "type": "LCD", "prices": {"INCELL": "115", "ORG": "320"}}, {"id": 785, "brand": "Xiaomi", "model": "MI10T 5G", "type": "LCD", "prices": {"ORI": "95"}}, {"id": 786, "brand": "Xiaomi", "model": "MI10LITE", "type": "LCD", "prices": {"INCELL": "95", "ORG": "210"}}, {"id": 787, "brand": "Xiaomi", "model": "MINOTE10", "type": "LCD", "prices": {"INCELL": "110", "ORG": "320"}}, {"id": 788, "brand": "Xiaomi", "model": "MI11", "type": "LCD", "prices": {"INCELL": "110", "ORG": "550"}}, {"id": 789, "brand": "Xiaomi", "model": "MI11T/MI11TPRO", "type": "LCD", "prices": {"INCELL": "85", "ORG": "220"}}, {"id": 790, "brand": "Xiaomi", "model": "MI11LITENE", "type": "LCD", "prices": {"INCELL": "85", "ORG": "310"}}, {"id": 791, "brand": "Xiaomi", "model": "MI11ULTRA", "type": "LCD", "prices": {"INCELL": "120", "ORG": "580"}}, {"id": 792, "brand": "Xiaomi", "model": "MI12", "type": "LCD", "prices": {"INCELL": "165", "ORG": "320"}}, {"id": 793, "brand": "Xiaomi", "model": "MI12T", "type": "LCD", "prices": {"INCELL": "85", "ORG": "290"}}, {"id": 794, "brand": "Xiaomi", "model": "MI12PRO/MI12TPRO", "type": "LCD", "prices": {"INCELL": "110", "ORG": "740"}}, {"id": 795, "brand": "Xiaomi", "model": "MI12X", "type": "LCD", "prices": {"INCELL": "165", "ORG": "300"}}, {"id": 796, "brand": "Xiaomi", "model": "MI12LITE", "type": "LCD", "prices": {"INCELL": "85", "ORG": "250"}}, {"id": 797, "brand": "Xiaomi", "model": "MI12ULTRA", "type": "LCD", "prices": {"INCELL": "110", "ORG": "400"}}, {"id": 798, "brand": "Xiaomi", "model": "MI13", "type": "LCD", "prices": {"INCELL": "110", "ORG": "400"}}, {"id": 799, "brand": "Xiaomi", "model": "MI13PRO", "type": "LCD", "prices": {"INCELL": "110", "ORG": "400"}}, {"id": 800, "brand": "Xiaomi", "model": "MI13TPRO", "type": "LCD", "prices": {"INCELL": "85", "ORG": "300"}}, {"id": 801, "brand": "Xiaomi", "model": "MI13LITE", "type": "LCD", "prices": {"ORG": "350"}}, {"id": 802, "brand": "Xiaomi", "model": "MI13ULTRA", "type": "LCD", "prices": {"ORG": "800", "OLED": "400"}}, {"id": 803, "brand": "Xiaomi", "model": "MI14", "type": "LCD", "prices": {"ORG": "450"}}, {"id": 804, "brand": "Xiaomi", "model": "MI14T", "type": "LCD", "prices": {"INCELL": "95", "ORG": "250"}}, {"id": 805, "brand": "Xiaomi", "model": "MI14TPRO", "type": "LCD", "prices": {"ORG": "250"}}, {"id": 806, "brand": "Xiaomi", "model": "MI14ULTRA", "type": "LCD", "prices": {"ORG": "700", "OLED": "400"}}, {"id": 807, "brand": "Xiaomi", "model": "MI15T", "type": "LCD", "prices": {"ORG": "370"}}, {"id": 808, "brand": "Xiaomi", "model": "MI15TPRO", "type": "LCD", "prices": {"ORG": "650"}}, {"id": 809, "brand": "Xiaomi", "model": "MI15 ULTRA", "type": "LCD", "prices": {"OLED": "400"}}, {"id": 810, "brand": "Xiaomi", "model": "MI17PROMAX", "type": "LCD", "prices": {"ORG": "970"}}, {"id": 811, "brand": "Xiaomi", "model": "K20", "type": "LCD", "prices": {"INCELL": "85", "ORG": "380", "OLED": "270"}}, {"id": 812, "brand": "Xiaomi", "model": "K30", "type": "LCD", "prices": {"ORI": "80"}}, {"id": 813, "brand": "Xiaomi", "model": "K40", "type": "LCD", "prices": {"INCELL": "85", "ORG": "330", "OLED": "220"}}, {"id": 814, "brand": "Xiaomi", "model": "K40GAMING", "type": "LCD", "prices": {"INCELL": "95", "ORG": "230"}}, {"id": 815, "brand": "Xiaomi", "model": "K50", "type": "LCD", "prices": {"INCELL": "90", "ORG": "350"}}, {"id": 816, "brand": "Xiaomi", "model": "K60", "type": "LCD", "prices": {"INCELL": "90", "ORG": "560", "OLED": "300"}}, {"id": 817, "brand": "Xiaomi", "model": "K70", "type": "LCD", "prices": {"INCELL": "90", "ORG": "550", "OLED": "300"}}, {"id": 818, "brand": "Xiaomi", "model": "K80", "type": "LCD", "prices": {"ORG": "650"}}, {"id": 819, "brand": "Back Shrak", "model": "BACK SHRAK HELLO", "type": "LCD", "prices": {"ORG": "330"}}, {"id": 820, "brand": "Back Shrak", "model": "BACK SHRAK2", "type": "LCD", "prices": {"ORG": "590"}}, {"id": 821, "brand": "Back Shrak", "model": "BACK SHRAK3", "type": "LCD", "prices": {"ORG": "400"}}, {"id": 822, "brand": "Back Shrak", "model": "BACK SHRAK3S", "type": "LCD", "prices": {"ORG": "400"}}, {"id": 823, "brand": "Back Shrak", "model": "BACK SHRAK4", "type": "LCD", "prices": {"INCELL": "85", "ORG": "400"}}, {"id": 824, "brand": "Back Shrak", "model": "BACK SHRAK5", "type": "LCD", "prices": {"INCELL": "85", "ORG": "400"}}, {"id": 825, "brand": "Back Shrak", "model": "BACK SHRAK5PRO", "type": "LCD", "prices": {"INCELL": "115", "ORG": "400"}}, {"id": 826, "brand": "Back Shrak", "model": "BLACK SHARK6", "type": "LCD", "prices": {"ORG": "400"}}, {"id": 827, "brand": "Back Shrak", "model": "BLACK SHARK7", "type": "LCD", "prices": {"ORG": "320"}}, {"id": 828, "brand": "Oppo", "model": "A1K", "type": "LCD", "prices": {"ORI": "60"}}, {"id": 829, "brand": "Oppo", "model": "A7/A12/A5S", "type": "LCD", "prices": {"ORI": "60", "ORG": "70"}}, {"id": 830, "brand": "Oppo", "model": "A3S", "type": "LCD", "prices": {"ORI": "65", "ORG": "70"}}, {"id": 831, "brand": "Oppo", "model": "A312020", "type": "LCD", "prices": {"ORI": "60", "ORG": "70"}}, {"id": 832, "brand": "Oppo", "model": "A52020/A92020", "type": "LCD", "prices": {"ORI": "60", "ORG": "70"}}, {"id": 833, "brand": "Oppo", "model": "A15", "type": "LCD", "prices": {"ORI": "60", "ORG": "70"}}, {"id": 834, "brand": "Oppo", "model": "A16", "type": "LCD", "prices": {"ORI": "60", "ORG": "70"}}, {"id": 835, "brand": "Oppo", "model": "A17", "type": "LCD", "prices": {"ORI": "60", "ORG": "75"}}, {"id": 836, "brand": "Oppo", "model": "A36", "type": "LCD", "prices": {"ORI": "60", "ORG": "76"}}, {"id": 837, "brand": "Oppo", "model": "A38", "type": "LCD", "prices": {"ORI": "60", "ORG": "75"}}, {"id": 838, "brand": "Oppo", "model": "A52", "type": "LCD", "prices": {"ORI": "65", "ORG": "75"}}, {"id": 839, "brand": "Oppo", "model": "A32/A53", "type": "LCD", "prices": {"ORI": "65", "ORG": "75"}}, {"id": 840, "brand": "Oppo", "model": "A54", "type": "LCD", "prices": {"ORI": "65", "ORG": "75"}}, {"id": 841, "brand": "Oppo", "model": "A57", "type": "LCD", "prices": {"ORI": "65", "ORG": "75"}}, {"id": 842, "brand": "Oppo", "model": "A58 4G", "type": "LCD", "prices": {"ORI": "65", "ORG": "75"}}, {"id": 843, "brand": "Oppo", "model": "A58 5G", "type": "LCD", "prices": {"ORI": "65", "ORG": "75"}}, {"id": 844, "brand": "Oppo", "model": "A73", "type": "LCD", "prices": {"INCELL": "70", "ORG": "300", "OLED": "200"}}, {"id": 845, "brand": "Oppo", "model": "A78 4G", "type": "LCD", "prices": {"INCELL": "75", "ORG": "420", "OLED": "300"}}, {"id": 846, "brand": "Oppo", "model": "A93", "type": "LCD", "prices": {"INCELL": "75", "ORG": "420", "OLED": "300"}}, {"id": 847, "brand": "Oppo", "model": "A94", "type": "LCD", "prices": {"INCELL": "70", "ORG": "330", "OLED": "300"}}, {"id": 848, "brand": "Oppo", "model": "A96", "type": "LCD", "prices": {"INCELL": "70", "ORG": "330", "OLED": "300"}}, {"id": 849, "brand": "Oppo", "model": "F7", "type": "LCD", "prices": {"ORI": "70", "ORG": "75"}}, {"id": 850, "brand": "Oppo", "model": "F9", "type": "LCD", "prices": {"ORI": "65", "ORG": "75"}}, {"id": 851, "brand": "Oppo", "model": "F11", "type": "LCD", "prices": {"ORI": "70", "ORG": "80"}}, {"id": 852, "brand": "Oppo", "model": "F11PRO", "type": "LCD", "prices": {"ORI": "75", "ORG": "85"}}, {"id": 853, "brand": "Realme", "model": "REALMEC3", "type": "LCD", "prices": {"ORI": "60", "ORG": "70"}}, {"id": 854, "brand": "Realme", "model": "REALME X2PRO", "type": "LCD", "prices": {"TFT": "85", "ORG": "350", "OLED": "190"}}, {"id": 855, "brand": "Realme", "model": "REALME X3", "type": "LCD", "prices": {"ORI": "80"}}, {"id": 856, "brand": "Realme", "model": "REALMEC11/C12/C15", "type": "LCD", "prices": {"ORI": "60", "ORG": "75"}}, {"id": 857, "brand": "Realme", "model": "REALMEC112021/C20", "type": "LCD", "prices": {"ORI": "65", "ORG": "75"}}, {"id": 858, "brand": "Realme", "model": "REALMEC21Y/C25Y", "type": "LCD", "prices": {"ORI": "60", "ORG": "75"}}, {"id": 859, "brand": "Realme", "model": "REALMEC30S", "type": "LCD", "prices": {"ORI": "65", "ORG": "75"}}, {"id": 860, "brand": "Realme", "model": "REALMEC30", "type": "LCD", "prices": {"ORI": "65", "ORG": "75"}}, {"id": 861, "brand": "Realme", "model": "REALMEC33", "type": "LCD", "prices": {"ORI": "65", "ORG": "75"}}, {"id": 862, "brand": "Realme", "model": "REALMEC31", "type": "LCD", "prices": {"ORI": "65", "ORG": "75"}}, {"id": 863, "brand": "Realme", "model": "REALMEC35", "type": "LCD", "prices": {"ORI": "65", "ORG": "75"}}, {"id": 864, "brand": "Realme", "model": "REALMEC51/C53", "type": "LCD", "prices": {"ORI": "65", "ORG": "75"}}, {"id": 865, "brand": "Realme", "model": "REALMEC55", "type": "LCD", "prices": {"ORI": "65", "ORG": "75"}}, {"id": 866, "brand": "Realme", "model": "REALMEC61", "type": "LCD", "prices": {"ORI": "65", "ORG": "75"}}, {"id": 867, "brand": "Realme", "model": "REALMEC63", "type": "LCD", "prices": {"ORI": "65", "ORG": "75"}}, {"id": 868, "brand": "Realme", "model": "REALMEC65", "type": "LCD", "prices": {"ORI": "65", "ORG": "75"}}, {"id": 869, "brand": "Realme", "model": "REALMEC67 4G", "type": "LCD", "prices": {"ORI": "70", "ORG": "85"}}, {"id": 870, "brand": "Realme", "model": "REALMEC75", "type": "LCD", "prices": {"ORI": "70", "ORG": "85"}}, {"id": 871, "brand": "Realme", "model": "REALME3PRO/REALME5PRO", "type": "LCD", "prices": {"ORI": "65", "ORG": "75"}}, {"id": 872, "brand": "Realme", "model": "REALME6", "type": "LCD", "prices": {"ORI": "75", "ORG": "85"}}, {"id": 873, "brand": "Realme", "model": "REALME6I", "type": "LCD", "prices": {"ORI": "60", "ORG": "75"}}, {"id": 874, "brand": "Realme", "model": "REALME6PRO", "type": "LCD", "prices": {"ORI": "110", "ORG": "130"}}, {"id": 875, "brand": "Realme", "model": "REALME7", "type": "LCD", "prices": {"ORI": "75", "ORG": "85"}}, {"id": 876, "brand": "Realme", "model": "REALME7I", "type": "LCD", "prices": {"ORI": "65", "ORG": "75"}}, {"id": 877, "brand": "Realme", "model": "REALME7PRO", "type": "LCD", "prices": {"TFT": "70", "ORG": "340", "OLED": "250"}}, {"id": 878, "brand": "Realme", "model": "REALME8", "type": "LCD", "prices": {"TFT": "70", "ORG": "340", "OLED": "250"}}, {"id": 879, "brand": "Realme", "model": "REALME8 5G", "type": "LCD", "prices": {"ORI": "75"}}, {"id": 880, "brand": "Realme", "model": "REALME8I/REALME9I", "type": "LCD", "prices": {"ORI": "75"}}, {"id": 881, "brand": "Realme", "model": "REALME8PRO", "type": "LCD", "prices": {"TFT": "70", "ORG": "340", "OLED": "250"}}, {"id": 882, "brand": "Realme", "model": "REALME9", "type": "LCD", "prices": {"TFT": "70", "ORG": "410", "OLED": "280"}}, {"id": 883, "brand": "Realme", "model": "REALME9PRO", "type": "LCD", "prices": {"ORI": "75"}}, {"id": 884, "brand": "Realme", "model": "REALME10 4G/5G", "type": "LCD", "prices": {"TFT": "75", "ORG": "410", "OLED": "280"}}, {"id": 885, "brand": "Realme", "model": "REALME10PRO+", "type": "LCD", "prices": {"TFT": "85", "ORG": "230"}}, {"id": 886, "brand": "Realme", "model": "REALME11", "type": "LCD", "prices": {"TFT": "70", "ORG": "410", "OLED": "280"}}, {"id": 887, "brand": "Realme", "model": "REALME11PRO+", "type": "LCD", "prices": {"TFT": "85", "ORG": "230"}}, {"id": 888, "brand": "Realme", "model": "REALME12", "type": "LCD", "prices": {"TFT": "75", "ORG": "410", "OLED": "185"}}, {"id": 889, "brand": "Realme", "model": "REALM12PRO", "type": "LCD", "prices": {"TFT": "85", "ORG": "230"}}, {"id": 890, "brand": "Realme", "model": "REALM12PLUS", "type": "LCD", "prices": {"TFT": "75", "ORG": "410", "OLED": "185"}}, {"id": 891, "brand": "Realme", "model": "REALM12PRO+", "type": "LCD", "prices": {"TFT": "85", "ORG": "230"}}, {"id": 892, "brand": "Realme", "model": "REALM12 X", "type": "LCD", "prices": {"TFT": "75", "ORG": "410", "OLED": "185"}}, {"id": 893, "brand": "Realme", "model": "REAMLE13", "type": "LCD", "prices": {"TFT": "75", "ORG": "410", "OLED": "185"}}, {"id": 894, "brand": "Realme", "model": "REAMLE13 PLUS", "type": "LCD", "prices": {"TFT": "75", "ORG": "410", "OLED": "185"}}, {"id": 895, "brand": "Realme", "model": "REAMLE13PRO PLUS", "type": "LCD", "prices": {"TFT": "90", "ORG": "260"}}, {"id": 896, "brand": "Realme", "model": "REAMLE14T", "type": "LCD", "prices": {"TFT": "75", "ORG": "410", "OLED": "185"}}, {"id": 897, "brand": "Realme", "model": "REAMLE14PRO+", "type": "LCD", "prices": {"TFT": "110", "ORG": "300"}}, {"id": 898, "brand": "Realme", "model": "REALMEGT", "type": "LCD", "prices": {"TFT": "75", "ORG": "530", "OLED": "270"}}, {"id": 899, "brand": "Realme", "model": "REALMEGT MASTER", "type": "LCD", "prices": {"TFT": "75", "ORG": "530", "OLED": "270"}}, {"id": 900, "brand": "Realme", "model": "REALME GTNEO", "type": "LCD", "prices": {"TFT": "75", "ORG": "530", "OLED": "270"}}, {"id": 901, "brand": "Realme", "model": "REALMEGT2", "type": "LCD", "prices": {"TFT": "85", "ORG": "450", "OLED": "320"}}, {"id": 902, "brand": "Realme", "model": "REALME GTNEO2", "type": "LCD", "prices": {"TFT": "85", "ORG": "450", "OLED": "320"}}, {"id": 903, "brand": "Realme", "model": "REALMEGT3", "type": "LCD", "prices": {"TFT": "85", "ORG": "250"}}, {"id": 904, "brand": "Realme", "model": "REALME GT NEO3T", "type": "LCD", "prices": {"TFT": "80", "ORG": "450"}}, {"id": 905, "brand": "Realme", "model": "REALME GTNE03", "type": "LCD", "prices": {"TFT": "75", "ORG": "230"}}, {"id": 906, "brand": "Realme", "model": "REALMEGT3T", "type": "LCD", "prices": {"TFT": "90", "ORG": "480", "OLED": "320"}}, {"id": 907, "brand": "Realme", "model": "REALMEGT5", "type": "LCD", "prices": {"TFT": "90", "ORG": "250"}}, {"id": 908, "brand": "Realme", "model": "REALME GTNEO5", "type": "LCD", "prices": {"TFT": "90", "ORG": "250"}}, {"id": 909, "brand": "Realme", "model": "REALMEGT6", "type": "LCD", "prices": {"TFT": "185", "ORG": "300"}}, {"id": 910, "brand": "Realme", "model": "REALMEGT6PRO", "type": "LCD", "prices": {"ORG": "300"}}, {"id": 911, "brand": "Realme", "model": "REALMEGT7", "type": "LCD", "prices": {"TFT": "110", "ORG": "350"}}, {"id": 912, "brand": "Realme", "model": "REALMEGT7PRO", "type": "LCD", "prices": {"ORG": "1250"}}, {"id": 913, "brand": "Reno", "model": "RENO2", "type": "LCD", "prices": {"INCELL": "80", "ORG": "300", "OLED": "270"}}, {"id": 914, "brand": "Reno", "model": "RENO2F", "type": "LCD", "prices": {"INCELL": "75", "ORG": "550", "OLED": "270"}}, {"id": 915, "brand": "Reno", "model": "RENO3", "type": "LCD", "prices": {"INCELL": "70", "ORG": "300", "OLED": "190"}}, {"id": 916, "brand": "Reno", "model": "RENO3PRO", "type": "LCD", "prices": {"INCELL": "75", "ORG": "850", "OLED": "280"}}, {"id": 917, "brand": "Reno", "model": "RENO4", "type": "LCD", "prices": {"INCELL": "90", "ORG": "420", "OLED": "280"}}, {"id": 918, "brand": "Reno", "model": "RENO4PRO", "type": "LCD", "prices": {"INCELL": "90", "ORG": "330"}}, {"id": 919, "brand": "Reno", "model": "RENO5", "type": "LCD", "prices": {"INCELL": "75", "ORG": "420", "OLED": "280"}}, {"id": 920, "brand": "Reno", "model": "RENO6", "type": "LCD", "prices": {"INCELL": "75", "ORG": "420", "OLED": "280"}}, {"id": 921, "brand": "Reno", "model": "RENO6PRO", "type": "LCD", "prices": {"INCELL": "95", "ORG": "300"}}, {"id": 922, "brand": "Reno", "model": "RENO7", "type": "LCD", "prices": {"INCELL": "75", "ORG": "530", "OLED": "290"}}, {"id": 923, "brand": "Reno", "model": "RENO7PRO", "type": "LCD", "prices": {"INCELL": "85", "ORG": "330"}}, {"id": 924, "brand": "Reno", "model": "RENO8", "type": "LCD", "prices": {"INCELL": "75", "ORG": "390", "OLED": "290"}}, {"id": 925, "brand": "Reno", "model": "RENO8PRO", "type": "LCD", "prices": {"INCELL": "75", "ORG": "330"}}, {"id": 926, "brand": "Reno", "model": "RENO8T", "type": "LCD", "prices": {"INCELL": "85", "ORG": "220"}}, {"id": 927, "brand": "Reno", "model": "RENO9", "type": "LCD", "prices": {"INCELL": "85", "ORG": "220"}}, {"id": 928, "brand": "Reno", "model": "RENO9PRO", "type": "LCD", "prices": {"INCELL": "85", "ORG": "250"}}, {"id": 929, "brand": "Reno", "model": "RENO10", "type": "LCD", "prices": {"INCELL": "85", "ORG": "250"}}, {"id": 930, "brand": "Reno", "model": "RENO10PRO", "type": "LCD", "prices": {"INCELL": "85", "ORG": "250"}}, {"id": 931, "brand": "Reno", "model": "RENO11", "type": "LCD", "prices": {"INCELL": "85", "ORG": "250"}}, {"id": 932, "brand": "Reno", "model": "RENO11PRO", "type": "LCD", "prices": {"INCELL": "85", "ORG": "250"}}, {"id": 933, "brand": "Reno", "model": "RENO12", "type": "LCD", "prices": {"INCELL": "90", "ORG": "270"}}, {"id": 934, "brand": "Reno", "model": "RENO12PRO", "type": "LCD", "prices": {"INCELL": "95", "ORG": "270"}}, {"id": 935, "brand": "Reno", "model": "RENO13", "type": "LCD", "prices": {"INCELL": "85", "ORG": "270"}}, {"id": 936, "brand": "Vivo", "model": "Y03/Y18", "type": "LCD", "prices": {"ORI": "65"}}, {"id": 937, "brand": "Vivo", "model": "Y21", "type": "LCD", "prices": {"ORI": "60"}}, {"id": 938, "brand": "Vivo", "model": "Y17S", "type": "LCD", "prices": {"ORI": "60"}}, {"id": 939, "brand": "Vivo", "model": "Y20", "type": "LCD", "prices": {"ORI": "60"}}, {"id": 940, "brand": "Vivo", "model": "Y22", "type": "LCD", "prices": {"ORI": "65"}}, {"id": 941, "brand": "Vivo", "model": "Y27S", "type": "LCD", "prices": {"ORI": "65"}}, {"id": 942, "brand": "Vivo", "model": "Y28", "type": "LCD", "prices": {"ORI": "65"}}, {"id": 943, "brand": "Vivo", "model": "Y3/Y12", "type": "LCD", "prices": {"ORI": "60"}}, {"id": 944, "brand": "Vivo", "model": "Y30", "type": "LCD", "prices": {"ORI": "65"}}, {"id": 945, "brand": "Vivo", "model": "Y33S", "type": "LCD", "prices": {"ORI": "65"}}, {"id": 946, "brand": "Vivo", "model": "Y36", "type": "LCD", "prices": {"ORI": "75"}}, {"id": 947, "brand": "Vivo", "model": "Y35", "type": "LCD", "prices": {"ORI": "60"}}, {"id": 948, "brand": "Vivo", "model": "Y50", "type": "LCD", "prices": {"ORI": "65"}}, {"id": 949, "brand": "Vivo", "model": "Y52S", "type": "LCD", "prices": {"ORI": "65"}}, {"id": 950, "brand": "Vivo", "model": "Y512020", "type": "LCD", "prices": {"ORI": "65"}}, {"id": 951, "brand": "Vivo", "model": "Y83/Y81", "type": "LCD", "prices": {"ORI": "65"}}, {"id": 952, "brand": "Vivo", "model": "Y90", "type": "LCD", "prices": {"ORI": "65"}}, {"id": 953, "brand": "Vivo", "model": "Y91", "type": "LCD", "prices": {"ORI": "65"}}, {"id": 954, "brand": "Vivo", "model": "Y93", "type": "LCD", "prices": {"ORI": "65"}}, {"id": 955, "brand": "Vivo", "model": "Y200I", "type": "LCD", "prices": {"ORI": "75"}}, {"id": 956, "brand": "Vivo", "model": "MOTO G13", "type": "LCD", "prices": {"ORI": "75"}}, {"id": 957, "brand": "Vivo", "model": "ZTE A51", "type": "LCD", "prices": {"ORI": "85"}}, {"id": 958, "brand": "Vivo", "model": "ZTE NUBIA NEO2", "type": "LCD", "prices": {"ORI": "90"}}, {"id": 959, "brand": "Vivo", "model": "ZTE NUBIA NEO3", "type": "LCD", "prices": {"ORI": "105"}}, {"id": 960, "brand": "Vivo", "model": "ZTE NUBIA FOCUS PRO", "type": "LCD", "prices": {"ORI": "90"}}, {"id": 961, "brand": "Vivo", "model": "ZTE A35", "type": "LCD", "prices": {"ORI": "75"}}, {"id": 962, "brand": "Vivo", "model": "ZTE A55", "type": "LCD", "prices": {"ORI": "65"}}, {"id": 963, "brand": "Vivo", "model": "ZTE A36", "type": "LCD", "prices": {"ORI": "80"}}, {"id": 964, "brand": "Vivo", "model": "vivo 30 lite", "type": "LCD", "prices": {"ORG": "330", "INCELL": "75", "OLED": "200"}}, {"id": 965, "brand": "Vivo", "model": "NOKIA 150 LCD ORG", "type": "LCD", "prices": {"ORI": "20"}}, {"id": 966, "brand": "Vivo", "model": "NOKIA 105 2019 LCD ORG", "type": "LCD", "prices": {"ORI": "20"}}, {"id": 967, "brand": "Vivo", "model": "NOKIA 105 2023 LCD ORG", "type": "LCD", "prices": {"ORI": "20"}}, {"id": 968, "brand": "Vivo", "model": "NOKIA C1", "type": "LCD", "prices": {"ORI": "65"}}, {"id": 969, "brand": "Vivo", "model": "NOKIA C1 2ND", "type": "LCD", "prices": {"ORI": "70"}}, {"id": 970, "brand": "Vivo", "model": "NOKIA 3.2", "type": "LCD", "prices": {"ORI": "70"}}, {"id": 971, "brand": "Vivo", "model": "M-HORSE 6.17", "type": "LCD", "prices": {"ORI": "70"}}, {"id": 972, "brand": "Vivo", "model": "M-HORSE 15 PRO MAX", "type": "LCD", "prices": {"ORI": "90"}}, {"id": 973, "brand": "Vivo", "model": "M-HORSE 16 PRO MAX", "type": "LCD", "prices": {"ORI": "90"}}, {"id": 974, "brand": "Vivo", "model": "M-HORSE 17PRO MAX", "type": "LCD", "prices": {"ORI": "90"}}, {"id": 975, "brand": "Vivo", "model": "M-HORSE BT14", "type": "LCD", "prices": {"ORI": "95"}}, {"id": 976, "brand": "Vivo", "model": "M-HORSE S26ULTRA", "type": "LCD", "prices": {"ORI": "115"}}, {"id": 977, "brand": "Vivo", "model": "M-HORSE S25ULTRA", "type": "LCD", "prices": {"ORI": "90"}}];
 
-const DB_NAME = "SparePartsAppDB";
-const DB_VERSION = 1;
-let db = null, parsedRows = [], selectedFile = null;
+// ===== STATE =====
+let products = [];
+let currentBrand = 'الكل';
+let searchQuery = '';
+let uploadedFiles = [];
 
-const $ = id => document.getElementById(id);
-
-function status(el, msg, ok = false){
-  if(!el) return;
-  el.textContent = msg;
-  el.className = "status " + (ok ? "ok" : "err");
-  el.classList.remove("hidden");
-}
-
-function esc(s){
-  return String(s??"").replace(/[&<>"']/g, x => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[x]));
-}
-
-function clean(v){ return v == null ? "" : String(v).trim(); }
-
-function num(v){
-  if(v == null || clean(v) === "") return null;
-  const s = clean(v).replace(/,/g, "");
-  const n = Number(s);
-  return Number.isFinite(n) ? n : null;
-}
-
-function slug(v){
-  return clean(v).toLowerCase().replace(/\s+/g, "_").replace(/[^\p{L}\p{N}._+/-]/gu, "");
-}
-
-function openDB(){
-  return new Promise((resolve, reject) => {
-    const req = indexedDB.open(DB_NAME, DB_VERSION);
-    req.onupgradeneeded = e => {
-      const d = e.target.result;
-      if (!d.objectStoreNames.contains("products")) {
-        d.createObjectStore("products", { keyPath: "key" });
-      }
-      if (!d.objectStoreNames.contains("history")) {
-        d.createObjectStore("history", { keyPath: "id", autoIncrement: true });
-      }
-    };
-    req.onsuccess = e => { db = e.target.result; resolve(db); };
-    req.onerror = () => reject("تعذر فتح تخزين الهاتف المحلي");
-  });
-}
-
-function saveProducts(items){
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(["products"], "readwrite");
-    const store = tx.objectStore("products");
-    items.forEach(item => store.put(item));
-    tx.oncomplete = () => resolve();
-    tx.onerror = e => reject(e.target.error);
-  });
-}
-
-function searchProducts(query = ""){
-  return new Promise(resolve => {
-    const tx = db.transaction(["products"], "readonly");
-    const store = tx.objectStore("products");
-    const req = store.openCursor();
-    const results = [];
-    const q = query.toLowerCase().trim();
-
-    req.onsuccess = e => {
-      const cursor = e.target.result;
-      if (cursor) {
-        const item = cursor.value;
-        const match = !q || 
-          (item.model && item.model.toLowerCase().includes(q)) || 
-          (item.itemCode && item.itemCode.toLowerCase().includes(q)) || 
-          (item.color && item.color.toLowerCase().includes(q)) ||
-          (item.category && item.category.toLowerCase().includes(q));
-
-        if (match) results.push(item);
-        if (results.length >= 100) return resolve(results);
-        cursor.continue();
-      } else {
-        resolve(results);
-      }
-    };
-  });
-}
-
-function matrix(ws){ return XLSX.utils.sheet_to_json(ws, {header:1, defval:"", raw:true}); }
-
-function headerIndex(a){
-  for(let i = 0; i < Math.min(a.length, 15); i++){
-    const s = a[i].map(clean).join(" ").toLowerCase();
-    if(/model|modle|item|original/i.test(s)) return i;
+// ===== INIT =====
+function init() {
+  const saved = localStorage.getItem('sparePartsData');
+  if (saved) {
+    try {
+      products = JSON.parse(saved);
+      showToast('✅ تم تحميل البيانات المحفوظة');
+    } catch(e) {
+      products = [...DEFAULT_DATA];
+    }
+  } else {
+    products = [...DEFAULT_DATA];
   }
-  return 1;
+  renderBrands();
+  renderProducts();
+  updateStats();
 }
 
-function parseSamsung(wb){
-  const a = matrix(wb.Sheets[wb.SheetNames[0]]), out = [];
-  const hIdx = headerIndex(a);
-  for(let i = hIdx + 1; i < a.length; i++){
-    const r = a[i], model = clean(r[2]);
-    if(!model) continue;
-    const code = clean(r[0]) || clean(r[1]);
-    const prices = [
-      ["original", num(r[3])], ["oled", num(r[4])],
-      ["oled2", num(r[5])], ["incell", num(r[6])]
-    ].filter(x => x[1] !== null);
-    if(prices.length) out.push({category:"Samsung", model, itemCode:code, color:"", prices});
-  }
-  return out;
+// ===== RENDER BRANDS =====
+function renderBrands() {
+  const brands = ['الكل', ...new Set(products.map(p => p.brand))];
+  const container = document.getElementById('brandFilters');
+  container.innerHTML = brands.map(b => `
+    <div class="brand-chip ${b === currentBrand ? 'active' : ''}" onclick="filterBrand('${b}')">${b}</div>
+  `).join('');
 }
 
-function parseIphone(wb){
-  const a = matrix(wb.Sheets[wb.SheetNames[0]]), out = [];
-  const types = ["copy", "second_hand", "change_glass", "fog", "original_gx", "copy_gx", "wd_incell", "hd_utc_tft"];
-  const hIdx = headerIndex(a);
-  for(let i = hIdx + 1; i < a.length; i++){
-    const r = a[i], model = clean(r[1]);
-    if(!model) continue;
-    const prices = [];
-    for(let j = 2; j < 10; j++){
-      const n = num(r[j]);
-      if(n !== null) prices.push([types[j-2] || "price_"+(j-1), n]);
-    }
-    if(prices.length) out.push({category:"iPhone", model, itemCode:clean(r[0]), color:"", prices});
-  }
-  return out;
+// ===== FILTER =====
+function filterBrand(brand) {
+  currentBrand = brand;
+  renderBrands();
+  renderProducts();
 }
 
-function parseSvc(wb){
-  const a = matrix(wb.Sheets[wb.SheetNames[0]]), out = [];
-  let lastItem = "";
-  const hIdx = headerIndex(a);
-  for(let i = hIdx + 1; i < a.length; i++){
-    const r = a[i];
-    const rawItem = clean(r[1]);
-    const item = rawItem || lastItem;
-    if(rawItem) lastItem = rawItem;
-    const color = clean(r[2]), price = num(r[3]);
-    if(item && price !== null){
-      out.push({category:"SVC", model:item, itemCode:clean(r[0]), color, prices:[["price", price]]});
-    }
-  }
-  return out;
-}
-
-function parseAndroid(wb){
-  const a = matrix(wb.Sheets[wb.SheetNames[0]]), out = [];
-  let currentBrand = "Android", currentHeaders = [];
-  const knownBrands = ["huawei","honor","infinx","infinix","tecno","itel","redmi","poco","xiaomi","oppo","realme","vivo","nokia","zte"];
-
-  for(let i = 0; i < a.length; i++){
-    const row = a[i].map(clean);
-    const nonE = row.filter(Boolean);
-    if(!nonE.length) continue;
-
-    const joined = nonE.join(" ").toLowerCase();
-    const firstCol = (row[0] || "").toLowerCase();
-
-    if(nonE.length <= 2 && knownBrands.some(b => firstCol.includes(b) || joined.includes(b)) && !/model|modle|lcd|aaa/i.test(joined)){
-      currentBrand = row[0] || row[1] || currentBrand;
-      currentHeaders = [];
-      continue;
-    }
-
-    if(/model|modle/i.test(joined)){
-      currentHeaders = [];
-      for(let j = 2; j < row.length; j++){
-        const h = row[j].toLowerCase().replace(/[\n\s]+/g, "_");
-        currentHeaders.push(h || "price_" + (j-1));
-      }
-      continue;
-    }
-
-    const model = row[1] || row[0];
-    if(!model || /no|model|modle/i.test(model)) continue;
-
-    const prices = [];
-    for(let j = 2; j < row.length; j++){
-      const n = num(row[j]);
-      if(n !== null){
-        const hName = currentHeaders[j - 2] || ("price_" + (j-1));
-        prices.push([hName, n]);
-      }
-    }
-
-    if(prices.length){
-      out.push({category: currentBrand, model, itemCode: row[0], color: "", prices});
-    }
-  }
-  return out;
-}
-
-document.querySelectorAll(".tabs button").forEach(b => b.onclick = () => {
-  document.querySelectorAll(".tabs button").forEach(x => x.classList.remove("active"));
-  b.classList.add("active");
-  document.querySelectorAll("main section").forEach(x => x.classList.add("hidden"));
-  $("tab-" + b.dataset.tab).classList.remove("hidden");
-  if(b.dataset.tab === "products") loadProducts();
-  if(b.dataset.tab === "history") loadHistory();
+// ===== SEARCH =====
+document.getElementById('searchInput').addEventListener('input', (e) => {
+  searchQuery = e.target.value.toLowerCase().trim();
+  renderProducts();
 });
 
-$("file").onchange = e => {
-  selectedFile = e.target.files[0] || null;
-  $("preview").classList.add("hidden");
-  $("importBtn").disabled = true;
-};
+// ===== RENDER PRODUCTS =====
+function renderProducts() {
+  const list = document.getElementById('productList');
+  let filtered = products;
 
-$("previewBtn").onclick = async () => {
-  if(!selectedFile){ status($("importStatus"), "اختر ملف Excel أولاً."); return; }
-  try{
-    const wb = XLSX.read(await selectedFile.arrayBuffer(), {type:"array"});
-    const cat = $("category").value;
-    
-    parsedRows = cat === "Samsung" ? parseSamsung(wb) :
-                 cat === "iPhone"  ? parseIphone(wb) :
-                 cat === "SVC"     ? parseSvc(wb) : parseAndroid(wb);
-
-    if(!parsedRows.length) throw new Error("لم يتم العثور على أسعار صالحة في الملف.");
-
-    let html = "<div class='status ok'>تم تحليل الملف! تم العثور على " + parsedRows.length + " منتج:</div>";
-    html += "<div style='overflow:auto'><table><tr><th>الماركة</th><th>الموديل</th><th>الكود</th><th>الأسعار</th></tr>";
-    html += parsedRows.slice(0, 10).map(x => 
-      "<tr><td><span class='badge'>" + esc(x.category) + "</span></td><td>" + esc(x.model) + "</td><td>" + esc(x.itemCode) + "</td><td>" + esc(x.prices.map(p=>p[0]+": "+p[1]+" د.ل").join(" | ")) + "</td></tr>"
-    ).join("");
-    html += "</table></div>";
-
-    $("preview").innerHTML = html;
-    $("preview").classList.remove("hidden");
-    $("importBtn").disabled = false;
-    status($("importStatus"), "جاهز للحفظ في ذاكرة الهاتف.", true);
-  }catch(e){
-    status($("importStatus"), "خطأ أثناء تحليل الملف:\n" + (e.message || e));
+  if (currentBrand !== 'الكل') {
+    filtered = filtered.filter(p => p.brand === currentBrand);
   }
-};
 
-$("importBtn").onclick = async () => {
-  $("importBtn").disabled = true;
-  try{
-    const payload = parsedRows.map(x => ({
-      key: [x.category, x.model, x.itemCode || "", x.color || ""].map(slug).join("|"),
-      category: x.category, model: x.model, itemCode: x.itemCode,
-      color: x.color, prices: x.prices, updatedAt: new Date().toISOString()
-    }));
-
-    await saveProducts(payload);
-    
-    const tx = db.transaction(["history"], "readwrite");
-    tx.objectStore("history").add({
-      fileName: selectedFile.name, totalProducts: parsedRows.length,
-      category: $("category").value, date: new Date().toISOString()
+  if (searchQuery) {
+    filtered = filtered.filter(p => {
+      const text = (p.model + ' ' + p.brand + ' ' + p.type).toLowerCase();
+      return text.includes(searchQuery);
     });
-
-    status($("importStatus"), `✅ تم حفظ ${parsedRows.length} منتج بنجاح في الهاتف!`, true);
-  }catch(e){
-    status($("importStatus"), "❌ خطأ أثناء الحفظ:\n" + (e.message || e));
-  }finally{
-    $("importBtn").disabled = false;
   }
-};
 
-async function loadProducts(){
-  const list = await searchProducts($("productSearch").value);
-  if(!list.length){
-    $("productsTable").innerHTML = "<div class='muted'>لا توجد منتجات محفوظة تطابق البحث.</div>";
+  if (filtered.length === 0) {
+    list.innerHTML = `
+      <div class="no-results">
+        <div class="no-results-icon">🔍</div>
+        <div>لا توجد نتائج</div>
+        <div style="font-size:12px; margin-top:8px;">جرب بحثًا مختلفًا</div>
+      </div>
+    `;
     return;
   }
-  $("productsTable").innerHTML = "<div style='overflow:auto'><table><tr><th>الماركة</th><th>الموديل</th><th>الكود</th><th>الأسعار</th></tr>" +
-    list.map(p => `<tr><td><span class='badge'>${esc(p.category)}</span></td><td>${esc(p.model)}</td><td>${esc(p.itemCode)}</td><td>${esc(p.prices.map(z=>z[0]+": "+z[1]+" د.ل").join(" | "))}</td></tr>`).join("") +
-    "</table></div>";
-}
 
-$("searchBtn").onclick = loadProducts;
+  list.innerHTML = filtered.map((p, idx) => {
+    const prices = p.prices || {};
+    const priceKeys = Object.keys(prices);
+    const firstPrice = priceKeys.length > 0 ? prices[priceKeys[0]] : '';
+    const modelHtml = highlightText(p.model, searchQuery);
 
-async function loadHistory(){
-  const tx = db.transaction(["history"], "readonly");
-  const req = tx.objectStore("history").getAll();
-  req.onsuccess = () => {
-    const list = (req.result || []).reverse();
-    if(!list.length){
-      $("historyTable").innerHTML = "<div class='muted'>لا يوجد سجل بعد.</div>";
-      return;
+    let priceRows = '';
+    for (const [k, v] of Object.entries(prices)) {
+      priceRows += `
+        <div class="price-row">
+          <span class="price-label">${k}</span>
+          <span style="display:flex; align-items:center;">
+            <button class="edit-price-btn" onclick="event.stopPropagation(); editPrice(${p.id}, '${k}')">✏️</button>
+            <span class="price-value">${v}</span>
+          </span>
+        </div>
+      `;
     }
-    $("historyTable").innerHTML = "<div style='overflow:auto'><table><tr><th>الملف</th><th>التصنيف</th><th>العدد</th><th>التاريخ</th></tr>" +
-      list.map(x => `<tr><td>${esc(x.fileName)}</td><td><span class='badge'>${esc(x.category)}</span></td><td>${x.totalProducts}</td><td>${esc(new Date(x.date).toLocaleString('ar-LY'))}</td></tr>`).join("") +
-      "</table></div>";
-  };
+
+    return `
+      <div class="product-card" id="card-${p.id}" onclick="toggleCard(${p.id})">
+        <div class="product-header">
+          <div>
+            <div class="product-model">${modelHtml}</div>
+            <span class="product-brand">${p.brand}</span>
+            <div class="product-type">${p.type} ${p.colors ? '• ' + p.colors.join(', ') : ''}</div>
+          </div>
+          <div class="product-prices-preview">
+            ${firstPrice ? `<span class="price-tag">${firstPrice}</span>` : ''}
+          </div>
+        </div>
+        <div class="price-details" id="details-${p.id}">
+          ${priceRows}
+        </div>
+      </div>
+    `;
+  }).join('');
 }
 
-$("clearBtn").onclick = () => {
-  if(confirm("هل تريد مسح جميع البيانات المسجلة على الهاتف؟")){
-    const tx = db.transaction(["products", "history"], "readwrite");
-    tx.objectStore("products").clear();
-    tx.objectStore("history").clear();
-    tx.oncomplete = () => {
-      alert("تم المسح بنجاح.");
-      loadProducts();
-      loadHistory();
-    };
-  }
-};
+function highlightText(text, query) {
+  if (!query) return text;
+  const regex = new RegExp(`(${query})`, 'gi');
+  return text.replace(regex, '<span class="highlight">$1</span>');
+}
 
-openDB().catch(err => alert("⚠️ " + err));
-})();
+function toggleCard(id) {
+  const card = document.getElementById('card-' + id);
+  card.classList.toggle('expanded');
+}
+
+// ===== EDIT PRICE =====
+function editPrice(id, priceKey) {
+  const p = products.find(x => x.id === id);
+  if (!p) return;
+  const current = p.prices[priceKey];
+  const newVal = prompt(`تعديل سعر "${p.model}" - ${priceKey}:
+السعر الحالي: ${current}`, current);
+  if (newVal !== null && newVal.trim() !== '') {
+    p.prices[priceKey] = newVal.trim();
+    saveData();
+    renderProducts();
+    showToast('✅ تم تحديث السعر');
+  }
+}
+
+// ===== SAVE =====
+function saveData() {
+  localStorage.setItem('sparePartsData', JSON.stringify(products));
+  updateStats();
+}
+
+function updateStats() {
+  document.getElementById('totalCount').textContent = `📦 ${products.length} منتج`;
+}
+
+// ===== RESET =====
+function resetData() {
+  if (confirm('هل تريد استعادة الأسعار الأصلية؟ سيتم حذف جميع التعديلات!')) {
+    products = [...DEFAULT_DATA];
+    localStorage.removeItem('sparePartsData');
+    currentBrand = 'الكل';
+    searchQuery = '';
+    document.getElementById('searchInput').value = '';
+    renderBrands();
+    renderProducts();
+    updateStats();
+    showToast('🔄 تم استعادة البيانات الأصلية');
+  }
+}
+
+// ===== UPLOAD MODAL =====
+function openUploadModal() {
+  document.getElementById('uploadModal').classList.add('show');
+  uploadedFiles = [];
+  renderFileList();
+}
+function closeUploadModal() {
+  document.getElementById('uploadModal').classList.remove('show');
+}
+
+// ===== DRAG & DROP =====
+const uploadArea = document.getElementById('uploadArea');
+uploadArea.addEventListener('dragover', (e) => { e.preventDefault(); uploadArea.classList.add('dragover'); });
+uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('dragover'));
+uploadArea.addEventListener('drop', (e) => {
+  e.preventDefault();
+  uploadArea.classList.remove('dragover');
+  handleFiles(e.dataTransfer.files);
+});
+
+function handleFiles(files) {
+  for (const file of files) {
+    if (file.name.endsWith('.xlsx')) {
+      uploadedFiles.push({ file, status: 'pending', data: null });
+    }
+  }
+  renderFileList();
+}
+
+function renderFileList() {
+  const list = document.getElementById('fileList');
+  if (uploadedFiles.length === 0) {
+    list.innerHTML = '';
+    return;
+  }
+  list.innerHTML = uploadedFiles.map((f, i) => `
+    <div class="file-item">
+      <span class="file-name">📄 ${f.file.name}</span>
+      <span class="file-status ${f.status}">${f.status === 'pending' ? '⏳ جاري' : f.status === 'done' ? '✅ تم' : '❌ خطأ'}</span>
+    </div>
+  `).join('');
+}
+
+// ===== PROCESS FILES =====
+async function processFiles() {
+  if (uploadedFiles.length === 0) {
+    showToast('⚠️ الرجاء اختيار ملف أولاً');
+    return;
+  }
+
+  const progress = document.getElementById('progressFill');
+  let updated = 0;
+
+  for (let i = 0; i < uploadedFiles.length; i++) {
+    const uf = uploadedFiles[i];
+    progress.style.width = `${((i) / uploadedFiles.length) * 100}%`;
+
+    try {
+      const data = await readExcel(uf.file);
+      const parsed = parseExcelData(data, uf.file.name);
+
+      // Merge: update existing or add new
+      for (const newItem of parsed) {
+        const existing = products.find(p => 
+          p.brand === newItem.brand && 
+          p.model.toLowerCase() === newItem.model.toLowerCase() &&
+          p.type === newItem.type
+        );
+        if (existing) {
+          existing.prices = { ...existing.prices, ...newItem.prices };
+          if (newItem.colors) existing.colors = newItem.colors;
+          updated++;
+        } else {
+          newItem.id = Math.max(...products.map(p => p.id), 0) + 1;
+          products.push(newItem);
+          updated++;
+        }
+      }
+
+      uf.status = 'done';
+    } catch(e) {
+      console.error(e);
+      uf.status = 'error';
+    }
+    renderFileList();
+  }
+
+  progress.style.width = '100%';
+  saveData();
+  renderBrands();
+  renderProducts();
+
+  setTimeout(() => {
+    closeUploadModal();
+    showToast(`✅ تم تحديث ${updated} منتج بنجاح!`);
+    progress.style.width = '0%';
+  }, 800);
+}
+
+// ===== READ EXCEL =====
+function readExcel(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const result = {};
+        workbook.SheetNames.forEach(name => {
+          result[name] = XLSX.utils.sheet_to_json(workbook.Sheets[name], { header: 1 });
+        });
+        resolve(result);
+      } catch(err) {
+        reject(err);
+      }
+    };
+    reader.onerror = reject;
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+// ===== PARSE EXCEL DATA =====
+function parseExcelData(data, filename) {
+  const lower = filename.toLowerCase();
+  const sheets = Object.values(data);
+  if (sheets.length === 0) return [];
+
+  const rows = sheets[0];
+  const result = [];
+
+  // Samsung LCD
+  if (lower.includes('samsung') && !lower.includes('svc')) {
+    for (let i = 2; i < rows.length; i++) {
+      const r = rows[i];
+      if (!r || !r[2]) continue;
+      const model = String(r[2]).trim();
+      if (!model || model === 'nan') continue;
+      const prices = {};
+      if (r[3] && String(r[3]).trim()) prices['Original'] = String(r[3]).trim();
+      if (r[4] && String(r[4]).trim()) prices['OLED'] = String(r[4]).trim();
+      if (r[5] && String(r[5]).trim()) prices['OLED2'] = String(r[5]).trim();
+      if (r[6] && String(r[6]).trim()) prices['INCELL'] = String(r[6]).trim();
+      if (Object.keys(prices).length > 0) {
+        result.push({ brand: 'Samsung', model, type: 'LCD', prices });
+      }
+    }
+  }
+  // iPhone LCD
+  else if (lower.includes('iphone') || lower.includes('ipone')) {
+    for (let i = 2; i < rows.length; i++) {
+      const r = rows[i];
+      if (!r || !r[1]) continue;
+      const model = String(r[1]).trim();
+      if (!model || model === 'nan') continue;
+      const prices = {};
+      const pmap = {'Copy':2,'Second Hand':3,'Change Glass':4,'FOG':5,'Original GX':6,'Copy GX':7,'WD INCELL':8,'HD UTC TFT':9};
+      for (const [k, idx] of Object.entries(pmap)) {
+        if (r[idx] && String(r[idx]).trim()) prices[k] = String(r[idx]).trim();
+      }
+      if (Object.keys(prices).length > 0) {
+        result.push({ brand: 'iPhone', model, type: 'LCD', prices });
+      }
+    }
+  }
+  // SVC Service Pack
+  else if (lower.includes('svc')) {
+    let current = null;
+    for (let i = 2; i < rows.length; i++) {
+      const r = rows[i];
+      if (!r) continue;
+      const item = r[1] ? String(r[1]).trim() : '';
+      const color = r[2] ? String(r[2]).trim() : '';
+      const price = r[3];
+
+      if (item && item !== 'nan') {
+        if (current) result.push(current);
+        const p = {};
+        if (price !== undefined && price !== null && String(price).trim()) {
+          try { p['Price'] = String(parseInt(price)); } catch(e) { p['Price'] = String(price).trim(); }
+        }
+        current = {
+          brand: 'Samsung', model: item, type: 'Service Pack',
+          prices: p, colors: (color && color !== 'nan') ? [color] : []
+        };
+      } else if (current && color && color !== 'nan') {
+        if (price !== undefined && price !== null && String(price).trim()) {
+          try { current.prices[color] = String(parseInt(price)); } catch(e) { current.prices[color] = String(price).trim(); }
+        }
+        current.colors.push(color);
+      }
+    }
+    if (current) result.push(current);
+  }
+  // Multi-brand (INF HW XI ITEL)
+  else {
+    let currentBrand = null;
+    for (let i = 0; i < rows.length; i++) {
+      const r = rows[i];
+      if (!r) continue;
+      const first = String(r[0] || '').trim().toUpperCase();
+      if (['HUAWEI','INFINX','TECNO','ITEL','REDMI','POCO','XIAOMI','BACK SHRAK','OPPO','REALME','RENO','VIVO'].includes(first)) {
+        currentBrand = first;
+        continue;
+      }
+      if (!currentBrand) continue;
+      const model = r[1] ? String(r[1]).trim() : '';
+      if (!model || model.toLowerCase() === 'nan' || model.toLowerCase() === 'model') continue;
+
+      const prices = {};
+      let pmap = {};
+      if (currentBrand === 'HUAWEI') pmap = {'AAA':2,'ORI':4,'ORG':5,'ORG WF':6,'OLED':7};
+      else if (['INFINX','TECNO'].includes(currentBrand)) pmap = {'TFT':2,'ORI':3,'ORG':4,'OLED':5};
+      else if (currentBrand === 'ITEL') pmap = {'TFT/AAA':2,'ORI':3,'ORG':4,'OLED':5};
+      else if (['REDMI','POCO'].includes(currentBrand)) pmap = {'TFT/AAA':2,'ORI':3,'ORG':4,'OLED':5};
+      else if (currentBrand === 'XIAOMI') pmap = {'INCELL':2,'ORI':3,'ORG':4,'OLED':5};
+      else if (currentBrand === 'BACK SHRAK') pmap = {'INCELL':2,'ORG':3};
+      else if (currentBrand === 'OPPO') pmap = {'INCELL':2,'ORI':3,'ORG':4,'OLED':5};
+      else if (currentBrand === 'REALME') pmap = {'TFT':2,'ORI':3,'ORG':4,'OLED':5};
+      else if (currentBrand === 'RENO') pmap = {'INCELL':2,'ORG':3,'OLED':4};
+      else if (currentBrand === 'VIVO') pmap = {'ORI':2,'ORG':3,'INCELL':4,'OLED':5};
+
+      for (const [k, idx] of Object.entries(pmap)) {
+        if (r[idx] && String(r[idx]).trim() && String(r[idx]).trim().toLowerCase() !== 'nan') {
+          prices[k] = String(r[idx]).trim();
+        }
+      }
+      if (Object.keys(prices).length > 0) {
+        result.push({ brand: currentBrand.charAt(0) + currentBrand.slice(1).toLowerCase(), model, type: 'LCD', prices });
+      }
+    }
+  }
+
+  return result;
+}
+
+// ===== TOAST =====
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ===== START =====
+init();
 </script>
 </body>
 </html>
