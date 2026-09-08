@@ -195,25 +195,6 @@
             color: var(--text-dark);
         }
 
-        .model-color-tag {
-            background: #e0f2fe;
-            color: #0369a1;
-            border: 1px solid #bae6fd;
-            font-size: 0.8rem;
-            padding: 3px 9px;
-            border-radius: 6px;
-            font-weight: 700;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        body.dark .model-color-tag {
-            background: #0c4a6e;
-            color: #7dd3fc;
-            border-color: #0284c7;
-        }
-
         .updated-tag {
             background: #fef3c7;
             color: #b45309;
@@ -222,28 +203,6 @@
             border-radius: 4px;
             font-weight: bold;
         }
-
-        .info-tags-wrap {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-            margin-bottom: 10px;
-        }
-
-        .info-badge {
-            background: rgba(2, 132, 199, 0.08);
-            border: 1px solid var(--border);
-            padding: 3px 8px;
-            border-radius: 6px;
-            font-size: 0.78rem;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        body.dark .info-badge { background: rgba(255, 255, 255, 0.05); }
-        .info-title { color: var(--text-muted); font-weight: 600; }
-        .info-value { color: var(--primary); font-weight: 700; }
 
         .qualities-grid {
             display: grid;
@@ -273,9 +232,10 @@
         .price-tag {
             font-size: 1rem;
             font-weight: 800;
-            padding: 3px 10px;
+            padding: 4px 10px;
             border-radius: 6px;
             width: 100%;
+            text-align: center;
         }
 
         .bg-original { background-color: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
@@ -287,7 +247,6 @@
         .bg-other { background-color: #f3e8ff; color: #6b21a8; border: 1px solid #e9d5ff; }
         body.dark .bg-other { background-color: #581c87; color: #e9d5ff; border-color: #7e22ce; }
 
-        /* 🎨 الشريط العلوي المحسن لنفس تصميم صورة 2 */
         .group-banner {
             background: var(--primary);
             color: #ffffff;
@@ -362,10 +321,23 @@
 </div>
 
 <script>
-    const STORAGE_KEY = 'PHONE_PARTS_STORE_V4';
+    const STORAGE_KEY = 'PHONE_PARTS_STORE_V5';
     let masterStore = {};
     let activeBrand = '';
     let currentViewMode = 'cards';
+
+    const IGNORE_HEADER_WORDS = [
+        'no', 'n/o', '#', 'م', 'ت', 'تسلسل', 'الرقم', 'id', 'modle', 'model', 'الموديل', 
+        'الصنف', 'الموديل/الصنف', 'original', 'oled', 'oled2', 'incell', 'incel', 'copy', 
+        'price', 'السعر', 'سعر', 'نوع', 'جودة'
+    ];
+
+    const COLOR_WORDS = [
+        'black', 'blk', 'white', 'wht', 'green', 'grn', 'blue', 'blu', 'pink', 'gold', 
+        'silver', 'slv', 'violet', 'lavender', 'gray', 'grey', 'yellow', 'red', 'orange', 
+        'purple', 'no frame', 'frame', 'black+frame', 'blk+frame', 'black inner', 'white inner',
+        'blue inner', 'green inner', 'gold inner', 'silver inner'
+    ];
 
     function cleanStr(val) {
         if (val === null || val === undefined) return '';
@@ -451,7 +423,7 @@
                     const rawRows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { header: 1, defval: '' });
 
                     if (rawRows.length > 0) {
-                        processSmartData(brandKey, rawRows);
+                        processSmartData(brandKey, file.name, rawRows);
                     }
                     resolve();
                 };
@@ -478,78 +450,85 @@
         return filename.replace(/\.[^/.]+$/, "");
     }
 
-    /* 🎯 دالة لتنسيق شريط العنوان والتاريخ مثل صورة 2 */
-    function formatBannerText(rawText, brandKey) {
-        let str = cleanStr(rawText).toUpperCase();
+    function formatBannerText(filename, brandKey) {
+        let str = filename.replace(/\.[^/.]+$/, "").toUpperCase();
         
-        if (str.includes('PRICE OF')) return str;
-
-        // استخراج التاريخ من النص
         let dateMatch = str.match(/(\d{1,4}[\/\.-]\d{1,2}[\/\.-]\d{1,4})/);
+        let dateStr = '2026.08.10';
+        
         if (dateMatch) {
-            let dateStr = dateMatch[0].replace(/[\/-]/g, '.');
-            let parts = dateStr.split('.');
-            if (parts.length === 3 && parts[0].length === 2 && parts[2].length === 4) {
-                // تحويل التاريخ لـ YYYY.MM.DD
-                dateStr = `${parts[2]}.${parts[1]}.${parts[0]}`;
-            }
-            return `PRICE OF ${brandKey.toUpperCase()} DATE ${dateStr}`;
-        }
-        
-        return `PRICE OF ${brandKey.toUpperCase()} DATE ${str}`;
-    }
-
-    function processSmartData(brandKey, rawRows) {
-        let maxCols = 0;
-        for (let r = 0; r < Math.min(15, rawRows.length); r++) {
-            if (rawRows[r] && rawRows[r].length > maxCols) maxCols = rawRows[r].length;
-        }
-
-        const keywords = ['original', 'oled', 'incell', 'incel', 'copy', 'fog', 'gx', 'aaa', 'ori', 'org', 'service', 'pack', 'glass', 'change', 'tft', 'lcd', 'نوع', 'درجة', 'جودة', 'شاشة', 'سعر', 'موديل', 'لون', 'اللون', 'ملاحظات', 'فريم', 'إطار', 'color'];
-
-        let detectedHeaders = new Array(maxCols).fill('');
-        
-        for (let c = 0; c < maxCols; c++) {
-            for (let r = 0; r < Math.min(10, rawRows.length); r++) {
-                let cellVal = cleanStr(rawRows[r][c]);
-                if (cellVal && isNaN(cellVal) && !cellVal.match(/^\d{1,2}[\/\.-]\d{1,2}[\/\.-]\d{2,4}$/)) {
-                    if (keywords.some(kw => cellVal.toLowerCase().includes(kw)) || cellVal.length > 2) {
-                        detectedHeaders[c] = cellVal;
-                        break;
-                    }
+            let rawDate = dateMatch[0].replace(/[\/-]/g, '.');
+            let parts = rawDate.split('.');
+            if (parts.length === 3) {
+                if (parts[0].length === 2 && parts[2].length === 4) {
+                    dateStr = `${parts[2]}.${parts[1]}.${parts[0]}`;
+                } else if (parts[0].length === 4) {
+                    dateStr = `${parts[0]}.${parts[1]}.${parts[2]}`;
+                } else {
+                    dateStr = rawDate;
                 }
             }
         }
 
-        let modelColIndex = 0;
-        const col0Header = (detectedHeaders[0] || '').toLowerCase().trim();
-        const seqHeaders = ['no', 'n', '#', 'م', 'ت', 'تسلسل', 'الرقم', 'id'];
+        let cleanBrandName = brandKey.toUpperCase();
+        if (cleanBrandName.includes('IPHONE')) cleanBrandName = 'IPHONE LCD';
+        
+        return `PRICE OF ${cleanBrandName} DATE ${dateStr}`;
+    }
 
-        if (seqHeaders.includes(col0Header)) {
-            modelColIndex = 1;
-        } else {
-            let numCount = 0;
-            let col1HasText = false;
-            for (let r = 0; r < Math.min(15, rawRows.length); r++) {
-                let v0 = cleanStr(rawRows[r][0]);
-                let v1 = cleanStr(rawRows[r][1]);
-                if (v0 && !isNaN(v0)) numCount++;
-                if (v1 && isNaN(v1) && v1.length > 1) col1HasText = true;
+    function isColorOnly(text) {
+        if (!text) return false;
+        let lower = text.toLowerCase().trim();
+        return COLOR_WORDS.includes(lower);
+    }
+
+    function isHeaderRow(rowStrList) {
+        let matches = 0;
+        rowStrList.forEach(s => {
+            if (IGNORE_HEADER_WORDS.includes(s.toLowerCase().trim())) {
+                matches++;
             }
-            if (numCount > 3 && col1HasText) {
-                modelColIndex = 1;
-            }
+        });
+        return matches >= 2;
+    }
+
+    function processSmartData(brandKey, fileName, rawRows) {
+        let maxCols = 0;
+        for (let r = 0; r < Math.min(20, rawRows.length); r++) {
+            if (rawRows[r] && rawRows[r].length > maxCols) maxCols = rawRows[r].length;
         }
 
+        let modelColIndex = 0;
+        let numCount = 0;
+        let col1HasText = false;
+
+        for (let r = 0; r < Math.min(15, rawRows.length); r++) {
+            let v0 = cleanStr(rawRows[r][0]);
+            let v1 = cleanStr(rawRows[r][1]);
+            if (v0 && !isNaN(v0) && Number(v0) < 500) numCount++;
+            if (v1 && isNaN(v1) && v1.length > 1) col1HasText = true;
+        }
+
+        if (numCount >= 3 && col1HasText) {
+            modelColIndex = 1;
+        }
+
+        let headers = new Array(maxCols).fill('');
         for (let c = 0; c < maxCols; c++) {
-            if (!detectedHeaders[c] || detectedHeaders[c] === '-') {
-                detectedHeaders[c] = (c === modelColIndex) ? 'الموديل/الصنف' : ('عمود ' + c);
+            for (let r = 0; r < Math.min(10, rawRows.length); r++) {
+                let cellVal = cleanStr(rawRows[r][c]);
+                if (cellVal && isNaN(cellVal) && cellVal.length > 1 && !IGNORE_HEADER_WORDS.includes(cellVal.toLowerCase())) {
+                    headers[c] = cellVal;
+                    break;
+                }
             }
+            if (!headers[c]) headers[c] = (c === modelColIndex) ? 'الموديل/الصنف' : ('نوع ' + c);
         }
 
         if (!masterStore[brandKey]) {
             masterStore[brandKey] = {
-                headers: detectedHeaders,
+                bannerTitle: formatBannerText(fileName, brandKey),
+                headers: headers,
                 modelColIndex: modelColIndex,
                 itemsMap: {},
                 itemsList: []
@@ -557,77 +536,69 @@
         }
 
         const store = masterStore[brandKey];
-        store.headers = detectedHeaders;
-        store.modelColIndex = modelColIndex;
+        store.bannerTitle = formatBannerText(fileName, brandKey);
+        store.headers = headers;
 
-        const ignoreHeaderList = ['no', 'n', '#', 'م', 'ت', 'تسلسل', 'الرقم', 'id', 'modle', 'model', 'الموديل', 'الصنف', 'الموديل/الصنف'];
+        let lastValidModel = '';
 
         for (let r = 0; r < rawRows.length; r++) {
             const row = rawRows[r];
             if (!row || row.every(c => cleanStr(c) === '')) continue;
 
-            const nonNull = row.filter(c => cleanStr(c) !== '');
-            const isGroup = nonNull.length === 1 && typeof nonNull[0] === 'string' && isNaN(nonNull[0]);
+            const rowStrings = row.map(c => cleanStr(c));
+            if (isHeaderRow(rowStrings)) continue;
 
-            if (isGroup) {
-                const groupName = cleanStr(nonNull[0]);
-                // تجنب إضافة الهيدر كعنوان مجموعة إذا كان كلمة مثل NO أو Modle
-                if (!ignoreHeaderList.includes(groupName.toLowerCase())) {
-                    const formattedTitle = formatBannerText(groupName, brandKey);
-                    if (!store.itemsMap['GRP_' + formattedTitle]) {
-                        const gObj = { isGroup: true, name: formattedTitle };
-                        store.itemsMap['GRP_' + formattedTitle] = gObj;
-                        store.itemsList.push(gObj);
-                    }
-                }
-                continue;
-            }
+            let cellModel = cleanStr(row[modelColIndex]);
 
-            let modelName = cleanStr(row[modelColIndex]);
-            if ((!modelName || !isNaN(modelName)) && row[modelColIndex + 1]) {
-                if (isNaN(cleanStr(row[modelColIndex + 1]))) {
-                    modelName = cleanStr(row[modelColIndex + 1]);
-                }
-            }
+            if (IGNORE_HEADER_WORDS.includes(cellModel.toLowerCase())) continue;
 
-            const lowerModel = (modelName || '').toLowerCase();
-
-            /* 🚫 استبعاد صف الهيدر والعناوين لعدم إنشائها ككارت مستقل (حل مشكلة صورة 1) */
-            if (!modelName || ignoreHeaderList.includes(lowerModel) || keywords.some(k => lowerModel === k)) {
-                continue;
-            }
-
-            const vals = [];
-            let headerMatches = 0;
-            for (let c = 0; c < detectedHeaders.length; c++) {
-                let cellVal = cleanStr(row[c]);
-                vals.push(cellVal);
-                if (cellVal && detectedHeaders[c] && cellVal.toLowerCase() === detectedHeaders[c].toLowerCase()) {
-                    headerMatches++;
-                }
-            }
-
-            // إذا تكررت أسماء الأعمدة داخل الصف يتم تتجاهله (هيدر مكرر)
-            if (headerMatches >= 2) continue;
-
-            const key = modelName.toLowerCase();
-            const existing = store.itemsMap[key];
-
-            if (existing) {
-                for (let c = 0; c < vals.length; c++) {
-                    if (vals[c] !== '') existing.values[c] = vals[c];
-                }
-                existing.updated = true;
+            if (!cellModel || isColorOnly(cellModel)) {
+                cellModel = lastValidModel;
             } else {
+                lastValidModel = cellModel;
+            }
+
+            if (!cellModel) continue;
+
+            const modelKey = cellModel.toLowerCase();
+
+            if (!store.itemsMap[modelKey]) {
                 const itemObj = {
                     isGroup: false,
-                    modelName: modelName,
-                    key: key,
-                    values: vals,
+                    modelName: cellModel,
+                    key: modelKey,
+                    variantsMap: {},
                     updated: false
                 };
-                store.itemsMap[key] = itemObj;
+                store.itemsMap[modelKey] = itemObj;
                 store.itemsList.push(itemObj);
+            }
+
+            const itemObj = store.itemsMap[modelKey];
+
+            let colorOrQuality = '';
+            let price = '';
+
+            for (let c = modelColIndex + 1; c < row.length; c++) {
+                let val = cleanStr(row[c]);
+                if (!val) continue;
+
+                if (!isNaN(val) && Number(val) > 0) {
+                    price = val;
+                } else if (isNaN(val)) {
+                    if (headers[c] && !headers[c].startsWith('نوع ')) {
+                        colorOrQuality = headers[c];
+                    } else {
+                        colorOrQuality = val;
+                    }
+                }
+            }
+
+            if (price && colorOrQuality) {
+                itemObj.variantsMap[colorOrQuality] = price;
+            } else if (price && !colorOrQuality) {
+                let defaultQuality = headers[modelColIndex + 1] || 'السعر';
+                itemObj.variantsMap[defaultQuality] = price;
             }
         }
     }
@@ -665,110 +636,82 @@
         }
 
         const data = masterStore[activeBrand];
-        const headers = data.headers;
         const items = data.itemsList;
-        const modelIdx = data.modelColIndex || 0;
 
         let totalCount = 0;
 
         if (currentViewMode === 'cards') {
             let html = '<div class="cards-grid">';
+            
+            if (data.bannerTitle) {
+                html += `<div class="group-banner" data-group="true">${data.bannerTitle}</div>`;
+            }
+
             items.forEach(item => {
-                if (item.isGroup) {
-                    html += `<div class="group-banner" data-group="true">${item.name}</div>`;
-                } else {
-                    totalCount++;
-                    const modelTitle = item.modelName || item.values[modelIdx] || 'غير معنون';
-                    const safeModelAttr = modelTitle.toLowerCase().replace(/"/g, '&quot;');
-                    
-                    let colorHtml = '';
-                    let infoTagsHtml = '';
-                    let pricesHtml = '';
+                totalCount++;
+                const modelTitle = item.modelName;
+                const safeModelAttr = modelTitle.toLowerCase().replace(/"/g, '&quot;');
+                
+                let pricesHtml = '';
+                const variantKeys = Object.keys(item.variantsMap);
 
-                    for (let c = 0; c < headers.length; c++) {
-                        if (c === modelIdx || (c === 0 && modelIdx === 1)) continue;
+                variantKeys.forEach(vKey => {
+                    const priceVal = item.variantsMap[vKey];
+                    const badgeClass = getQualityBadgeClass(vKey);
 
-                        const val = item.values[c];
-                        const qTitle = headers[c] || ('نوع ' + c);
-
-                        if (val && val !== '-' && val !== '') {
-                            if (!isNaN(val) && Number(val) > 0) {
-                                const badgeClass = getQualityBadgeClass(qTitle);
-                                pricesHtml += `
-                                <div class="quality-box">
-                                    <span class="quality-name">${qTitle}</span>
-                                    <span class="price-tag ${badgeClass}">${val}</span>
-                                </div>`;
-                            } else {
-                                const lowerTitle = qTitle.toLowerCase();
-                                if (lowerTitle.includes('لون') || lowerTitle.includes('color')) {
-                                    colorHtml += `<span class="model-color-tag">🎨 ${val}</span>`;
-                                } else {
-                                    infoTagsHtml += `
-                                    <div class="info-badge">
-                                        <span class="info-title">${qTitle}:</span>
-                                        <span class="info-value">${val}</span>
-                                    </div>`;
-                                }
-                            }
-                        }
-                    }
-
-                    html += `
-                    <div class="item-card" data-item="true" data-model="${safeModelAttr}">
-                        <div class="card-header">
-                            <div class="title-wrap">
-                                <span class="model-title">${modelTitle}</span>
-                                ${colorHtml}
-                            </div>
-                            ${item.updated ? '<span class="updated-tag">تم التحديث</span>' : ''}
-                        </div>
-
-                        ${infoTagsHtml ? `<div class="info-tags-wrap">${infoTagsHtml}</div>` : ''}
-
-                        <div class="qualities-grid">
-                            ${pricesHtml}
-                        </div>
+                    pricesHtml += `
+                    <div class="quality-box">
+                        <span class="quality-name">${vKey}</span>
+                        <span class="price-tag ${badgeClass}">${priceVal}</span>
                     </div>`;
-                }
+                });
+
+                html += `
+                <div class="item-card" data-item="true" data-model="${safeModelAttr}">
+                    <div class="card-header">
+                        <div class="title-wrap">
+                            <span class="model-title">${modelTitle}</span>
+                        </div>
+                    </div>
+
+                    <div class="qualities-grid">
+                        ${pricesHtml || '<div style="color:var(--text-muted); font-size:0.8rem;">لا توجد أسعار</div>'}
+                    </div>
+                </div>`;
             });
+
             html += '</div>';
             container.innerHTML = html;
 
         } else {
             let html = '<div class="table-card"><div class="table-wrapper"><table><thead><tr>';
-            headers.forEach((h, idx) => {
-                if (idx === 0 && modelIdx === 1) return;
-                html += `<th>${h}</th>`;
-            });
+            html += `<th>الموديل / الصنف</th><th>النوع / اللون</th><th>السعر</th>`;
             html += '</tr></thead><tbody>';
 
+            if (data.bannerTitle) {
+                html += `<tr data-group="true" class="group-banner"><td colspan="3">${data.bannerTitle}</td></tr>`;
+            }
+
             items.forEach(item => {
-                if (item.isGroup) {
-                    html += `<tr data-group="true" class="group-banner"><td colspan="${headers.length}">${item.name}</td></tr>`;
-                } else {
-                    totalCount++;
-                    const modelTitle = item.modelName || item.values[modelIdx] || '';
-                    const safeModelAttr = modelTitle.toLowerCase().replace(/"/g, '&quot;');
+                totalCount++;
+                const modelTitle = item.modelName;
+                const safeModelAttr = modelTitle.toLowerCase().replace(/"/g, '&quot;');
+                const variantKeys = Object.keys(item.variantsMap);
+
+                variantKeys.forEach((vKey, idx) => {
+                    const priceVal = item.variantsMap[vKey];
+                    const badgeClass = getQualityBadgeClass(vKey);
 
                     html += `<tr data-item="true" data-model="${safeModelAttr}">`;
-                    for (let c = 0; c < headers.length; c++) {
-                        if (c === 0 && modelIdx === 1) continue;
-
-                        const val = item.values[c] || '-';
-                        const isPrice = !isNaN(val) && val !== '' && val !== '-' && Number(val) > 0;
-                        if (c === modelIdx) {
-                            html += `<td>${val} ${item.updated ? ' <small style="color:#d97706;">●</small>' : ''}</td>`;
-                        } else if (isPrice) {
-                            const badgeClass = getQualityBadgeClass(headers[c] || '');
-                            html += `<td><span class="price-tag ${badgeClass}">${val}</span></td>`;
-                        } else {
-                            html += `<td>${val}</td>`;
-                        }
+                    if (idx === 0) {
+                        html += `<td rowspan="${variantKeys.length}" style="vertical-align:middle; font-weight:bold;">${modelTitle}</td>`;
                     }
+                    html += `<td>${vKey}</td>`;
+                    html += `<td><span class="price-tag ${badgeClass}">${priceVal}</span></td>`;
                     html += '</tr>';
-                }
+                });
             });
+
             html += '</tbody></table></div></div>';
             container.innerHTML = html;
         }
